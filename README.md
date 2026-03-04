@@ -178,11 +178,13 @@ All keys are 64-character random strings. Your `hu-` key is paired with a UUID a
 
 | Script | Description |
 |---|---|
+| `npm run start` | Start both the API (`server.js`) and UI (`vite`) concurrently |
+| `npm run start:api` | Start only the API server |
+| `npm run stop:api` | Manually kill the API server |
 | `npm run dev` | Vite dev server with HMR on `http://localhost:5173` |
 | `npm run build` | TypeScript check + Vite production bundle → `dist/` |
 | `npm run preview` | Serve the production `dist/` locally |
 | `npm run lint` | ESLint check across all `.ts` / `.tsx` files |
-| `node server.js` | Start the Express/SQLite API server on port `4242` |
 
 ---
 

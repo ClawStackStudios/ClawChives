@@ -23,13 +23,16 @@
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
-"use strict";
+import express from "express";
+import cors from "cors";
+import crypto from "crypto";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+import Database from "better-sqlite3";
 
-const express = require("express");
-const cors = require("cors");
-const crypto = require("crypto");
-const path = require("path");
-const fs = require("fs");
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // ─── SQLite Setup ─────────────────────────────────────────────────────────────
 
@@ -38,17 +41,6 @@ const DB_PATH = path.join(DATA_DIR, "db.sqlite");
 
 // Ensure data directory exists
 fs.mkdirSync(DATA_DIR, { recursive: true });
-
-let Database;
-try {
-  Database = require("better-sqlite3");
-} catch {
-  console.error(
-    "\n❌  better-sqlite3 is not installed.\n" +
-    "    Run: npm install better-sqlite3\n"
-  );
-  process.exit(1);
-}
 
 const db = new Database(DB_PATH);
 db.pragma("journal_mode = WAL");   // Better concurrent read performance

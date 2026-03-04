@@ -16,7 +16,7 @@ ClawChives is a **Local-First Sovereign Bookmarking** engine built for the era o
 
 - **Identity**: Crytographic key files (`.json`) containing a `uuid` and `hu-` token.
 - **Collaboration**: **Humans** and **Lobsters** (Agents) share the same reef (database).
-- **Storage**: Fluid swap between **IndexedDB** (Static/GitHub Pages) and **SQLite** (Docker/Self-hosted).
+- **Storage**: Powerful and reliable local persistence using **SQLite** (Docker/Self-hosted) powered by a Node REST architecture.
 
 ---
 
@@ -24,7 +24,7 @@ ClawChives is a **Local-First Sovereign Bookmarking** engine built for the era o
 
 Follow these rules or find yourself in the trap:
 
-1. **Adapter Pattern or Bust**: Never touch `IndexedDB` or the `API` directly in components. Use the `IDatabaseAdapter` via the `useDatabase()` hook.
+1. **Adapter Pattern or Bust**: Never touch the API directly in components. Use the central `IDatabaseAdapter` via the `useDatabase()` hook to execute endpoints.
 2. **Feature-Based Nesting**: Keep components grouped by their domain (e.g., `components/auth/`, `components/dashboard/`).
 3. **ShellCryption**: All identity validation happens client-side. The server never sees the raw `hu-` identity token; it only sees the `api-` bearer tokens.
 4. **Lobster Branding**: Use the color semantic theme:
@@ -43,19 +43,17 @@ graph TD
     end
     
     subgraph Storage_Adapters
-        B -->|VITE_DATABASE=INDEXEDDB| C[IndexedDBAdapter]
-        B -->|VITE_DATABASE=SQLITE| D[RestAdapter]
+        B -->|useDatabase() Hook| D[RestAdapter]
     end
 
     subgraph Data_Layer
-        C --> E[(IndexedDB)]
         D --> F[server.js / Express]
         F --> G[(SQLite / better-sqlite3)]
     end
 ```
 
 ### Done List ✅
-- [x] **Dual-Database Adapter Layer** implemented.
+- [x] **API Migration**: Pruned IndexedDB, moved fully to the central RestAdapter.
 - [x] **Better-SQLite3** API server for persistence.
 - [x] **Docker Compose** orchestration with multi-profile support.
 - [x] **Lobster Rebranding**: Full copy overhaul with crustacean puns.
@@ -66,15 +64,12 @@ graph TD
 ## 🚢 Operational Intel
 
 ### Run Instructions
-- **Local Dev (IDB)**: `npm run dev`
-- **Local Dev (SQLite)**: `VITE_DATABASE=SQLITE npm run dev` + `node server.js`
+- **Start All**: `npm run start` (Runs Vite + server.js concurrently)
+- **API Only**: `npm run start:api`
+- **Stop API**: `npm run stop:api`
 - **Docker Compose**:
   ```bash
-  # Deployment for SQLite Mode
-  docker-compose --profile sqlite up --build
-  
-  # Deployment for IndexedDB-only
-  docker-compose --profile indexeddb up --build
+  docker-compose up --build
   ```
 
 ### Key Token Prefixes

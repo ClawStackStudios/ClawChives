@@ -43,12 +43,10 @@ npm install
 # 3. Copy the environment config
 cp .env.example .env
 
-# 4. Start the backend server
-node server.js
-
-# 5. Start the frontend development server
-npm run dev
-# → http://localhost:5173
+# 4. Start the frontend and backend servers together
+npm run start
+# → Frontend: http://localhost:5173
+# → Backend: http://localhost:4242/api/health
 ```
 
 ---
