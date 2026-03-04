@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Button } from "../ui/button";
 import { Label } from "../ui/label";
 import { Key, Lock, AlertCircle, Upload, ArrowLeft, CheckCircle } from "lucide-react";
-import { validateIdentityFile } from "../../lib/crypto";
+import { validateIdentityFile, hashToken } from "../../lib/crypto";
 
 interface LoginFormProps {
   onSuccess: (uuid: string) => void;
@@ -49,21 +49,25 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
 
       const { uuid, token, username } = keyData as { username: string; uuid: string; token: string };
 
-      // 3. Exchange for API Token
+      // 3. Hash the extracted token securely on the client
+      const keyHash = await hashToken(token);
+
+      // 4. Exchange for API Token
       const apiUrl = ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL ?? "http://localhost:4242").replace(/\/$/, "");
       const tokenResponse = await fetch(`${apiUrl}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerKey: token }),
+        body: JSON.stringify({ type: "human", uuid, keyHash }),
       });
 
       if (!tokenResponse.ok) {
-        throw new Error("Invalid identity key or server unreachable.");
+        const errData = await tokenResponse.json().catch(() => ({}));
+        throw new Error(errData.error || "Invalid identity file or server unreachable.");
       }
 
       const { data } = await tokenResponse.json();
 
-      // 4. Store API token in sessionStorage
+      // 5. Store API token in sessionStorage
       sessionStorage.setItem("cc_api_token", data.token);
       sessionStorage.setItem("cc_username", username);
       sessionStorage.setItem("cc_user_uuid", uuid);

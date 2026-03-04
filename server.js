@@ -49,6 +49,13 @@ db.pragma("foreign_keys = ON");
 // ─── Schema Migrations ────────────────────────────────────────────────────────
 
 db.exec(`
+  CREATE TABLE IF NOT EXISTS users (
+    uuid       TEXT PRIMARY KEY,
+    username   TEXT NOT NULL UNIQUE,
+    key_hash   TEXT NOT NULL,
+    created_at TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS api_tokens (
     key        TEXT PRIMARY KEY,
     owner_key  TEXT NOT NULL,
@@ -229,19 +236,66 @@ app.get("/api/health", (_req, res) => {
 
 // ─── Auth Routes ──────────────────────────────────────────────────────────────
 
-/** POST /api/auth/token — issue a REST api- token from a hu- or ag- key */
-app.post("/api/auth/token", (req, res) => {
-  const { ownerKey } = req.body;
-  const ownerType = detectKeyType(ownerKey);
-  if (!ownerKey || (ownerType !== "human" && ownerType !== "agent")) {
-    return res.status(400).json({ success: false, error: "ownerKey must be a hu- or ag- key" });
+/** POST /api/auth/register — register the master human identity */
+app.post("/api/auth/register", (req, res) => {
+  const { uuid, username, keyHash } = req.body;
+  if (!uuid || !username || !keyHash) {
+    return res.status(400).json({ success: false, error: "Missing identity data" });
   }
 
-  const token = `api-${generateString(32)}`;
-  db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at) VALUES (?, ?, ?, ?)")
-    .run(token, ownerKey, ownerType, new Date().toISOString());
+  // Enforce Sovereign single-human rule
+  const countRow = db.prepare("SELECT COUNT(*) as c FROM users").get();
+  if (countRow.c > 0) {
+    return res.status(409).json({ success: false, error: "A Sovereign identity is already registered on this database." });
+  }
 
-  res.status(201).json({ success: true, data: { token, type: ownerType, createdAt: new Date().toISOString() } });
+  db.prepare("INSERT INTO users (uuid, username, key_hash, created_at) VALUES (?, ?, ?, ?)").run(
+    uuid, username, keyHash, new Date().toISOString()
+  );
+
+  res.status(201).json({ success: true });
+});
+
+/** POST /api/auth/token — issue a REST api- token from a hu- hash or ag- key */
+app.post("/api/auth/token", (req, res) => {
+  const { type, uuid, keyHash, ownerKey } = req.body;
+
+  if (type === "human") {
+    if (!uuid || !keyHash) return res.status(400).json({ success: false, error: "Missing human identity fields" });
+
+    // Verify against DB
+    const user = db.prepare("SELECT * FROM users WHERE uuid = ?").get(uuid);
+    if (!user) return res.status(404).json({ success: false, error: "Identity not registered on this node" });
+    if (user.key_hash !== keyHash) return res.status(401).json({ success: false, error: "Invalid identity key" });
+
+    const token = `api-${generateString(32)}`;
+    db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at) VALUES (?, ?, ?, ?)").run(
+      token, user.uuid, "human", new Date().toISOString()
+    );
+
+    return res.status(201).json({ success: true, data: { token, type: "human", createdAt: new Date().toISOString() } });
+  } else if (type === "agent" || (ownerKey && detectKeyType(ownerKey) === "agent")) {
+    const agentKey = ownerKey;
+    if (!agentKey || !agentKey.startsWith("ag-")) return res.status(400).json({ success: false, error: "Invalid agent key" });
+
+    // Verify Agent
+    const agent = db.prepare("SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1").get(agentKey);
+    if (!agent) return res.status(401).json({ success: false, error: "Invalid or revoked agent key" });
+
+    const token = `api-${generateString(32)}`;
+    db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at) VALUES (?, ?, ?, ?)").run(
+      token, agentKey, "agent", new Date().toISOString()
+    );
+
+    return res.status(201).json({ success: true, data: { token, type: "agent", createdAt: new Date().toISOString() } });
+  } else {
+    // Legacy fallback or invalid
+    const inferredType = detectKeyType(ownerKey);
+    if (inferredType === "human") {
+      return res.status(400).json({ success: false, error: "Client must supply keyHash for humans, not the raw ownerKey" });
+    }
+    return res.status(400).json({ success: false, error: "Invalid authentication request" });
+  }
 });
 
 /** GET /api/auth/validate */

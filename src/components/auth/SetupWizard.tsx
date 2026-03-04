@@ -8,6 +8,7 @@ import {
   generateHumanKey,
   generateUUID,
   downloadIdentityFile,
+  hashToken,
   type IdentityData,
 } from "../../lib/crypto";
 
@@ -62,12 +63,28 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
     setError("");
 
     try {
-      // 1. Exchange human key for API token from server
+      // 1. Hash the key client side to securely identify to the server
+      const keyHash = await hashToken(generatedKey);
+
+      // 2. Register identity on server 
       const apiUrl = ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL ?? "http://localhost:4242").replace(/\/$/, "");
+      
+      const registerResponse = await fetch(`${apiUrl}/api/auth/register`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ uuid: generatedUUID, username: username.trim(), keyHash }),
+      });
+
+      if (!registerResponse.ok) {
+        const errData = await registerResponse.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to register identity on the server.");
+      }
+
+      // 3. Exchange for API Token
       const tokenResponse = await fetch(`${apiUrl}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ownerKey: generatedKey }),
+        body: JSON.stringify({ type: "human", uuid: generatedUUID, keyHash }),
       });
 
       if (!tokenResponse.ok) {
@@ -76,7 +93,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
 
       const { data: tokenData } = await tokenResponse.json();
       
-      // 2. Store API token in sessionStorage
+      // 4. Store API token in sessionStorage
       sessionStorage.setItem("cc_api_token", tokenData.token);
       sessionStorage.setItem("cc_username", username.trim());
       sessionStorage.setItem("cc_user_uuid", generatedUUID);
