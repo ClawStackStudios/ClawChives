@@ -6,24 +6,28 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { DatabaseStatsModal } from "./components/dashboard/DatabaseStatsModal";
 import * as IndexedDB from "./lib/indexedDB";
+import type { User } from "./lib/indexedDB";
 
 type View = "landing" | "login" | "setup" | "dashboard" | "settings";
 
 function App() {
   const [currentView, setCurrentView] = useState<View>("landing");
-  const [, setIsAuthenticated] = useState(false);
+  const [_isAuthenticated, setIsAuthenticated] = useState(false);
+  const [_currentUser, setCurrentUser] = useState<User | null>(null);
   const [showDatabaseModal, setShowDatabaseModal] = useState(false);
 
   useEffect(() => {
     checkAuth();
   }, []);
 
+  /** On startup: check if there's a persisted user account to auto-navigate to dashboard */
   const checkAuth = async () => {
     try {
-      const keys = await IndexedDB.getAllAgentKeys();
-      if (keys.length > 0) {
-        setIsAuthenticated(true);
-        setCurrentView("dashboard");
+      const user = await IndexedDB.getUser();
+      if (user) {
+        // User exists — still require key-file login for security
+        // We show landing so they can click Login
+        setCurrentUser(user);
       }
     } catch (error) {
       console.error("Auth check failed:", error);
@@ -38,7 +42,7 @@ function App() {
     setCurrentView("login");
   };
 
-  const handleSetupComplete = () => {
+  const handleSetupComplete = (_username: string, _token: string) => {
     setIsAuthenticated(true);
     setCurrentView("dashboard");
   };
@@ -50,6 +54,7 @@ function App() {
 
   const handleLogout = () => {
     setIsAuthenticated(false);
+    setCurrentUser(null);
     setCurrentView("landing");
   };
 

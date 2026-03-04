@@ -50,6 +50,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
   const [isMasked, setIsMasked] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState("");
 
   const steps: { id: Step; label: string }[] = [
     { id: "details", label: "Details" },
@@ -99,6 +100,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
 
   const handleGenerate = async () => {
     setIsGenerating(true);
+    setGenerateError("");
     try {
       const agentKey = await saveAgentKey({
         name: formData.name,
@@ -112,7 +114,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
       setCurrentStep("generated");
       onKeyGenerated(agentKey);
     } catch (error) {
-      console.error("Failed to generate agent key:", error);
+      setGenerateError(error instanceof Error ? error.message : "Failed to generate agent key. Please try again.");
     } finally {
       setIsGenerating(false);
     }
@@ -138,6 +140,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
     setGeneratedKey(null);
     setIsMasked(true);
     setCopied(false);
+    setGenerateError("");
     setCurrentStep("details");
     onClose();
   };
@@ -224,6 +227,13 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
 
         {/* Content */}
         <div className="p-6 overflow-y-auto max-h-[60vh]">
+          {/* Error banner */}
+          {generateError && (
+            <div className="mb-4 flex items-start gap-3 p-4 bg-red-50 border border-red-200 rounded-xl">
+              <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-red-800">{generateError}</p>
+            </div>
+          )}
           {currentStep === "details" && (
             <div className="space-y-4">
               <div>

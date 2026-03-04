@@ -1,6 +1,6 @@
 // IndexedDB utility for local storage
 const DB_NAME = "ClawChivesDB";
-const DB_VERSION = 4; // Increased to handle version conflicts
+const DB_VERSION = 5; // Bumped: added userKeys store
 
 // Store names
 const STORES = {
@@ -8,6 +8,7 @@ const STORES = {
   FOLDERS: "folders",
   TAGS: "tags",
   AGENT_KEYS: "agent_keys",
+  USER_KEYS: "user_keys",       // <-- NEW: stores identity keys separately from user record
   APPEARANCE_SETTINGS: "appearance_settings",
   PROFILE_SETTINGS: "profile_settings",
   USER: "user",
@@ -45,6 +46,7 @@ export interface Tag {
 }
 
 import type { AgentKey, ExpirationType } from "../types/agent";
+
 export interface AppearanceSettings {
   theme: "light" | "dark" | "auto";
   layout: "grid" | "list" | "masonry";
@@ -63,50 +65,46 @@ export interface ProfileSettings {
   email?: string;
 }
 
+/** The user's account record — does NOT store sensitive key material */
 export interface User {
   username: string;
   displayName: string;
   email?: string;
   uuid: string;
-  publicKey?: string;
   avatar?: string;
-  token?: string;
   createdAt: string;
 }
 
+/** Stored in the userKeys store — keeps key material isolated from user record */
+export interface UserKey {
+  id: string;         // typically same as user uuid
+  uuid: string;       // links back to User.uuid
+  token: string;      // the hu-<64chars> identity token (hashed in production)
+  createdAt: string;
+}
 
+export interface DatabaseStats {
+  totalBookmarks: number;
+  totalFolders: number;
+  uniqueTags: number;
+  starredCount: number;
+  archivedCount: number;
+  totalKeys: number;
+  totalSettings: number;
+  totalSizeMB: number;
+}
 
+// ─── Database initialization ────────────────────────────────────────────────
 
-// Database reset function - deletes and recreates the database
 export const resetDatabase = async (): Promise<void> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.deleteDatabase(DB_NAME);
-
-    request.onsuccess = () => {
-      console.log("Database deleted successfully");
-      resolve();
-    };
-
-    request.onerror = () => {
-      console.error("Error deleting database:", request.error);
-      reject(request.error);
-    };
-
-    request.onblocked = () => {
-      console.warn("Database deletion blocked - closing all connections");
-      // Force close all connections
-      indexedDB.databases().then((databases) => {
-        databases.forEach((db) => {
-          if (db.name === DB_NAME) {
-            // Database will be deleted once all connections are closed
-          }
-        });
-      });
-    };
+    request.onsuccess = () => { console.log("Database deleted successfully"); resolve(); };
+    request.onerror = () => { console.error("Error deleting database:", request.error); reject(request.error); };
+    request.onblocked = () => { console.warn("Database deletion blocked - close all tabs and retry"); };
   });
 };
 
-// Database initialization
 const openDB = (): Promise<IDBDatabase> => {
   return new Promise((resolve, reject) => {
     const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -114,121 +112,131 @@ const openDB = (): Promise<IDBDatabase> => {
     request.onerror = () => {
       const error = request.error;
       if (error?.name === "VersionError") {
-        // Version conflict - database exists with higher version
-        console.error("Version conflict: Database version is higher than requested");
         reject(new Error(`Database version conflict. Current version is higher than ${DB_VERSION}. Please reset the database.`));
       } else {
         reject(new Error(`Failed to open database: ${error?.message}`));
       }
     };
 
-    request.onsuccess = () => {
-      resolve(request.result);
-    };
+    request.onsuccess = () => resolve(request.result);
 
     request.onupgradeneeded = (event) => {
       const db = (event.target as IDBOpenDBRequest).result;
-      const oldVersion = event.oldVersion;
+      const tx = (event.target as IDBOpenDBRequest).transaction!;
 
-      console.log(`Upgrading database from version ${oldVersion} to ${DB_VERSION}`);
+      // ── Helper: get or create a store, returns IDBObjectStore ──────────────
+      const getOrCreate = (
+        name: string,
+        options: IDBObjectStoreParameters
+      ): IDBObjectStore => {
+        if (db.objectStoreNames.contains(name)) {
+          return tx.objectStore(name); // use upgrade tx to get existing store
+        }
+        return db.createObjectStore(name, options);
+      };
 
-      // Create bookmarks store
-      if (!db.objectStoreNames.contains(STORES.BOOKMARKS)) {
-        const bookmarkStore = db.createObjectStore(STORES.BOOKMARKS, { keyPath: "id" });
-        bookmarkStore.createIndex("url", "url", { unique: true });
-        bookmarkStore.createIndex("folderId", "folderId");
-        bookmarkStore.createIndex("starred", "starred");
-        bookmarkStore.createIndex("archived", "archived");
-        bookmarkStore.createIndex("tags", "tags", { multiEntry: true });
-      }
+      // ── Helper: add index only if it doesn't already exist ─────────────────
+      const ensureIndex = (
+        store: IDBObjectStore,
+        indexName: string,
+        keyPath: string,
+        options?: IDBIndexParameters
+      ) => {
+        if (!store.indexNames.contains(indexName)) {
+          store.createIndex(indexName, keyPath, options);
+        }
+      };
 
-      // Create folders store
-      if (!db.objectStoreNames.contains(STORES.FOLDERS)) {
-        const folderStore = db.createObjectStore(STORES.FOLDERS, { keyPath: "id" });
-        folderStore.createIndex("parentId", "parentId");
-      }
+      // ── bookmarks ───────────────────────────────────────────────────────────
+      const bookmarkStore = getOrCreate(STORES.BOOKMARKS, { keyPath: "id" });
+      ensureIndex(bookmarkStore, "url", "url", { unique: true });
+      ensureIndex(bookmarkStore, "folderId", "folderId");
+      ensureIndex(bookmarkStore, "starred", "starred");
+      ensureIndex(bookmarkStore, "archived", "archived");
+      ensureIndex(bookmarkStore, "tags", "tags", { multiEntry: true });
 
-      // Create tags store
-      if (!db.objectStoreNames.contains(STORES.TAGS)) {
-        const tagStore = db.createObjectStore(STORES.TAGS, { keyPath: "id" });
-        tagStore.createIndex("name", "name", { unique: true });
-      }
+      // ── folders ─────────────────────────────────────────────────────────────
+      const folderStore = getOrCreate(STORES.FOLDERS, { keyPath: "id" });
+      ensureIndex(folderStore, "parentId", "parentId");
 
-      // Create agent keys store
-      if (!db.objectStoreNames.contains(STORES.AGENT_KEYS)) {
-        const agentKeyStore = db.createObjectStore(STORES.AGENT_KEYS, { keyPath: "id" });
-        agentKeyStore.createIndex("apiKey", "apiKey", { unique: true });
-        agentKeyStore.createIndex("isActive", "isActive");
-      }
+      // ── tags ────────────────────────────────────────────────────────────────
+      const tagStore = getOrCreate(STORES.TAGS, { keyPath: "id" });
+      ensureIndex(tagStore, "name", "name", { unique: true });
 
-      // Create appearance settings store
-      if (!db.objectStoreNames.contains(STORES.APPEARANCE_SETTINGS)) {
-        db.createObjectStore(STORES.APPEARANCE_SETTINGS, { keyPath: "id" });
-      }
+      // ── agent_keys ──────────────────────────────────────────────────────────
+      const agentKeyStore = getOrCreate(STORES.AGENT_KEYS, { keyPath: "id" });
+      ensureIndex(agentKeyStore, "apiKey", "apiKey", { unique: true });
+      ensureIndex(agentKeyStore, "name", "name", { unique: false });
+      ensureIndex(agentKeyStore, "isActive", "isActive");
 
-      // Create profile settings store
-      if (!db.objectStoreNames.contains(STORES.PROFILE_SETTINGS)) {
-        db.createObjectStore(STORES.PROFILE_SETTINGS, { keyPath: "id" });
-      }
+      // ── user_keys (NEW in v5) ────────────────────────────────────────────────
+      const userKeyStore = getOrCreate(STORES.USER_KEYS, { keyPath: "id" });
+      ensureIndex(userKeyStore, "uuid", "uuid", { unique: true });
 
-      // Create user store
-      if (!db.objectStoreNames.contains(STORES.USER)) {
-        db.createObjectStore(STORES.USER, { keyPath: "uuid" });
-      }
+      // ── appearance_settings ─────────────────────────────────────────────────
+      getOrCreate(STORES.APPEARANCE_SETTINGS, { keyPath: "id" });
+
+      // ── profile_settings ────────────────────────────────────────────────────
+      getOrCreate(STORES.PROFILE_SETTINGS, { keyPath: "id" });
+
+      // ── user ────────────────────────────────────────────────────────────────
+      const userStore = getOrCreate(STORES.USER, { keyPath: "uuid" });
+      ensureIndex(userStore, "username", "username", { unique: true });
     };
   });
 };
 
-// Generic CRUD operations
+// ─── Generic CRUD ────────────────────────────────────────────────────────────
+
 const getAll = async <T>(storeName: string): Promise<T[]> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, "readonly");
-    const store = transaction.objectStore(storeName);
-    const request = store.getAll();
-
-    request.onsuccess = () => resolve(request.result);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(storeName, "readonly");
+    const req = tx.objectStore(storeName).getAll();
+    req.onsuccess = () => resolve(req.result);
+    req.onerror = () => reject(req.error);
   });
 };
 
 const add = async <T>(storeName: string, data: T): Promise<T> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, "readwrite");
-    const store = transaction.objectStore(storeName);
-    const request = store.add(data);
-
-    request.onsuccess = () => resolve(data);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(storeName, "readwrite");
+    const req = tx.objectStore(storeName).add(data);
+    req.onsuccess = () => resolve(data);
+    req.onerror = () => {
+      // Provide friendlier error messages for constraint violations
+      if (req.error?.name === "ConstraintError") {
+        reject(new Error(`A record with this unique value already exists in '${storeName}'.`));
+      } else {
+        reject(req.error);
+      }
+    };
   });
 };
 
 const update = async <T>(storeName: string, data: T): Promise<T> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, "readwrite");
-    const store = transaction.objectStore(storeName);
-    const request = store.put(data);
-
-    request.onsuccess = () => resolve(data);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(storeName, "readwrite");
+    const req = tx.objectStore(storeName).put(data);
+    req.onsuccess = () => resolve(data);
+    req.onerror = () => reject(req.error);
   });
 };
 
 const remove = async (storeName: string, id: string): Promise<void> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(storeName, "readwrite");
-    const store = transaction.objectStore(storeName);
-    const request = store.delete(id);
-
-    request.onsuccess = () => resolve();
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(storeName, "readwrite");
+    const req = tx.objectStore(storeName).delete(id);
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
   });
 };
 
-// Bookmark operations
+// ─── Bookmark operations ──────────────────────────────────────────────────────
+
 export const bookmarks = {
   getAll: () => getAll<Bookmark>(STORES.BOOKMARKS),
   add: (bookmark: Bookmark) => add(STORES.BOOKMARKS, bookmark),
@@ -237,77 +245,128 @@ export const bookmarks = {
   getByFolder: async (folderId: string): Promise<Bookmark[]> => {
     const db = await openDB();
     return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES.BOOKMARKS, "readonly");
-      const store = transaction.objectStore(STORES.BOOKMARKS);
-      const index = store.index("folderId");
-      const request = index.getAll(folderId);
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
+      const tx = db.transaction(STORES.BOOKMARKS, "readonly");
+      const req = tx.objectStore(STORES.BOOKMARKS).index("folderId").getAll(folderId);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
     });
   },
   getStarred: async (): Promise<Bookmark[]> => {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES.BOOKMARKS, "readonly");
-      const store = transaction.objectStore(STORES.BOOKMARKS);
-      const index = store.index("starred");
-      const request = index.getAll();
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    const all = await getAll<Bookmark>(STORES.BOOKMARKS);
+    return all.filter((b) => b.starred);
   },
   getArchived: async (): Promise<Bookmark[]> => {
-    const db = await openDB();
-    return new Promise((resolve, reject) => {
-      const transaction = db.transaction(STORES.BOOKMARKS, "readonly");
-      const store = transaction.objectStore(STORES.BOOKMARKS);
-      const index = store.index("archived");
-      const request = index.getAll();
-
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = () => reject(request.error);
-    });
+    const all = await getAll<Bookmark>(STORES.BOOKMARKS);
+    return all.filter((b) => b.archived);
   },
   search: async (query: string): Promise<Bookmark[]> => {
-    const bookmarks = await getAll<Bookmark>(STORES.BOOKMARKS);
-    const lowerQuery = query.toLowerCase();
-    return bookmarks.filter(
+    const all = await getAll<Bookmark>(STORES.BOOKMARKS);
+    const q = query.toLowerCase();
+    return all.filter(
       (b) =>
-        b.title.toLowerCase().includes(lowerQuery) ||
-        b.description?.toLowerCase().includes(lowerQuery) ||
-        b.url.toLowerCase().includes(lowerQuery) ||
-        b.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
+        b.title.toLowerCase().includes(q) ||
+        b.description?.toLowerCase().includes(q) ||
+        b.url.toLowerCase().includes(q) ||
+        b.tags.some((t) => t.toLowerCase().includes(q))
     );
   },
 };
 
-// Folder operations
+// ─── Folder operations ────────────────────────────────────────────────────────
+
 export const folders = {
   getAll: () => getAll<Folder>(STORES.FOLDERS),
   add: (folder: Folder) => add(STORES.FOLDERS, folder),
   update: (folder: Folder) => update(STORES.FOLDERS, folder),
   delete: (id: string) => remove(STORES.FOLDERS, id),
   getByParent: async (parentId?: string): Promise<Folder[]> => {
-    const folders = await getAll<Folder>(STORES.FOLDERS);
-    return folders.filter((f) => f.parentId === parentId);
+    const all = await getAll<Folder>(STORES.FOLDERS);
+    return all.filter((f) => f.parentId === parentId);
   },
 };
 
-// Tag operations
+// ─── Tag operations ───────────────────────────────────────────────────────────
+
 export const tags = {
   getAll: () => getAll<Tag>(STORES.TAGS),
   add: (tag: Tag) => add(STORES.TAGS, tag),
   update: (tag: Tag) => update(STORES.TAGS, tag),
   delete: (id: string) => remove(STORES.TAGS, id),
   getByName: async (name: string): Promise<Tag | undefined> => {
-    const tags = await getAll<Tag>(STORES.TAGS);
-    return tags.find((t) => t.name === name);
+    const all = await getAll<Tag>(STORES.TAGS);
+    return all.find((t) => t.name === name);
   },
 };
 
-// Agent key operations
+// ─── User operations ──────────────────────────────────────────────────────────
+
+/** Get the current user (there should only be one) */
+export const getUser = async (): Promise<User | null> => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.USER, "readonly");
+    const req = tx.objectStore(STORES.USER).getAll();
+    req.onsuccess = () => resolve(req.result.length > 0 ? req.result[0] : null);
+    req.onerror = () => reject(req.error);
+  });
+};
+
+/** Check if a username is already taken — uses scan, not index, for migration safety */
+export const isUsernameTaken = async (username: string): Promise<boolean> => {
+  const users = await getAll<User>(STORES.USER);
+  return users.some((u) => u.username.toLowerCase() === username.toLowerCase());
+};
+
+/** Save or update the user record (does NOT include key material) */
+export const saveUser = async (user: User): Promise<User> => {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORES.USER, "readwrite");
+    const req = tx.objectStore(STORES.USER).put(user);
+    req.onsuccess = () => resolve(user);
+    req.onerror = () => {
+      if (req.error?.name === "ConstraintError") {
+        reject(new Error(`Username "${user.username}" is already taken. Please choose a different username.`));
+      } else {
+        reject(req.error);
+      }
+    };
+  });
+};
+
+/** Delete the user record */
+export const deleteUser = async (uuid: string): Promise<void> => {
+  return remove(STORES.USER, uuid);
+};
+
+// ─── User Key operations ──────────────────────────────────────────────────────
+
+/** Save an identity key for a user, in the dedicated userKeys store */
+export const saveUserKey = async (userKey: UserKey): Promise<UserKey> => {
+  return update(STORES.USER_KEYS, userKey); // put so it can be overwritten on re-setup
+};
+
+/** Get the identity key for a given user UUID — uses scan, not index, for migration safety */
+export const getUserKey = async (uuid: string): Promise<UserKey | null> => {
+  const keys = await getAll<UserKey>(STORES.USER_KEYS);
+  return keys.find((k) => k.uuid === uuid) ?? null;
+};
+
+/** Delete the identity key for a user (e.g., on account wipe) */
+export const deleteUserKey = async (uuid: string): Promise<void> => {
+  const key = await getUserKey(uuid);
+  if (key) await remove(STORES.USER_KEYS, key.id);
+};
+
+// ─── Agent Key operations ─────────────────────────────────────────────────────
+
+function generateRandomString(length: number): string {
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  const randomValues = new Uint32Array(length);
+  crypto.getRandomValues(randomValues);
+  return Array.from(randomValues, (v) => chars[v % chars.length]).join("");
+}
+
 export const getAllAgentKeys = async (): Promise<AgentKey[]> => {
   return getAll<AgentKey>(STORES.AGENT_KEYS);
 };
@@ -320,7 +379,14 @@ export const saveAgentKey = async (data: {
   expirationDate?: string;
   rateLimit?: number;
 }): Promise<AgentKey> => {
-  const apiKey = `claw_${generateRandomString(32)}`;
+  // Check for duplicate name (soft warning — names aren't required to be unique, just informational)
+  const existing = await getAllAgentKeys();
+  const nameTaken = existing.some((k) => k.name.toLowerCase() === data.name.toLowerCase() && k.isActive);
+  if (nameTaken) {
+    throw new Error(`An active agent key named "${data.name}" already exists. Choose a different name.`);
+  }
+
+  const apiKey = `ag-${generateRandomString(64)}`;
   const agentKey: AgentKey = {
     id: crypto.randomUUID(),
     name: data.name,
@@ -350,207 +416,132 @@ export const revokeAgentKey = async (id: string): Promise<void> => {
   }
 };
 
-// Appearance settings operations
+/** Validate an agent key — checks existence, active status, and expiry */
+export const validateAgentKey = async (apiKey: string): Promise<{ valid: boolean; reason?: string; key?: AgentKey }> => {
+  const agents = await getAllAgentKeys();
+  const key = agents.find((k) => k.apiKey === apiKey);
+
+  if (!key) return { valid: false, reason: "Agent key not found" };
+  if (!key.isActive) return { valid: false, reason: "Agent key has been revoked" };
+
+  if (key.expirationType !== "never" && key.expirationDate) {
+    if (new Date(key.expirationDate) < new Date()) {
+      return { valid: false, reason: "Agent key has expired" };
+    }
+  }
+
+  return { valid: true, key };
+};
+
+// ─── Appearance Settings ──────────────────────────────────────────────────────
+
 export const getAppearanceSettings = async (): Promise<AppearanceSettings | null> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.APPEARANCE_SETTINGS, "readonly");
-    const store = transaction.objectStore(STORES.APPEARANCE_SETTINGS);
-    const request = store.get("default");
-
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(STORES.APPEARANCE_SETTINGS, "readonly");
+    const req = tx.objectStore(STORES.APPEARANCE_SETTINGS).get("default");
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
   });
 };
 
-export const saveAppearanceSettings = async (
-  settings: AppearanceSettings
-): Promise<AppearanceSettings> => {
+export const saveAppearanceSettings = async (settings: AppearanceSettings): Promise<AppearanceSettings> => {
   const db = await openDB();
-  const dataWithId = { ...settings, id: "default" };
+  const data = { ...settings, id: "default" };
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.APPEARANCE_SETTINGS, "readwrite");
-    const store = transaction.objectStore(STORES.APPEARANCE_SETTINGS);
-    const request = store.put(dataWithId);
-
-    request.onsuccess = () => resolve(dataWithId);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(STORES.APPEARANCE_SETTINGS, "readwrite");
+    const req = tx.objectStore(STORES.APPEARANCE_SETTINGS).put(data);
+    req.onsuccess = () => resolve(data);
+    req.onerror = () => reject(req.error);
   });
 };
 
-// Profile settings operations
+// ─── Profile Settings ─────────────────────────────────────────────────────────
+
 export const getProfileSettings = async (): Promise<ProfileSettings | null> => {
   const db = await openDB();
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.PROFILE_SETTINGS, "readonly");
-    const store = transaction.objectStore(STORES.PROFILE_SETTINGS);
-    const request = store.get("default");
-
-    request.onsuccess = () => resolve(request.result || null);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(STORES.PROFILE_SETTINGS, "readonly");
+    const req = tx.objectStore(STORES.PROFILE_SETTINGS).get("default");
+    req.onsuccess = () => resolve(req.result || null);
+    req.onerror = () => reject(req.error);
   });
 };
 
-export const saveProfileSettings = async (
-  settings: ProfileSettings
-): Promise<ProfileSettings> => {
+export const saveProfileSettings = async (settings: ProfileSettings): Promise<ProfileSettings> => {
   const db = await openDB();
-  const dataWithId = { ...settings, id: "default" };
+  const data = { ...settings, id: "default" };
   return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.PROFILE_SETTINGS, "readwrite");
-    const store = transaction.objectStore(STORES.PROFILE_SETTINGS);
-    const request = store.put(dataWithId);
-
-    request.onsuccess = () => resolve(dataWithId);
-    request.onerror = () => reject(request.error);
+    const tx = db.transaction(STORES.PROFILE_SETTINGS, "readwrite");
+    const req = tx.objectStore(STORES.PROFILE_SETTINGS).put(data);
+    req.onsuccess = () => resolve(data);
+    req.onerror = () => reject(req.error);
   });
 };
 
-// User operations
-export const getUser = async (): Promise<User | null> => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.USER, "readonly");
-    const store = transaction.objectStore(STORES.USER);
-    const request = store.getAll();
+// ─── Database Stats & Utilities ───────────────────────────────────────────────
 
-    request.onsuccess = () => {
-      const users = request.result;
-      resolve(users.length > 0 ? users[0] : null);
-    };
-    request.onerror = () => reject(request.error);
-  });
-};
-
-export const saveUser = async (user: User): Promise<User> => {
-  const db = await openDB();
-  return new Promise((resolve, reject) => {
-    const transaction = db.transaction(STORES.USER, "readwrite");
-    const store = transaction.objectStore(STORES.USER);
-    const request = store.put(user);
-
-    request.onsuccess = () => resolve(user);
-    request.onerror = () => reject(request.error);
-  });
-};
-
-// Utility function to generate random string
-function generateRandomString(length: number): string {
-  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-  let result = "";
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return result;
-}
-
-export interface DatabaseStats {
-  totalBookmarks: number;
-  totalFolders: number;
-  uniqueTags: number;
-  starredCount: number;
-  archivedCount: number;
-  totalKeys: number;
-  totalSettings: number;
-  totalSizeMB: number;
-}
 export const getDatabaseStats = async (): Promise<DatabaseStats> => {
-  const db = await openDB();
-  return new Promise(async (resolve, reject) => {
-    let itemCount = 0;
-    const storeNames = Array.from(db.objectStoreNames);
-    
-    if (storeNames.length === 0) {
-        resolve({
-            totalBookmarks: 0,
-            totalFolders: 0,
-            uniqueTags: 0,
-            starredCount: 0,
-            archivedCount: 0,
-            totalKeys: 0,
-            totalSettings: 0,
-            totalSizeMB: 0
-        });
-        return;
-    }
+  const [bookmarksList, foldersList, tagsList, keysList] = await Promise.all([
+    bookmarks.getAll(),
+    folders.getAll(),
+    tags.getAll(),
+    getAllAgentKeys(),
+  ]);
+  const settings = await Promise.all([getProfileSettings(), getAppearanceSettings()]);
 
-    const transaction = db.transaction(storeNames, "readonly");
-    
-    let completedRequests = 0;
-    
-    storeNames.forEach(storeName => {
-        const store = transaction.objectStore(storeName);
-        const countRequest = store.count();
-        
-        countRequest.onsuccess = async () => {
-            itemCount += countRequest.result;
-            completedRequests++;
-            if (completedRequests === storeNames.length) {
-                // Rough estimation of size, since we can't easily quantify indexedDB size accurately without iterating all data.
-                const allKeys = await getAllAgentKeys();
-                const allSettings = await Promise.all([
-                  getProfileSettings(),
-                  getAppearanceSettings()
-                ]);
-
-                // To compute proper counts relying on internal logic 
-                const bookmarksList = await bookmarks.getAll()
-                const foldersList = await folders.getAll()
-                const tagsList = await tags.getAll()
-
-                resolve({
-                    totalBookmarks: bookmarksList.length,
-                    totalFolders: foldersList.length,
-                    uniqueTags: tagsList.length,
-                    starredCount: bookmarksList.filter((b: any) => b.starred).length,
-                    archivedCount: bookmarksList.filter((b: any) => b.archived).length,
-                    totalKeys: allKeys.length,
-                    totalSettings: allSettings.filter(Boolean).length,
-                    totalSizeMB: itemCount * 512 / 1024 / 1024,
-                });
-            }
-        };
-        
-        countRequest.onerror = () => reject(countRequest.error);
-    });
-  });
+  return {
+    totalBookmarks: bookmarksList.length,
+    totalFolders: foldersList.length,
+    uniqueTags: tagsList.length,
+    starredCount: bookmarksList.filter((b) => b.starred).length,
+    archivedCount: bookmarksList.filter((b) => b.archived).length,
+    totalKeys: keysList.length,
+    totalSettings: settings.filter(Boolean).length,
+    totalSizeMB: (bookmarksList.length * 512 + foldersList.length * 128 + keysList.length * 256) / 1024 / 1024,
+  };
 };
 
 export const clearDatabase = async (): Promise<void> => {
   const db = await openDB();
-  return new Promise(async (resolve, reject) => {
+  return new Promise((resolve, reject) => {
     const storeNames = Array.from(db.objectStoreNames);
-    if (storeNames.length === 0) {
-        resolve();
-        return;
-    }
-    const transaction = db.transaction(storeNames, "readwrite");
-
-    storeNames.forEach(storeName => {
-        const store = transaction.objectStore(storeName);
-        store.clear();
-    });
-
-    transaction.oncomplete = () => resolve();
-    transaction.onerror = () => reject(transaction.error);
+    if (storeNames.length === 0) { resolve(); return; }
+    const tx = db.transaction(storeNames, "readwrite");
+    storeNames.forEach((name) => tx.objectStore(name).clear());
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
   });
 };
+
+// ─── Exports ──────────────────────────────────────────────────────────────────
 
 export const IndexedDB = {
   bookmarks,
   folders,
   tags,
+  // User
+  getUser,
+  saveUser,
+  deleteUser,
+  isUsernameTaken,
+  // User Keys (separate from user record)
+  saveUserKey,
+  getUserKey,
+  deleteUserKey,
+  // Agent Keys
   getAllAgentKeys,
   saveAgentKey,
   deleteAgentKey,
   revokeAgentKey,
+  validateAgentKey,
+  // Settings
   getAppearanceSettings,
   saveAppearanceSettings,
   getProfileSettings,
   saveProfileSettings,
-  getUser,
-  saveUser,
+  // DB Utils
   resetDatabase,
   getDatabaseStats,
-  clearDatabase
+  clearDatabase,
 };
