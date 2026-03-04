@@ -5,6 +5,8 @@ import { SetupWizard } from "./components/auth/SetupWizard";
 import { Dashboard } from "./components/dashboard/Dashboard";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { DatabaseStatsModal } from "./components/dashboard/DatabaseStatsModal";
+import { useDatabaseAdapter } from "./services/database/DatabaseProvider";
+import { useTheme, type Theme } from "./components/theme-provider";
 
 // Simplified user type
 export interface User {
@@ -18,6 +20,9 @@ function App() {
   const [currentView, setCurrentView] = useState<View>("landing");
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [showDatabaseModal, setShowDatabaseModal] = useState(false);
+
+  const db = useDatabaseAdapter();
+  const { setTheme } = useTheme();
 
   useEffect(() => {
     checkAuth();
@@ -37,6 +42,18 @@ function App() {
           setCurrentView(savedView);
         } else {
           setCurrentView("dashboard");
+        }
+        
+        // Sync theme with backend
+        try {
+          if (db) {
+            const settings = await db.getAppearanceSettings();
+            if (settings?.theme) {
+              setTheme(settings.theme as Theme);
+            }
+          }
+        } catch (e) {
+          console.error("Failed to sync appearance settings:", e);
         }
       } else {
         sessionStorage.removeItem("cc_api_token");
@@ -102,7 +119,7 @@ function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       {currentView === "landing" && (
         <LandingPage 
           onCreateAccount={handleCreateAccount}

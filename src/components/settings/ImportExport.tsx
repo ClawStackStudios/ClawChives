@@ -25,7 +25,7 @@ export function ImportExport() {
     <div className="space-y-8">
       <div>
         <h3 className="text-lg font-semibold text-gray-900 mb-4">Import Bookmarks</h3>
-        <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+        <div className="border-2 border-dashed border-gray-300 dark:border-slate-700 rounded-lg p-8 text-center">
           <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600 mb-4">
             Upload an HTML bookmark file (Netscape format)
@@ -57,7 +57,7 @@ export function ImportExport() {
         <div className="grid grid-cols-3 gap-4">
           <button
             onClick={() => handleExport("html")}
-            className="p-6 border border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-center group"
+            className="p-6 border border-gray-200 dark:border-slate-800 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-center group"
           >
             <FileText className="w-8 h-8 text-gray-400 group-hover:text-red-500 mx-auto mb-3" />
             <div className="font-medium text-gray-900">HTML</div>
@@ -65,7 +65,7 @@ export function ImportExport() {
           </button>
           <button
             onClick={() => handleExport("json")}
-            className="p-6 border border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-center group"
+            className="p-6 border border-gray-200 dark:border-slate-800 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-center group"
           >
             <Database className="w-8 h-8 text-gray-400 group-hover:text-red-500 mx-auto mb-3" />
             <div className="font-medium text-gray-900">JSON</div>
@@ -73,7 +73,7 @@ export function ImportExport() {
           </button>
           <button
             onClick={() => handleExport("csv")}
-            className="p-6 border border-gray-200 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-center group"
+            className="p-6 border border-gray-200 dark:border-slate-800 rounded-lg hover:border-red-500 hover:bg-red-50 transition-colors text-center group"
           >
             <FileSpreadsheet className="w-8 h-8 text-gray-400 group-hover:text-red-500 mx-auto mb-3" />
             <div className="font-medium text-gray-900">CSV</div>

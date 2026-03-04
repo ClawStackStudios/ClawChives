@@ -10,7 +10,7 @@ interface SearchBarProps {
 
 export function SearchBar({ filters, onFiltersChange }: SearchBarProps) {
   return (
-    <div className="bg-white rounded-xl border border-gray-200 p-4">
+    <div className="bg-white dark:bg-slate-900 rounded-xl border border-gray-200 dark:border-slate-800 p-4">
       <div className="flex items-center gap-3">
         <div className="flex-1 relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
@@ -25,7 +25,7 @@ export function SearchBar({ filters, onFiltersChange }: SearchBarProps) {
           {filters.search && (
             <button
               onClick={() => onFiltersChange({ ...filters, search: "" })}
-              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:text-slate-400 dark:hover:text-slate-200"
             >
               <X className="w-4 h-4" />
             </button>

@@ -157,7 +157,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">
           <div className="flex items-center justify-between">
@@ -183,7 +183,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
 
         {/* Progress Steps */}
         {currentStep !== "generated" && (
-          <div className="px-6 py-4 border-b border-gray-200">
+          <div className="px-6 py-4 border-b border-gray-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               {steps.map((step, index) => {
                 const isActive = step.id === currentStep;
@@ -280,7 +280,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
                       className={`cursor-pointer transition-all ${
                         isSelected
                           ? `${info.bgColor} ${info.borderColor} border-2`
-                          : "border-gray-200 hover:border-gray-300"
+                          : "border-gray-200 dark:border-slate-800 hover:border-gray-300 dark:border-slate-700"
                       }`}
                       onClick={() => setFormData({ ...formData, permissionLevel: level })}
                     >
@@ -586,7 +586,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <code className="flex-1 bg-white border border-gray-300 rounded-lg px-4 py-3 font-mono text-sm break-all">
+                    <code className="flex-1 bg-white dark:bg-slate-900 border border-gray-300 dark:border-slate-700 rounded-lg px-4 py-3 font-mono text-sm break-all">
                       {isMasked
                         ? generatedKey?.apiKey.replace(/./g, "•")
                         : generatedKey?.apiKey}
@@ -632,7 +632,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
 
         {/* Footer */}
         {currentStep !== "generated" && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex items-center justify-between">
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-800 bg-gray-50 flex items-center justify-between">
             <Button
               variant="outline"
               onClick={currentStep === "details" ? handleClose : handleBack}
@@ -660,7 +660,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
         )}
 
         {currentStep === "generated" && (
-          <div className="px-6 py-4 border-t border-gray-200 bg-gray-50 flex justify-end">
+          <div className="px-6 py-4 border-t border-gray-200 dark:border-slate-800 bg-gray-50 flex justify-end">
             <Button onClick={handleClose}>
               Done
             </Button>

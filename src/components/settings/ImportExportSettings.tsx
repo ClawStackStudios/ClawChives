@@ -148,7 +148,7 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${b.url}" ADD_DATE="${new Date(b.cre
                 {isImporting ? "Importing..." : "Import"}
               </Button>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Supports JSON format exported from ClawChives
             </p>
           </div>
@@ -186,36 +186,36 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${b.url}" ADD_DATE="${new Date(b.cre
             <Button
               variant="outline"
               onClick={() => handleExport("json")}
-              className="h-auto flex-col gap-3 py-6 hover:border-cyan-600 hover:bg-cyan-50"
+              className="h-auto flex-col gap-3 py-6 hover:border-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 dark:bg-cyan-950/30"
             >
               <Database className="w-8 h-8 text-cyan-600" />
               <div className="text-left">
                 <div className="font-medium">JSON</div>
-                <div className="text-xs text-slate-500">Full backup with metadata</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Full backup with metadata</div>
               </div>
             </Button>
 
             <Button
               variant="outline"
               onClick={() => handleExport("html")}
-              className="h-auto flex-col gap-3 py-6 hover:border-cyan-600 hover:bg-cyan-50"
+              className="h-auto flex-col gap-3 py-6 hover:border-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 dark:bg-cyan-950/30"
             >
               <FileText className="w-8 h-8 text-cyan-600" />
               <div className="text-left">
                 <div className="font-medium">HTML</div>
-                <div className="text-xs text-slate-500">Netscape bookmark format</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Netscape bookmark format</div>
               </div>
             </Button>
 
             <Button
               variant="outline"
               onClick={() => handleExport("csv")}
-              className="h-auto flex-col gap-3 py-6 hover:border-cyan-600 hover:bg-cyan-50"
+              className="h-auto flex-col gap-3 py-6 hover:border-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-950/30 dark:bg-cyan-950/30"
             >
               <FileSpreadsheet className="w-8 h-8 text-cyan-600" />
               <div className="text-left">
                 <div className="font-medium">CSV</div>
-                <div className="text-xs text-slate-500">Spreadsheet compatible</div>
+                <div className="text-xs text-slate-500 dark:text-slate-400">Spreadsheet compatible</div>
               </div>
             </Button>
           </div>

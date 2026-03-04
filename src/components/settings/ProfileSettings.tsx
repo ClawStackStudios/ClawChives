@@ -116,7 +116,7 @@ export function ProfileSettings() {
                     <Upload className="w-4 h-4" />
                   </Button>
                 </div>
-                <p className="text-xs text-slate-500 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   Recommended: Square image, at least 200x200px
                 </p>
               </div>
@@ -134,7 +134,7 @@ export function ProfileSettings() {
                 onChange={(e) => setUsername(e.target.value)}
                 className="mt-1"
               />
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                 Your unique identifier (cannot be changed after setup)
               </p>
             </div>
@@ -168,7 +168,7 @@ export function ProfileSettings() {
           </div>
 
           {/* Save Button */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+          <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
             {saveMessage && (
               <span className={`text-sm ${saveMessage.includes("success") ? "text-green-600" : "text-red-600"}`}>
                 {saveMessage}
@@ -194,16 +194,16 @@ export function ProfileSettings() {
         <CardContent>
           <div className="space-y-3 text-sm">
             <div className="flex justify-between">
-              <span className="text-slate-600">Account Type</span>
-              <span className="font-medium text-slate-900">Personal</span>
+              <span className="text-slate-600 dark:text-slate-400">Account Type</span>
+              <span className="font-medium text-slate-900 dark:text-slate-50">Personal</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600">Storage</span>
-              <span className="font-medium text-slate-900">Local (Encrypted)</span>
+              <span className="text-slate-600 dark:text-slate-400">Storage</span>
+              <span className="font-medium text-slate-900 dark:text-slate-50">Local (Encrypted)</span>
             </div>
             <div className="flex justify-between">
-              <span className="text-slate-600">Created</span>
-              <span className="font-medium text-slate-900">
+              <span className="text-slate-600 dark:text-slate-400">Created</span>
+              <span className="font-medium text-slate-900 dark:text-slate-50">
                 {new Date().toLocaleDateString()}
               </span>
             </div>

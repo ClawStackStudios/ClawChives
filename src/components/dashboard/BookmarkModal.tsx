@@ -117,16 +117,16 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
-          <h2 className="text-xl font-bold text-slate-900">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">
             {bookmark ? "Edit Bookmark" : "Add Bookmark"}
           </h2>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -150,7 +150,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
               className="mt-1"
             />
             {isLoading && (
-              <p className="text-xs text-slate-500 mt-1">Fetching metadata...</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Fetching metadata...</p>
             )}
           </div>
 
@@ -174,7 +174,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
-              className="mt-1 w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              className="mt-1 w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
@@ -185,7 +185,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
                 id="folder"
                 value={selectedFolder}
                 onChange={(e) => setSelectedFolder(e.target.value)}
-                className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none bg-white"
+                className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-cyan-500 appearance-none bg-white dark:bg-slate-900"
               >
                 <option value="">No folder</option>
                 {folders.map((folder) => (
@@ -237,7 +237,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
                     <button
                       type="button"
                       onClick={() => handleRemoveTag(tag)}
-                      className="hover:text-cyan-900"
+                      className="hover:text-cyan-900 dark:hover:text-cyan-100 dark:text-cyan-800"
                     >
                       <X className="w-3 h-3" />
                     </button>
@@ -247,7 +247,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
             )}
           </div>
 
-          <div className="flex gap-4 pt-4 border-t border-slate-200">
+          <div className="flex gap-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <label className="flex items-center gap-2 cursor-pointer">
               <input
                 type="checkbox"
@@ -255,7 +255,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
                 onChange={(e) => setStarred(e.target.checked)}
                 className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
               />
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <Star className={`w-4 h-4 ${starred ? "fill-amber-500 text-amber-500" : ""}`} />
                 Starred
               </div>
@@ -268,7 +268,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
                 onChange={(e) => setArchived(e.target.checked)}
                 className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
               />
-              <div className="flex items-center gap-2 text-sm text-slate-700">
+              <div className="flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
                 <Archive className={`w-4 h-4 ${archived ? "text-cyan-600" : ""}`} />
                 Archived
               </div>
@@ -276,7 +276,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders }: Bo
           </div>
         </div>
 
-        <div className="flex gap-3 p-6 border-t border-slate-200">
+        <div className="flex gap-3 p-6 border-t border-slate-200 dark:border-slate-800">
           <Button variant="outline" onClick={onClose} className="flex-1">
             Cancel
           </Button>

@@ -96,19 +96,19 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-cyan-100 rounded-lg">
               <Database className="w-5 h-5 text-cyan-700" />
             </div>
-            <h2 className="text-xl font-bold text-slate-900">Database Statistics</h2>
+            <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Database Statistics</h2>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={onClose}
-            className="h-8 w-8 p-0"
+            className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
           >
             <X className="w-5 h-5" />
           </Button>
@@ -142,12 +142,12 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
                   <p className="text-3xl font-bold text-purple-900">{stats.uniqueTags}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Database className="w-4 h-4 text-slate-700" />
-                    <span className="text-sm font-medium text-slate-900">Size</span>
+                    <Database className="w-4 h-4 text-slate-700 dark:text-slate-300" />
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-50">Size</span>
                   </div>
-                  <p className="text-3xl font-bold text-slate-900">{stats.totalSizeMB} MB</p>
+                  <p className="text-3xl font-bold text-slate-900 dark:text-slate-50">{stats.totalSizeMB} MB</p>
                 </div>
               </div>
 
@@ -187,7 +187,7 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
 
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900">All Bookmarks</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">All Bookmarks</h3>
                   <div className="flex items-center gap-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -201,35 +201,35 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
                   </div>
                 </div>
 
-                <div className="border border-slate-200 rounded-xl overflow-hidden">
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden">
                   <table className="w-full">
-                    <thead className="bg-slate-50">
+                    <thead className="bg-slate-50 dark:bg-slate-950">
                       <tr>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                           Title
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                           URL
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                           Tags
                         </th>
-                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-left text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                           Created
                         </th>
-                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 uppercase tracking-wider">
+                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                           Actions
                         </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
                       {filteredBookmarks.map((bookmark) => (
-                        <tr key={bookmark.id} className="hover:bg-slate-50">
+                        <tr key={bookmark.id} className="hover:bg-slate-50 dark:hover:bg-slate-800 dark:bg-slate-950">
                           <td className="px-4 py-3">
                             <div className="flex items-center gap-2">
                               {bookmark.starred && <Star className="w-4 h-4 text-amber-500 fill-current" />}
                               {bookmark.archived && <Archive className="w-4 h-4 text-cyan-600" />}
-                              <span className="font-medium text-slate-900">{bookmark.title}</span>
+                              <span className="font-medium text-slate-900 dark:text-slate-50">{bookmark.title}</span>
                             </div>
                           </td>
                           <td className="px-4 py-3">
@@ -250,11 +250,11 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
                                 </span>
                               ))}
                               {bookmark.tags?.length > 2 && (
-                                <span className="text-xs text-slate-500">+{bookmark.tags.length - 2}</span>
+                                <span className="text-xs text-slate-500 dark:text-slate-400">+{bookmark.tags.length - 2}</span>
                               )}
                             </div>
                           </td>
-                          <td className="px-4 py-3 text-sm text-slate-600">
+                          <td className="px-4 py-3 text-sm text-slate-600 dark:text-slate-400">
                             {new Date(bookmark.createdAt).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3 text-right">
@@ -273,15 +273,15 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
                   </table>
 
                   {filteredBookmarks.length === 0 && (
-                    <div className="text-center py-12 text-slate-500">
+                    <div className="text-center py-12 text-slate-500 dark:text-slate-400">
                       No bookmarks found
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex justify-between items-center pt-6 border-t border-slate-200">
-                <div className="text-sm text-slate-600">
+              <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-800">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
                   Showing {filteredBookmarks.length} of {stats.totalBookmarks} bookmarks
                 </div>
                 <Button

@@ -244,7 +244,7 @@ export function AgentPermissions() {
                     </div>
                   )}
 
-                  <div className="pt-4 border-t border-gray-200">
+                  <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <Key className="w-4 h-4 text-gray-500" />

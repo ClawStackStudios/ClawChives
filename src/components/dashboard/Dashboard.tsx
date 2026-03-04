@@ -135,18 +135,18 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   });
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
       {/* Mobile Menu Button */}
       <button
         onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white rounded-lg shadow-lg"
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-slate-900 rounded-lg shadow-lg text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-50"
       >
         {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
       </button>
 
       {/* Sidebar */}
       <aside
-        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white border-r border-slate-200 transform transition-transform duration-300 ease-in-out ${
+        className={`fixed lg:static inset-y-0 left-0 z-40 w-64 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transform transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
@@ -184,7 +184,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white border-b border-slate-200 px-6 py-4">
+        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-xl">
@@ -198,7 +198,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
               </div>
               {user && (
                 <div className="ml-4 flex items-center gap-2">
-                  <span className="text-sm font-medium text-slate-700">Hello, {user.username}</span>
+                  <span className="text-sm font-medium text-slate-700 dark:text-slate-300">Hello, {user.username}</span>
                 </div>
               )}
             </div>
@@ -208,7 +208,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
                 variant="ghost"
                 size="sm"
                 onClick={onShowDatabaseStats}
-                className="text-slate-600"
+                className="text-slate-600 dark:text-slate-400"
               >
                 <Database className="w-4 h-4 mr-2" />
                 Database
@@ -217,7 +217,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
                 variant="ghost"
                 size="sm"
                 onClick={onGoToSettings}
-                className="text-slate-600"
+                className="text-slate-600 dark:text-slate-400"
               >
                 <Settings className="w-4 h-4 mr-2" />
                 Settings

@@ -41,8 +41,8 @@ export function FolderModal({ isOpen, onClose, onSave, folder }: FolderModalProp
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md">
-        <div className="p-6 border-b border-gray-200">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md">
+        <div className="p-6 border-b border-gray-200 dark:border-slate-800">
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Folder className="w-5 h-5 text-cyan-700" />
             {folder ? "Edit Folder" : "New Folder"}

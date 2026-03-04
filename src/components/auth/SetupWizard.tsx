@@ -126,8 +126,8 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
               <span className="text-3xl">🦞</span>
             </div>
           </div>
-          <CardTitle className="text-2xl font-bold text-slate-900">Welcome to ClawChives</CardTitle>
-          <CardDescription className="text-slate-600">
+          <CardTitle className="text-2xl font-bold text-slate-900 dark:text-slate-50">Welcome to ClawChives</CardTitle>
+          <CardDescription className="text-slate-600 dark:text-slate-400">
             Your sovereign bookmark library
           </CardDescription>
         </CardHeader>
@@ -154,9 +154,9 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           {/* ── Welcome ─────────────────────────────────────────────────── */}
           {step === "welcome" && (
             <div className="space-y-4">
-              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200">
-                <h3 className="font-semibold text-slate-900 mb-2">Before we begin</h3>
-                <ul className="space-y-2 text-sm text-slate-600">
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-lg p-4 border border-slate-200 dark:border-slate-800">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-2">Before we begin</h3>
+                <ul className="space-y-2 text-sm text-slate-600 dark:text-slate-400">
                   {[
                     "Your data is encrypted and stored locally",
                     "You'll generate a unique identity key",
@@ -180,11 +180,11 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
           {step === "profile" && (
             <div className="space-y-4">
               <div className="text-center mb-4">
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 rounded-full mb-4">
-                  <User className="w-8 h-8 text-slate-600" />
+                <div className="inline-flex items-center justify-center w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full mb-4">
+                  <User className="w-8 h-8 text-slate-600 dark:text-slate-400" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-1">Create Your Identity</h3>
-                <p className="text-sm text-slate-600">Enter your details to generate your secure key</p>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-1">Create Your Identity</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Enter your details to generate your secure key</p>
               </div>
 
               <div className="space-y-3">
@@ -200,7 +200,7 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                     autoComplete="off"
                     maxLength={32}
                   />
-                  <p className="text-xs text-slate-500 mt-1">Lowercase letters, numbers, and hyphens only. Max 32 chars.</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">Lowercase letters, numbers, and hyphens only. Max 32 chars.</p>
                 </div>
 
                 <div>
@@ -244,10 +244,10 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                 <div className="inline-flex items-center justify-center w-16 h-16 bg-amber-100 rounded-full mb-4">
                   <Shield className="w-8 h-8 text-amber-600" />
                 </div>
-                <h3 className="font-semibold text-slate-900 mb-2">Generating Identity Key</h3>
-                <p className="text-sm text-slate-600">Creating secure key for <strong>{username}</strong></p>
+                <h3 className="font-semibold text-slate-900 dark:text-slate-50 mb-2">Generating Identity Key</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">Creating secure key for <strong>{username}</strong></p>
               </div>
-              <div className="bg-slate-50 rounded-lg p-6 border border-slate-200 flex items-center justify-center gap-2 text-cyan-600">
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-lg p-6 border border-slate-200 dark:border-slate-800 flex items-center justify-center gap-2 text-cyan-600">
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-cyan-600" />
                 <span className="text-sm font-medium">Generating secure key...</span>
               </div>
@@ -259,27 +259,27 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
             <div className="space-y-4">
               <div className="text-center mb-4">
                 <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-2" />
-                <h3 className="font-semibold text-slate-900">Identity Created!</h3>
-                <p className="text-sm text-slate-600">
+                <h3 className="font-semibold text-slate-900 dark:text-slate-50">Identity Created!</h3>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   Your secure key has been generated for <strong>{username}</strong>
                 </p>
               </div>
 
-              <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 space-y-3">
+              <div className="bg-slate-50 dark:bg-slate-950 rounded-lg p-4 border border-slate-200 dark:border-slate-800 space-y-3">
                 <div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Username</Label>
-                  <p className="mt-1 text-sm font-medium text-slate-900">{username}</p>
+                  <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Username</Label>
+                  <p className="mt-1 text-sm font-medium text-slate-900 dark:text-slate-50">{username}</p>
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">Identity Key (preview)</Label>
-                  <code className="block mt-1 text-xs bg-slate-100 p-2 rounded break-all text-slate-700">
+                  <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">Identity Key (preview)</Label>
+                  <code className="block mt-1 text-xs bg-slate-100 dark:bg-slate-800 p-2 rounded break-all text-slate-700 dark:text-slate-300">
                     {generatedKey.substring(0, 20)}…
                   </code>
                   <p className="text-xs text-slate-400 mt-1">Full key is stored in the downloaded file.</p>
                 </div>
                 <div>
-                  <Label className="text-xs font-semibold text-slate-500 uppercase">UUID</Label>
-                  <p className="mt-1 text-xs font-mono text-slate-600">{generatedUUID}</p>
+                  <Label className="text-xs font-semibold text-slate-500 dark:text-slate-400 uppercase">UUID</Label>
+                  <p className="mt-1 text-xs font-mono text-slate-600 dark:text-slate-400">{generatedUUID}</p>
                 </div>
               </div>
 

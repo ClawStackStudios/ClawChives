@@ -36,7 +36,7 @@ export function ConfirmModal({
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="p-6">
           <div className={`w-12 h-12 rounded-full ${iconColors[variant]} flex items-center justify-center mb-4`}>
             <AlertTriangle className="w-6 h-6" />

@@ -68,12 +68,12 @@ export function BookmarkCard({
 
   return (
     <div 
-      className="group bg-white border border-slate-200 rounded-xl p-4 hover:shadow-lg hover:border-cyan-300 transition-all cursor-pointer"
+      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:border-cyan-300 transition-all cursor-pointer"
       draggable={!!onDragStart}
       onDragStart={(e) => onDragStart?.(e, bookmark.id)}
     >
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 overflow-hidden">
+        <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {faviconUrl ? (
             <img src={faviconUrl} alt="" className="w-6 h-6" onError={(e) => {
               (e.target as HTMLImageElement).style.display = "none";
@@ -84,7 +84,7 @@ export function BookmarkCard({
         </div>
         <div className="flex-1 min-w-0">
           <h3 
-            className="font-semibold text-slate-900 truncate hover:text-cyan-700 transition-colors"
+            className="font-semibold text-slate-900 dark:text-slate-50 truncate hover:text-cyan-700 transition-colors"
             onClick={() => onEdit(bookmark)}
           >
             {bookmark.title || "Untitled"}
@@ -93,7 +93,7 @@ export function BookmarkCard({
             href={bookmark.url} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="text-sm text-slate-500 truncate hover:text-cyan-600 flex items-center gap-1"
+            className="text-sm text-slate-500 dark:text-slate-400 truncate hover:text-cyan-600 flex items-center gap-1"
             onClick={(e) => e.stopPropagation()}
           >
             {bookmark.url}
@@ -104,7 +104,7 @@ export function BookmarkCard({
 
       {bookmark.description && (
         <p 
-          className="text-sm text-slate-600 line-clamp-2 mb-3"
+          className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3"
           onClick={() => onEdit(bookmark)}
         >
           {bookmark.description}
@@ -122,7 +122,7 @@ export function BookmarkCard({
             </span>
           ))}
           {bookmark.tags.length > 3 && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+            <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400">
               +{bookmark.tags.length - 3}
             </span>
           )}

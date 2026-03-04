@@ -154,7 +154,7 @@ export function BookmarkDashboard() {
   return (
     <div className="flex min-h-screen">
       {/* Sidebar */}
-      <div className="w-64 bg-white border-r border-gray-200 p-6 flex flex-col">
+      <div className="w-64 bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-800 p-6 flex flex-col">
         <div className="flex items-center gap-2 mb-8">
           <div className="w-8 h-8 bg-red-500 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold">🦞</span>
@@ -290,7 +290,7 @@ export function BookmarkDashboard() {
             </div>
           )}
 
-          <div className="flex items-center gap-2 border-l border-gray-200 pl-4">
+          <div className="flex items-center gap-2 border-l border-gray-200 dark:border-slate-800 pl-4">
             <Label className="text-sm">Icon Size:</Label>
             <select
               value={iconSize}

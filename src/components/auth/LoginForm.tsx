@@ -83,11 +83,11 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-amber-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-md p-8">
         <Button
           variant="ghost"
           onClick={onCancel}
-          className="mb-6 text-slate-600 hover:text-slate-900"
+          className="mb-6 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:text-slate-50"
         >
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Home
@@ -97,8 +97,8 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
           <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg shadow-red-200">
             <span className="text-3xl">🦞</span>
           </div>
-          <h1 className="text-2xl font-bold text-slate-900 mb-2">Welcome Back</h1>
-          <p className="text-slate-600">Login with your ClawChives identity file</p>
+          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50 mb-2">Welcome Back</h1>
+          <p className="text-slate-600 dark:text-slate-400">Login with your ClawChives identity file</p>
         </div>
 
         <div className="space-y-6">
@@ -117,8 +117,8 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
                 htmlFor="key-file"
                 className={`flex items-center justify-center gap-3 w-full p-6 border-2 border-dashed rounded-xl cursor-pointer transition-colors ${
                   keyFile
-                    ? "border-cyan-500 bg-cyan-50"
-                    : "border-slate-300 hover:border-cyan-400 hover:bg-cyan-50/50"
+                    ? "border-cyan-500 bg-cyan-50 dark:bg-cyan-950/30"
+                    : "border-slate-300 dark:border-slate-700 hover:border-cyan-400 hover:bg-cyan-50/50"
                 }`}
               >
                 {keyFile ? (
@@ -127,10 +127,10 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
                   <Upload className="w-8 h-8 text-slate-400" />
                 )}
                 <div className="text-left">
-                  <p className="font-medium text-slate-900">
+                  <p className="font-medium text-slate-900 dark:text-slate-50">
                     {keyFile ? keyFile.name : "Click to upload your identity file"}
                   </p>
-                  <p className="text-sm text-slate-500">
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
                     {keyFile ? "File selected — click Login to proceed" : ".json files only"}
                   </p>
                 </div>

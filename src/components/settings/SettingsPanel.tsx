@@ -17,15 +17,15 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>("profile");
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-white border-b border-slate-200 px-6 py-4 sticky top-0 z-10">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 sticky top-0 z-10">
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" onClick={onBack} className="text-slate-600 hover:bg-slate-100">
+            <Button variant="ghost" onClick={onBack} className="text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Bookmarks
             </Button>
-            <h1 className="text-2xl font-bold text-slate-900">Settings</h1>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-50">Settings</h1>
           </div>
           <Button variant="outline" onClick={onLogout} className="text-red-600 border-red-300 hover:bg-red-50">
             <LogOut className="w-4 h-4 mr-2" />
@@ -37,13 +37,13 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
       <div className="max-w-6xl mx-auto p-6">
         <div className="flex gap-6">
           <aside className="w-64 flex-shrink-0">
-            <nav className="bg-white rounded-xl border border-slate-200 p-2 space-y-1 sticky top-24">
+            <nav className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 p-2 space-y-1 sticky top-24">
               <button
                 onClick={() => setActiveTab("profile")}
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "profile"
                     ? "bg-cyan-100 text-cyan-900"
-                    : "text-slate-700 hover:bg-slate-100"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800"
                 }`}
               >
                 <User className="w-4 h-4" />
@@ -54,7 +54,7 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "appearance"
                     ? "bg-cyan-100 text-cyan-900"
-                    : "text-slate-700 hover:bg-slate-100"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800"
                 }`}
               >
                 <Palette className="w-4 h-4" />
@@ -65,7 +65,7 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "agents"
                     ? "bg-cyan-100 text-cyan-900"
-                    : "text-slate-700 hover:bg-slate-100"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800"
                 }`}
               >
                 <Shield className="w-4 h-4" />
@@ -76,7 +76,7 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
                 className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === "import-export"
                     ? "bg-cyan-100 text-cyan-900"
-                    : "text-slate-700 hover:bg-slate-100"
+                    : "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 dark:bg-slate-800"
                 }`}
               >
                 <Database className="w-4 h-4" />
