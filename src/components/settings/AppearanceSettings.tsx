@@ -73,7 +73,7 @@ export function AppearanceSettings() {
             <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 block">Theme</Label>
             <div className="grid grid-cols-3 gap-3">
               <button
-                onClick={() => setTheme("light")}
+                onClick={(e) => setTheme("light", e.clientX, e.clientY)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   theme === "light"
                     ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
@@ -84,7 +84,7 @@ export function AppearanceSettings() {
                 <span className="text-sm font-medium">Light</span>
               </button>
               <button
-                onClick={() => setTheme("dark")}
+                onClick={(e) => setTheme("dark", e.clientX, e.clientY)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   theme === "dark"
                     ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
@@ -95,7 +95,7 @@ export function AppearanceSettings() {
                 <span className="text-sm font-medium">Dark</span>
               </button>
               <button
-                onClick={() => setTheme("auto")}
+                onClick={(e) => setTheme("auto", e.clientX, e.clientY)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   theme === "auto"
                     ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"

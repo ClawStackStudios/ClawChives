@@ -109,3 +109,10 @@
     --chart-5: 340 75% 55%
   }
 }
+
+/* Disable default cross-fade for View Transitions for the Theme Toggle */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}

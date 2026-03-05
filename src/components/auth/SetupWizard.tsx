@@ -16,9 +16,10 @@ type Step = "welcome" | "profile" | "generating" | "complete";
 
 interface SetupWizardProps {
   onComplete: (username: string, token: string) => void;
+  onCancel?: () => void;
 }
 
-export function SetupWizard({ onComplete }: SetupWizardProps) {
+export function SetupWizard({ onComplete, onCancel }: SetupWizardProps) {
   const [step, setStep] = useState<Step>("welcome");
   const [username, setUsername] = useState("");
   const [displayName, setDisplayName] = useState("");
@@ -169,10 +170,18 @@ export function SetupWizard({ onComplete }: SetupWizardProps) {
                   ))}
                 </ul>
               </div>
-              <Button onClick={() => setStep("profile")} className="w-full bg-cyan-700 hover:bg-cyan-800">
-                Get Started
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <div className="flex gap-2 mt-4">
+                {onCancel && (
+                  <Button variant="ghost" onClick={onCancel} className="flex-1">
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    Back to Home
+                  </Button>
+                )}
+                <Button onClick={() => setStep("profile")} className="flex-1 bg-cyan-700 hover:bg-cyan-800">
+                  Get Started
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
             </div>
           )}
 

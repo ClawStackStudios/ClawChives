@@ -184,7 +184,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
       {/* Main Content */}
       <main className="flex-1 flex flex-col">
         {/* Header */}
-        <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4">
+        <header className="bg-white dark:bg-slate-900 border-b-2 border-red-500 px-6 py-4">
           <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1">
               <div className="relative flex-1 max-w-xl">

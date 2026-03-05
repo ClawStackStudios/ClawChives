@@ -137,6 +137,7 @@ function App() {
       {currentView === "setup" && (
         <SetupWizard 
           onComplete={handleSetupComplete}
+          onCancel={() => setCurrentView("landing")}
         />
       )}
 

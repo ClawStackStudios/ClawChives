@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react"
+import { flushSync } from "react-dom"
 
 export type Theme = "dark" | "light" | "auto"
 
@@ -10,7 +11,7 @@ type ThemeProviderProps = {
 
 type ThemeProviderState = {
   theme: Theme
-  setTheme: (theme: Theme) => void
+  setTheme: (theme: Theme, clientX?: number, clientY?: number) => void
 }
 
 const initialState: ThemeProviderState = {
@@ -26,34 +27,71 @@ export function ThemeProvider({
   storageKey = "cc_theme",
   ...props
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(
+  const [theme, setThemeState] = useState<Theme>(
     () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
   )
 
   useEffect(() => {
+    updateDomTheme(theme)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Initial setup only
+
+  const updateDomTheme = (newTheme: Theme) => {
     const root = window.document.documentElement
-
     root.classList.remove("light", "dark")
-
-    if (theme === "auto") {
-      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)")
-        .matches
+    if (newTheme === "auto") {
+      const systemTheme = window.matchMedia("(prefers-color-scheme: dark)").matches
         ? "dark"
         : "light"
-
       root.classList.add(systemTheme)
+    } else {
+      root.classList.add(newTheme)
+    }
+  }
+
+  const setThemeWithTransition = async (newTheme: Theme, clientX?: number, clientY?: number) => {
+    localStorage.setItem(storageKey, newTheme)
+
+    // Fallback if no view transition support or no coordinates
+    // @ts-ignore
+    if (!document.startViewTransition || clientX === undefined || clientY === undefined) {
+      updateDomTheme(newTheme)
+      setThemeState(newTheme)
       return
     }
 
-    root.classList.add(theme)
-  }, [theme])
+    // @ts-ignore
+    const transition = document.startViewTransition(() => {
+      flushSync(() => {
+        updateDomTheme(newTheme)
+        setThemeState(newTheme)
+      })
+    })
+
+    await transition.ready
+
+    const right = window.innerWidth - clientX
+    const bottom = window.innerHeight - clientY
+    const maxRadius = Math.hypot(Math.max(clientX, right), Math.max(clientY, bottom))
+
+    document.documentElement.animate(
+      {
+        clipPath: [
+          `circle(0px at ${clientX}px ${clientY}px)`,
+          `circle(${maxRadius}px at ${clientX}px ${clientY}px)`,
+        ],
+      },
+      {
+        duration: 500,
+        easing: "ease-in-out",
+        pseudoElement: "::view-transition-new(root)",
+      }
+    )
+  }
 
   const value = {
     theme,
-    setTheme: (theme: Theme) => {
-      localStorage.setItem(storageKey, theme)
-      setTheme(theme)
-    },
+    setTheme: setThemeWithTransition,
   }
 
   return (
