@@ -154,52 +154,40 @@ npm run preview
 <details>
 <summary>Expand Docker instructions</summary>
 
-**Environment Variables (edit before running):**
+**Environment Variables:**
 
 ```bash
-# Edit these values to match your environment before running
+# Default ports (edit in compose files if needed)
 UI_PORT=5173
 API_PORT=4242
 CORS_ORIGIN=http://localhost:5173
 ```
 
-**Build and start the full stack:**
+**Option A: Production (Pull from GHCR) ⚓**
+Use this for a stable, sovereign deployment. It pulls the latest pre-built images from the GitHub Container Registry.
 ```bash
-docker-compose up -d --build
+docker compose up -d
 ```
 
-**View API logs in real time:**
+**Option B: Development & Testing (Build Locally) 🛠️**
+Use this if you are modifying the source code and want to test changes immediately.
 ```bash
-docker-compose logs -f claw-chives-api
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-**Stop the stack:**
-```bash
-docker-compose down
-```
+**Monitoring & Maintenance:**
 
-**Run API container standalone (without compose):**
-```bash
-docker run -d \
-  --name clawchives-api \
-  -p 4242:4242 \
-  -e PORT=4242 \
-  -e DATA_DIR=/app/data \
-  -e CORS_ORIGIN=http://localhost:5173 \
-  -v clawchives_data:/app/data \
-  clawchives-api
-```
+- **View Logs**: `docker compose logs -f`
+- **Stop Stack**: `docker compose down`
+- **Volume Inspection**: `docker volume inspect clawchives_sqlite_data`
 
-**Run frontend container standalone:**
-```bash
-docker run -d \
-  --name clawchives-ui \
-  -p 5173:5173 \
-  -e VITE_API_URL=http://localhost:4242 \
-  clawchives-ui
-```
-
-> ⚓ **Persistence**: Data is stored in the `sqlite_data` Docker named volume, mounted at `/app/data/db.sqlite` inside the container.
+> [!IMPORTANT]
+> **Data Sovereignty & Persistence**: 
+> All pinchmarks and agent identities are stored in local bind mounts on your host system for maximum visibility and ease of backup.
+> - **Production**: `./data/db.sqlite`
+> - **Development**: `./data-dev/db.sqlite`
+>
+> You can directly copy or backup these directories. If they don't exist, Docker will create them as directories (root-owned) when the container starts. It is recommended to create them beforehand if you want specific permissions.
 
 </details>
 

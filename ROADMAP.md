@@ -66,7 +66,7 @@ gantt
 - [x] **Docker Dual-Profile** — `indexeddb` and `sqlite` compose profiles
 - [ ] Full unit test suite for services layer
 - [ ] Export/Import UI for bookmarks (JSON & CSV)
-- [ ] Dark mode toggle in Appearance Settings
+- [x] Dark mode toggle in Appearance Settings
 
 </details>
 

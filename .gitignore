@@ -29,3 +29,5 @@ clawchives_identity_key.json
 *.sw?
 .claude/
 .trunk/
+
+docker-compose.dev.yml
