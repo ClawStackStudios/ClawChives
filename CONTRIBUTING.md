@@ -104,7 +104,7 @@ git checkout -b feat/my-new-feature
 1. **Separation of Concerns** — Components display. Services fetch/persist. Adapters abstract storage.
 2. **Use the REST architecture** — Database operations should be executed through the REST Server (`server.js`) rather than modifying local states.
 3. **No monolith files** — Files growing beyond ~150 lines are a signal to refactor into sub-modules.
-4. **Auth stays client-side** — Never send `hu-*` identity keys to the server. Only `api-` and `ag-` tokens are server-side artifacts.
+4. **Auth stays client-side** — Never send `hu-*` identity keys to the server. Only `api-` and `lb-` tokens are server-side artifacts.
 5. **Feature-first directories** — New component groups go inside a named feature folder (`components/myfeature/`), not flat in the components root.
 
 ---

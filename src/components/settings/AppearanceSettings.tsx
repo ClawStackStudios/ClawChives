@@ -30,7 +30,8 @@ export function AppearanceSettings() {
     try {
       const settings = await db.getAppearanceSettings();
       if (settings) {
-        setTheme((settings.theme as Theme) || "auto");
+        // Note: We don't call setTheme here - the theme is already loaded from sessionStorage
+        // in ThemeProvider. We just sync the UI state to show the current theme setting.
         setLayout(settings.layout);
         setItemsPerPage(settings.itemsPerPage as 12 | 24 | 48);
         setCompactMode(settings.compactMode ?? false);
@@ -60,9 +61,9 @@ export function AppearanceSettings() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
-          <CardTitle>Appearance Settings</CardTitle>
+          <CardTitle className="text-cyan-600 dark:text-cyan-400">Appearance Settings</CardTitle>
           <CardDescription>
             Customize how ClawChives looks and feels
           </CardDescription>
@@ -213,7 +214,7 @@ export function AppearanceSettings() {
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
             <Button
               onClick={handleSaveSettings}
-              className="w-full bg-cyan-700 hover:bg-cyan-800"
+              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
             >
               <Palette className="w-4 h-4 mr-2" />
               Apply Appearance Settings

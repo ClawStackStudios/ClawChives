@@ -57,7 +57,7 @@
 No cloud. No landlords. Your reef, your rules.
 
 - 🔐 **ShellCryption Auth** — login with a generated JSON identity file, not a password. Your key, your identity.
-- 🤖 **Lobster Key System** — issue granular `ag-` API keys to your AI agents and scripts. Let your Lobsters scuttle the net.
+- 🤖 **Lobster Key System** — issue granular `lb-` API keys to your AI agents and scripts. Let your Lobsters scuttle the net.
 - 🗄️ **SQLite Bedrock** — a fast, reliable, zero-dependency backend for persistent local storage.
 - 🐳 **Docker-First** — fully containerized with named volume mounts for seamless self-hosting.
 - 🌊 **Liquid Metal Theming** — a stunning circular-reveal View Transition on every theme switch.
@@ -158,9 +158,13 @@ npm run preview
 
 ```bash
 # Default ports (edit in compose files if needed)
-UI_PORT=5173
+UI_PORT=4545
 API_PORT=4242
-CORS_ORIGIN=http://localhost:5173
+CORS_ORIGIN=http://localhost:4545
+
+# Optional: Match database file permissions to your host user
+PUID=1000
+PGID=1000
 ```
 
 **Option A: Production (Pull from GHCR) ⚓**
@@ -200,7 +204,7 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 | Prefix | Type | Length | Usage |
 |---|---|---|---|
 | `hu-` | **Human Key** | 64 chars | Your personal identity. Lives in `clawchives_identity_key.json`. |
-| `ag-` | **Agent Key** | 64 chars | For your AI Lobsters and automated scripts. Generated in Settings. |
+| `lb-` | **Lobster/Agent Key** | 64 chars | For your AI Lobsters and automated scripts. Generated in Settings with granular CUSTOM permissions. |
 | `api-` | **Session Token** | 32 chars | Short-lived REST API bearer. Issued via `POST /api/auth/token`. |
 
 > [!CAUTION]
@@ -219,7 +223,7 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 |---|---|---|
 | `GET` | `/api/health` | Health check + record counts |
 | `POST` | `/api/auth/register` | Register a new identity |
-| `POST` | `/api/auth/token` | Issue `api-` token from `hu-` or `ag-` key |
+| `POST` | `/api/auth/token` | Issue `api-` token from `hu-` or `lb-` key |
 | `GET` | `/api/auth/validate` | Validate current Bearer token |
 | `GET` | `/api/bookmarks` | List all pinchmarks (filterable) |
 | `POST` | `/api/bookmarks` | Create pinchmark |

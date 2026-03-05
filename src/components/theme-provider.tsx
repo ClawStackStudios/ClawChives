@@ -28,13 +28,12 @@ export function ThemeProvider({
   ...props
 }: ThemeProviderProps) {
   const [theme, setThemeState] = useState<Theme>(
-    () => (localStorage.getItem(storageKey) as Theme) || defaultTheme
+    () => (sessionStorage.getItem(storageKey) as Theme) || defaultTheme
   )
 
   useEffect(() => {
     updateDomTheme(theme)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []) // Initial setup only
+  }, [theme]) // Update DOM whenever theme changes
 
   const updateDomTheme = (newTheme: Theme) => {
     const root = window.document.documentElement
@@ -50,7 +49,7 @@ export function ThemeProvider({
   }
 
   const setThemeWithTransition = async (newTheme: Theme, clientX?: number, clientY?: number) => {
-    localStorage.setItem(storageKey, newTheme)
+    sessionStorage.setItem(storageKey, newTheme)
 
     // Fallback if no view transition support or no coordinates
     // @ts-ignore

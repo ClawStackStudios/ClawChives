@@ -29,7 +29,7 @@ ClawChives/
 │
 ├── 🌐 server.js                     # Express REST API + SQLite backend
 │                                      Endpoints: bookmarks, folders, agent-keys
-│                                      Auth: hu- / ag- / api- key enforcement
+│                                      Auth: hu- / lb- / api- key enforcement
 │                                      DB: better-sqlite3 → /app/data/db.sqlite
 │
 └── src/
@@ -56,7 +56,7 @@ ClawChives/
     │   │   ├── SettingsPanel.tsx    # Settings tabbed layout
     │   │   ├── ProfileSettings.tsx  # Display name, avatar, email
     │   │   ├── AppearanceSettings.tsx # Theme, layout, items-per-page
-    │   │   └── AgentKeyGeneratorModal.tsx # ag- key creation with permissions
+    │   │   └── AgentKeyGeneratorModal.tsx # lb- key creation with permissions
     │   └── ui/                      # shadcn/ui base components
     │       ├── button.tsx
     │       ├── card.tsx
@@ -68,11 +68,9 @@ ClawChives/
     │   ├── index.ts                 # Barrel export
     │   ├── database/
     │   │   ├── adapter.ts           # ◀ IDatabaseAdapter interface (contract)
-    │   │   ├── DatabaseProvider.tsx # ◀ React context: resolves adapter by env var
-    │   │   ├── indexeddb/
-    │   │   │   └── IndexedDBAdapter.ts  # Wraps src/lib/indexedDB.ts
+    │   │   ├── DatabaseProvider.tsx # ◀ React context: resolves RestAdapter
     │   │   └── rest/
-    │   │       └── RestAdapter.ts       # fetch() → server.js (SQLite mode)
+    │   │       └── RestAdapter.ts   # fetch() → server.js (SQLite mode)
     │   ├── bookmarks/               # Bookmark CRUD operations
     │   ├── folders/                 # Folder management
     │   ├── agents/                  # Agent key operations
@@ -86,10 +84,6 @@ ClawChives/
     │   └── useAuth.ts               # Authentication state hook
     │
     ├── lib/
-    │   ├── indexedDB.ts             # Low-level IndexedDB API (stores, migrations)
-    │   │                              Stores: bookmarks, folders, tags, agent_keys,
-    │   │                                      user_keys, appearance_settings,
-    │   │                                      profile_settings, user
     │   ├── crypto.ts                # SHA-256 token hashing utilities
     │   ├── api.ts                   # API client helpers
     │   ├── exportImport.ts          # JSON bookmark import/export
@@ -116,20 +110,16 @@ graph LR
     end
 
     subgraph Adapters ["Adapter Layer"]
-        D[IndexedDBAdapter]
         E[RestAdapter]
     end
 
     subgraph Storage ["Storage Layer"]
-        F[(Browser IndexedDB)]
         G[(SQLite server)]
     end
 
     A --> B
     B --> C
-    C -->|INDEXEDDB| D
     C -->|SQLITE| E
-    D --> F
     E -->|HTTP + Bearer| G
 ```
 
@@ -143,8 +133,8 @@ graph LR
 1. **Separation of Concerns** — Components display. Hooks manage state. Services handle data. Adapters abstract storage.
 2. **Feature First** — All directories inside `components/` are nested by feature area (auth, dashboard, settings). No flat generic component soup.
 3. **No Monoliths** — Files are single-responsibility. A growing file is a signal to refactor.
-4. **Adapter Pattern** — The `IDatabaseAdapter` interface decouples the UI from storage. Components have zero knowledge of IndexedDB vs SQLite.
-5. **Auth is Always Client-Side** — Identity key validation always occurs in IndexedDB, regardless of database mode. The server never holds identity tokens.
+4. **Adapter Pattern** — The `IDatabaseAdapter` interface decouples the UI from storage.
+5. **Auth is Always Client-Side** — Identity key validation always occurs in the browser memory (`sessionStorage`) and `SetupWizard`. The server never holds the raw identity tokens.
 6. **Explicit State** — Navigation state and auth state are persisted in `sessionStorage` using namespaced keys (`cc_authenticated`, `cc_view`).
 
 </details>
@@ -163,7 +153,7 @@ classDiagram
     class AgentKey {
         +string id
         +string name
-        +string apiKey [ag-xxxxxxxx × 64]
+        +string apiKey [lb-xxxxxxxx × 64]
         +Permissions permissions
         +string expirationType
         +boolean isActive

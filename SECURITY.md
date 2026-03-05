@@ -29,7 +29,7 @@ ClawChives uses a **key-file identity system** — there are no passwords or acc
 | Prefix | Type | Scope | Storage |
 |---|---|---|---|
 | `hu-` | Human Identity Key | App login | Browser IndexedDB (SHA-256 hashed) |
-| `ag-` | Agent Key | Automated agent access | Server DB (`agent_keys` table) |
+| `lb-` | Agent Key | Automated agent access | Server DB (`agent_keys` table) |
 | `api-` | REST Token | API session access | Server DB (`api_tokens` table) |
 
 ---
@@ -37,23 +37,21 @@ ClawChives uses a **key-file identity system** — there are no passwords or acc
 ## 🔒 Security Practices
 
 <details>
-<summary>Client-Side (IndexedDB mode)</summary>
+<summary>Client-Side (Session Memory)</summary>
 
-- `hu-` tokens are **never stored in plaintext** — only their SHA-256 hash is saved in IndexedDB.
-- `sessionStorage` is used for session state (`cc_authenticated`, `cc_view`) — clears automatically on tab close.
-- No cookies. No third-party tracking. No remote analytics.
+- `hu-` tokens are **never stored in plaintext** and are never sent to the server.
+- The `hu-` string is immediately hashed on the client using SHA-256 and exchanged via `POST /api/auth/token` for a short-lived `api-` bearer token.
+- `sessionStorage` is used for session state (`cc_authenticated`, `cc_view`) — clears automatically on tab close to prevent token theft.
 
 </details>
 
 <details>
-<summary>Server-Side (SQLite mode)</summary>
+<summary>Server-Side (Express & SQLite)</summary>
 
-- The server **never receives** your `hu-` identity key. Auth validation always stays in the browser.
-- `ag-` and `api-` keys are validated server-side via the `Authorization: Bearer` header.
-- Revoked keys are rejected at the middleware layer before reaching any route handler.
-- Agent keys with `expirationType != "never"` are automatically rejected past their expiry date.
+- **`requireAuth`**: Validates the `api-` token via the SQLite `api_tokens` table. It immediately injects `req.agentPermissions` for downstream handlers based on whether the token belongs to a human or an `lb-` agent key.
+- **`requireHuman`**: Restricts sensitive configuration routes (`/api/settings`, `/api/agent-keys`) to human tokens only. Lobster keys cannot mutate system configuration.
+- **`requirePermission(action)`**: Generates strict locks (e.g., `canWrite`, `canDelete`) around all CRUD routes based on the Granular Custom permissions assigned to the underlying `lb-` key.
 - SQLite uses **WAL journal mode** and **foreign key enforcement** for data integrity.
-- `CORS_ORIGIN` environment variable restricts which origins can reach the API.
 
 </details>
 

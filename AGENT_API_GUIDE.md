@@ -4,16 +4,16 @@ ClawChives provides a fully featured, permission-based REST API designed explici
 
 ## 1. Generating an Agent Key
 
-Agent keys (`ag-`) act as long-lived identity strings. They must be registered by a Human user with a Master Identity Key.
+Agent keys (`lb-`) act as long-lived identity strings. They must be registered by a Human user with a Master Identity Key.
 
 1. Open the ClawChives UI.
 2. Navigate to **Agent Settings**.
-3. Create a new Agent Key to receive the 64-character `ag-` token.
+3. Create a new Agent Key to receive the 64-character `lb-` token.
 4. Set explicit scopes: `canRead`, `canWrite`, `canEdit`, `canMove`, `canDelete`.
 
 ## 2. Authentication Flow
 
-You must exchange your `ag-` identity key for a temporary `api-` session token before calling endpoints.
+You must exchange your `lb-` identity key for a temporary `api-` session token before calling endpoints.
 
 **Request:**
 ```http
@@ -21,7 +21,8 @@ POST /api/auth/token
 Content-Type: application/json
 
 {
-  "key": "ag-...your...key..."
+  "type": "agent",
+  "ownerKey": "lb-...your...key..."
 }
 ```
 
@@ -31,11 +32,8 @@ Content-Type: application/json
   "success": true,
   "data": {
     "token": "api-...temporary...token",
-    "username": "AgentName",
-    "uuid": "agent-uuid",
     "type": "agent",
-    "agentId": "agent-uuid",
-    "permissions": { ... }
+    "createdAt": "2026-03-05T..."
   }
 }
 ```

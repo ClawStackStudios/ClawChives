@@ -3,6 +3,7 @@
 import { saveUser } from "../users";
 import { saveProfileSettings } from "../settings";
 import { generateRandomString } from "../utils/database";
+import { generateUUID } from "../../lib/crypto";
 import type { User } from "../types";
 
 export interface SetupData {
@@ -12,7 +13,7 @@ export interface SetupData {
 }
 
 export async function setupNewUser(data: SetupData): Promise<User> {
-  const uuid = crypto.randomUUID();
+  const uuid = generateUUID();
   const publicKey = `pub_${generateRandomString(64)}`;
   
   const user: User = {

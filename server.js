@@ -1,5 +1,5 @@
 /**
- * ClawChives API Server — SQLite Edition
+ * ClawChives API Server — SQLite Edition (Multi-User)
  * ─────────────────────────────────────────────────────────────────────────────
  * Express REST API with persistent SQLite storage via better-sqlite3.
  *
@@ -7,7 +7,7 @@
  *
  * Key prefixes:
  *   hu-  Human identity keys   (login — validated client-side against IndexedDB)
- *   ag-  Agent keys            (generated in Settings → Agent Permissions)
+ *   lb-  Agent keys            (generated in Settings → Agent Permissions)
  *   api- REST API tokens       (issued by POST /api/auth/token)
  *
  * Run (local):
@@ -30,6 +30,16 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 import Database from "better-sqlite3";
+import helmet from "helmet";
+import { getCorsConfig } from "./src/config/corsConfig.js";
+import { createAuditLogger } from "./src/utils/auditLogger.js";
+import { scheduleTokenCleanup, calculateExpiry, checkTokenExpiry } from "./src/utils/tokenExpiry.js";
+import { authLimiter, apiLimiter, createAgentKeyRateLimiter } from "./src/middleware/rateLimiter.js";
+import { validateBody } from "./src/middleware/validate.js";
+import { AuthSchemas, BookmarkSchemas, FolderSchemas, AgentKeySchemas } from "./src/validation/schemas.js";
+import { errorHandler } from "./src/middleware/errorHandler.js";
+import { requirePermission, requireHuman } from "./src/middleware/permissionChecker.js";
+import { httpsRedirect } from "./src/middleware/httpsRedirect.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -48,6 +58,7 @@ db.pragma("foreign_keys = ON");
 
 // ─── Schema Migrations ────────────────────────────────────────────────────────
 
+// Step 1: Create base tables (safe on repeated runs)
 db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     uuid       TEXT PRIMARY KEY,
@@ -59,17 +70,17 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS api_tokens (
     key        TEXT PRIMARY KEY,
     owner_key  TEXT NOT NULL,
-    owner_type TEXT NOT NULL,  /* 'human' | 'agent' */
+    owner_type TEXT NOT NULL,
     created_at TEXT NOT NULL
   );
 
   CREATE TABLE IF NOT EXISTS bookmarks (
     id          TEXT PRIMARY KEY,
-    url         TEXT NOT NULL UNIQUE,
+    url         TEXT NOT NULL,
     title       TEXT NOT NULL,
     description TEXT DEFAULT '',
     favicon     TEXT DEFAULT '',
-    tags        TEXT DEFAULT '[]',  /* JSON array */
+    tags        TEXT DEFAULT '[]',
     folder_id   TEXT,
     starred     INTEGER DEFAULT 0,
     archived    INTEGER DEFAULT 0,
@@ -91,7 +102,7 @@ db.exec(`
     name            TEXT NOT NULL,
     description     TEXT,
     api_key         TEXT NOT NULL UNIQUE,
-    permissions     TEXT NOT NULL,  /* JSON */
+    permissions     TEXT NOT NULL,
     expiration_type TEXT NOT NULL,
     expiration_date TEXT,
     rate_limit      INTEGER,
@@ -102,29 +113,115 @@ db.exec(`
 
   CREATE TABLE IF NOT EXISTS settings (
     key   TEXT PRIMARY KEY,
-    value TEXT NOT NULL  /* JSON */
+    value TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS audit_logs (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    timestamp   TEXT NOT NULL,
+    event_type  TEXT NOT NULL,
+    actor       TEXT,
+    actor_type  TEXT,
+    resource    TEXT,
+    action      TEXT NOT NULL,
+    outcome     TEXT NOT NULL,
+    ip_address  TEXT,
+    user_agent  TEXT,
+    details     TEXT
   );
 `);
+
+// Step 2: Additive column migrations — safe to re-run on any schema version
+const runColumnMigration = (sql, desc) => {
+  try { db.exec(sql); console.log(`[DB Migration] ✅  ${desc}`); }
+  catch (e) { if (!e.message.includes("duplicate column")) throw e; }
+};
+
+runColumnMigration(
+  "ALTER TABLE bookmarks ADD COLUMN user_uuid TEXT NOT NULL DEFAULT ''",
+  "bookmarks.user_uuid"
+);
+runColumnMigration(
+  "ALTER TABLE folders ADD COLUMN user_uuid TEXT NOT NULL DEFAULT ''",
+  "folders.user_uuid"
+);
+runColumnMigration(
+  "ALTER TABLE agent_keys ADD COLUMN user_uuid TEXT NOT NULL DEFAULT ''",
+  "agent_keys.user_uuid"
+);
+runColumnMigration(
+  "ALTER TABLE settings ADD COLUMN user_uuid TEXT NOT NULL DEFAULT ''",
+  "settings.user_uuid"
+);
+
+// Security Hardening Migrations
+runColumnMigration("ALTER TABLE api_tokens ADD COLUMN expires_at TEXT", "api_tokens.expires_at");
+db.prepare("UPDATE api_tokens SET expires_at = datetime('now', '+90 days') WHERE expires_at IS NULL").run();
+
+runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoked_at TEXT", "agent_keys.revoked_at");
+runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoked_by TEXT", "agent_keys.revoked_by");
+runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoke_reason TEXT", "agent_keys.revoke_reason");
+
+// Step 3: Ensure composite unique index on bookmarks and settings (user_uuid scoping)
+db.exec(`
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_user_url ON bookmarks(user_uuid, url);
+  CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_user_key  ON settings(user_uuid, key);
+
+  -- Security Hardening Indexes
+  CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
+  CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit_logs(event_type);
+  CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor);
+  CREATE INDEX IF NOT EXISTS idx_audit_outcome ON audit_logs(outcome);
+  CREATE INDEX IF NOT EXISTS idx_api_tokens_key ON api_tokens(key);
+  CREATE INDEX IF NOT EXISTS idx_api_tokens_expires_at ON api_tokens(expires_at);
+  CREATE INDEX IF NOT EXISTS idx_agent_keys_api_key ON agent_keys(api_key);
+  CREATE INDEX IF NOT EXISTS idx_agent_keys_active ON agent_keys(is_active);
+`);
+
 
 console.log(`[DB] SQLite database at ${DB_PATH}`);
 
 // ─── App & Middleware ─────────────────────────────────────────────────────────
 
+export const audit = createAuditLogger(db);
+scheduleTokenCleanup(db);
+
 const app = express();
 const PORT = parseInt(process.env.PORT ?? "4242", 10);
 
-app.use(cors({
-  origin: process.env.CORS_ORIGIN ?? "*",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
+// Trust proxy (behind Docker/LB)
+app.set("trust proxy", 1);
+
+app.use(httpsRedirect);
+
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://fonts.gstatic.com"],
+      imgSrc: ["'self'", "data:", "https:"],
+      connectSrc: ["'self'", "wss:", "ws:"],
+    },
+  },
+  crossOriginEmbedderPolicy: false,
 }));
+
+app.use(cors(getCorsConfig()));
 app.use(express.json());
+
+app.use("/api", apiLimiter);
+// app.use("/api/auth", authLimiter); // MOVED TO SPECIFIC ROUTES BELOW
 
 // Request logger
 app.use((req, _res, next) => {
   console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
   next();
 });
+
+const agentRateLimiter = createAgentKeyRateLimiter(db);
+const humanOnly = requireHuman(db);
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
@@ -137,7 +234,7 @@ function generateId() { return crypto.randomUUID(); }
 
 function detectKeyType(key) {
   if (key?.startsWith("hu-")) return "human";
-  if (key?.startsWith("ag-")) return "agent";
+  if (key?.startsWith("lb-")) return "agent";
   if (key?.startsWith("api-")) return "api";
   return null;
 }
@@ -156,12 +253,13 @@ function parseBookmark(row) {
     folder_id: undefined,
     created_at: undefined,
     updated_at: undefined,
+    user_uuid: undefined,
   };
 }
 
 function parseFolder(row) {
   if (!row) return null;
-  return { ...row, parentId: row.parent_id, createdAt: row.created_at, parent_id: undefined, created_at: undefined };
+  return { ...row, parentId: row.parent_id, createdAt: row.created_at, parent_id: undefined, created_at: undefined, user_uuid: undefined };
 }
 
 function parseAgentKey(row) {
@@ -175,9 +273,10 @@ function parseAgentKey(row) {
     rateLimit: row.rate_limit,
     createdAt: row.created_at,
     lastUsed: row.last_used,
+    apiKey: row.api_key,
     // remove snake_case dupes
     is_active: undefined, expiration_type: undefined, expiration_date: undefined,
-    rate_limit: undefined, created_at: undefined, last_used: undefined,
+    rate_limit: undefined, created_at: undefined, last_used: undefined, user_uuid: undefined, api_key: undefined
   };
 }
 
@@ -193,8 +292,20 @@ function requireAuth(req, res, next) {
   const keyType = detectKeyType(key);
 
   if (!keyType) {
-    return res.status(401).json({ success: false, error: "Invalid key format — must use hu-, ag-, or api- prefix" });
+    return res.status(401).json({ success: false, error: "Invalid key format — must use hu-, lb-, or api- prefix" });
   }
+
+  let finalUserUuid = null;
+  let finalPermissions = null;
+
+  // Super-admin permissions for Human users
+  const HUMAN_PERMISSIONS = {
+    canRead: true,
+    canWrite: true,
+    canEdit: true,
+    canMove: true,
+    canDelete: true,
+  };
 
   // api- tokens must exist in DB
   if (keyType === "api") {
@@ -202,9 +313,32 @@ function requireAuth(req, res, next) {
     if (!row) {
       return res.status(401).json({ success: false, error: "Invalid or revoked API token" });
     }
+    // Check token expiration
+    if (!checkTokenExpiry(row.expires_at)) {
+      audit.log("AUTH_FAILURE", {
+        actor: row.owner_key,
+        action: "validate_token",
+        outcome: "failure",
+        resource: "api_token",
+        details: { reason: "Token expired" },
+      });
+      return res.status(401).json({
+        success: false,
+        error: "Token expired. Please authenticate again."
+      });
+    }
+    if (row.owner_type === "human") {
+      finalUserUuid = row.owner_key;
+      finalPermissions = HUMAN_PERMISSIONS;
+    } else if (row.owner_type === "agent") {
+      const agent = db.prepare("SELECT user_uuid, permissions FROM agent_keys WHERE api_key = ?").get(row.owner_key);
+      if (!agent) return res.status(401).json({ success: false, error: "Agent for this token no longer exists" });
+      finalUserUuid = agent.user_uuid;
+      finalPermissions = JSON.parse(agent.permissions || "{}");
+    }
   }
 
-  // ag- keys validated against agent_keys table
+  // lb- keys validated against agent_keys table
   if (keyType === "agent") {
     const row = db.prepare("SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1").get(key);
     if (!row) {
@@ -213,11 +347,21 @@ function requireAuth(req, res, next) {
     // Update last_used
     db.prepare("UPDATE agent_keys SET last_used = ? WHERE api_key = ?")
       .run(new Date().toISOString(), key);
+    finalUserUuid = row.user_uuid;
+    finalPermissions = JSON.parse(row.permissions || "{}");
+  }
+
+  if (!finalUserUuid) {
+    return res.status(401).json({ success: false, error: "Could not resolve user identity" });
   }
 
   req.apiKey = key;
   req.keyType = keyType;
-  next();
+  req.userUuid = finalUserUuid;
+  req.agentPermissions = finalPermissions || {};
+  
+  // Apply dynamic agent rate limiting
+  agentRateLimiter(req, res, next);
 }
 
 // ─── Health ───────────────────────────────────────────────────────────────────
@@ -229,85 +373,88 @@ app.get("/api/health", (_req, res) => {
     agentKeys: db.prepare("SELECT COUNT(*) as c FROM agent_keys WHERE is_active = 1").get().c,
   };
   res.json({
-    success: true, service: "ClawChives API", version: "2.0.0",
+    success: true, service: "ClawChives API", version: "2.1.0",
     mode: "sqlite", db: DB_PATH, uptime: process.uptime(), counts,
   });
 });
 
 // ─── Auth Routes ──────────────────────────────────────────────────────────────
 
-/** POST /api/auth/register — register the master human identity */
-app.post("/api/auth/register", (req, res) => {
+/** POST /api/auth/register — register a human identity */
+app.post("/api/auth/register", authLimiter, validateBody(AuthSchemas.register), (req, res) => {
   const { uuid, username, keyHash } = req.body;
-  if (!uuid || !username || !keyHash) {
-    return res.status(400).json({ success: false, error: "Missing identity data" });
+
+  try {
+    db.prepare("INSERT INTO users (uuid, username, key_hash, created_at) VALUES (?, ?, ?, ?)").run(
+      uuid, username, keyHash, new Date().toISOString()
+    );
+    audit.log("AUTH_REGISTER", { actor: uuid, actor_type: "human", action: "register", outcome: "success", resource: "user", details: { username, user_uuid: uuid }, ip_address: req.ip, user_agent: req.headers["user-agent"] });
+    res.status(201).json({ success: true });
+  } catch (err) {
+    if (err.message && err.message.includes("UNIQUE constraint failed: users.username")) {
+      return res.status(409).json({ success: false, error: "Username already taken." });
+    }
+    return res.status(409).json({ success: false, error: "Failed to register user." });
   }
-
-  // Enforce Sovereign single-human rule
-  const countRow = db.prepare("SELECT COUNT(*) as c FROM users").get();
-  if (countRow.c > 0) {
-    return res.status(409).json({ success: false, error: "A Sovereign identity is already registered on this database." });
-  }
-
-  db.prepare("INSERT INTO users (uuid, username, key_hash, created_at) VALUES (?, ?, ?, ?)").run(
-    uuid, username, keyHash, new Date().toISOString()
-  );
-
-  res.status(201).json({ success: true });
 });
 
-/** POST /api/auth/token — issue a REST api- token from a hu- hash or ag- key */
-app.post("/api/auth/token", (req, res) => {
+/** POST /api/auth/token — issue a REST api- token from a hu- hash or lb- key */
+app.post("/api/auth/token", authLimiter, validateBody(AuthSchemas.token), (req, res) => {
   const { type, uuid, keyHash, ownerKey } = req.body;
+  
+  const ttl = process.env.TOKEN_TTL_DEFAULT || "30d";
+  const expiresAt = calculateExpiry(ttl);
 
   if (type === "human") {
-    if (!uuid || !keyHash) return res.status(400).json({ success: false, error: "Missing human identity fields" });
-
-    // Verify against DB
     const user = db.prepare("SELECT * FROM users WHERE uuid = ?").get(uuid);
-    if (!user) return res.status(404).json({ success: false, error: "Identity not registered on this node" });
-    if (user.key_hash !== keyHash) return res.status(401).json({ success: false, error: "Invalid identity key" });
+    if (!user) {
+      audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"] });
+      return res.status(404).json({ success: false, error: "Identity not registered on this node" });
+    }
+    if (user.key_hash !== keyHash) {
+      audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"], details: { user_uuid: uuid } });
+      return res.status(401).json({ success: false, error: "Invalid identity key" });
+    }
 
     const token = `api-${generateString(32)}`;
-    db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at) VALUES (?, ?, ?, ?)").run(
-      token, user.uuid, "human", new Date().toISOString()
+    db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at, expires_at) VALUES (?, ?, ?, ?, ?)").run(
+      token, user.uuid, "human", new Date().toISOString(), expiresAt
     );
 
-    return res.status(201).json({ success: true, data: { token, type: "human", createdAt: new Date().toISOString() } });
+    audit.log("AUTH_SUCCESS", { actor: user.uuid, actor_type: "human", action: "login", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"] });
+    return res.status(201).json({ success: true, data: { token, type: "human", createdAt: new Date().toISOString(), expiresAt } });
   } else if (type === "agent" || (ownerKey && detectKeyType(ownerKey) === "agent")) {
     const agentKey = ownerKey;
-    if (!agentKey || !agentKey.startsWith("ag-")) return res.status(400).json({ success: false, error: "Invalid agent key" });
+    if (!agentKey || !agentKey.startsWith("lb-")) return res.status(400).json({ success: false, error: "Invalid agent key" });
 
-    // Verify Agent
     const agent = db.prepare("SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1").get(agentKey);
-    if (!agent) return res.status(401).json({ success: false, error: "Invalid or revoked agent key" });
+    if (!agent) {
+      audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "agent", ip_address: req.ip, user_agent: req.headers["user-agent"] });
+      return res.status(401).json({ success: false, error: "Invalid or revoked agent key" });
+    }
 
     const token = `api-${generateString(32)}`;
-    db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at) VALUES (?, ?, ?, ?)").run(
-      token, agentKey, "agent", new Date().toISOString()
+    db.prepare("INSERT INTO api_tokens (key, owner_key, owner_type, created_at, expires_at) VALUES (?, ?, ?, ?, ?)").run(
+      token, agentKey, "agent", new Date().toISOString(), expiresAt
     );
 
-    return res.status(201).json({ success: true, data: { token, type: "agent", createdAt: new Date().toISOString() } });
+    audit.log("AUTH_SUCCESS", { actor: agent.id, actor_type: "agent", action: "login", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"] });
+    return res.status(201).json({ success: true, data: { token, type: "agent", createdAt: new Date().toISOString(), expiresAt } });
   } else {
-    // Legacy fallback or invalid
-    const inferredType = detectKeyType(ownerKey);
-    if (inferredType === "human") {
-      return res.status(400).json({ success: false, error: "Client must supply keyHash for humans, not the raw ownerKey" });
-    }
     return res.status(400).json({ success: false, error: "Invalid authentication request" });
   }
 });
 
 /** GET /api/auth/validate */
 app.get("/api/auth/validate", requireAuth, (req, res) => {
-  res.json({ success: true, data: { valid: true, keyType: req.keyType } });
+  res.json({ success: true, data: { valid: true, keyType: req.keyType, userUuid: req.userUuid } });
 });
 
 // ─── Bookmarks ────────────────────────────────────────────────────────────────
 
-app.get("/api/bookmarks", requireAuth, (req, res) => {
-  let sql = "SELECT * FROM bookmarks WHERE 1=1";
-  const params = [];
+app.get("/api/bookmarks", requireAuth, requirePermission("canRead"), (req, res) => {
+  let sql = "SELECT * FROM bookmarks WHERE user_uuid = ?";
+  const params = [req.userUuid];
 
   if (req.query.starred === "true")  { sql += " AND starred = 1"; }
   if (req.query.archived === "true") { sql += " AND archived = 1"; }
@@ -323,24 +470,23 @@ app.get("/api/bookmarks", requireAuth, (req, res) => {
   res.json({ success: true, data: rows.map(parseBookmark) });
 });
 
-app.get("/api/bookmarks/:id", requireAuth, (req, res) => {
-  const row = db.prepare("SELECT * FROM bookmarks WHERE id = ?").get(req.params.id);
+app.get("/api/bookmarks/:id", requireAuth, requirePermission("canRead"), (req, res) => {
+  const row = db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Bookmark not found" });
   res.json({ success: true, data: parseBookmark(row) });
 });
 
-app.post("/api/bookmarks", requireAuth, (req, res) => {
+app.post("/api/bookmarks", requireAuth, requirePermission("canWrite"), validateBody(BookmarkSchemas.create), (req, res) => {
   const { url, title } = req.body;
-  if (!url)   return res.status(400).json({ success: false, error: "url is required" });
-  if (!title) return res.status(400).json({ success: false, error: "title is required" });
 
-  // Duplicate URL check
-  const existing = db.prepare("SELECT id, title FROM bookmarks WHERE url = ?").get(url);
+  // Duplicate URL check per user
+  const existing = db.prepare("SELECT id, title FROM bookmarks WHERE url = ? AND user_uuid = ?").get(url, req.userUuid);
   if (existing) return res.status(409).json({ success: false, error: `A bookmark for "${url}" already exists`, existing });
 
   const now = new Date().toISOString();
   const bookmark = {
     id:          req.body.id ?? generateId(),
+    user_uuid:   req.userUuid,
     url,
     title,
     description: req.body.description ?? "",
@@ -354,14 +500,23 @@ app.post("/api/bookmarks", requireAuth, (req, res) => {
     updated_at:  now,
   };
 
-  db.prepare(`INSERT INTO bookmarks (id,url,title,description,favicon,tags,folder_id,starred,archived,color,created_at,updated_at)
-    VALUES (@id,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@created_at,@updated_at)`).run(bookmark);
+  db.prepare(`INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,color,created_at,updated_at)
+    VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@created_at,@updated_at)`).run(bookmark);
 
-  res.status(201).json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ?").get(bookmark.id)) });
+  audit.log("BOOKMARK_CREATED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "create",
+    outcome: "success",
+    resource: "bookmark",
+    details: { bookmark_id: bookmark.id, title: bookmark.title },
+  });
+
+  res.status(201).json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(bookmark.id, req.userUuid)) });
 });
 
-app.put("/api/bookmarks/:id", requireAuth, (req, res) => {
-  const row = db.prepare("SELECT * FROM bookmarks WHERE id = ?").get(req.params.id);
+app.put("/api/bookmarks/:id", requireAuth, requirePermission("canEdit"), validateBody(BookmarkSchemas.update), (req, res) => {
+  const row = db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Bookmark not found" });
 
   const updated = {
@@ -376,124 +531,195 @@ app.put("/api/bookmarks/:id", requireAuth, (req, res) => {
     color:       req.body.color       !== undefined ? req.body.color : row.color,
     updated_at:  new Date().toISOString(),
     id:          req.params.id,
+    user_uuid:   req.userUuid,
   };
 
   db.prepare(`UPDATE bookmarks SET url=@url, title=@title, description=@description, favicon=@favicon, tags=@tags,
-    folder_id=@folder_id, starred=@starred, archived=@archived, color=@color, updated_at=@updated_at WHERE id=@id`)
+    folder_id=@folder_id, starred=@starred, archived=@archived, color=@color, updated_at=@updated_at WHERE id=@id AND user_uuid=@user_uuid`)
     .run(updated);
 
-  res.json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ?").get(req.params.id)) });
+  audit.log("BOOKMARK_UPDATED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "update",
+    outcome: "success",
+    resource: "bookmark",
+    details: { bookmark_id: req.params.id },
+  });
+
+  res.json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid)) });
 });
 
-app.delete("/api/bookmarks/:id", requireAuth, (req, res) => {
-  const info = db.prepare("DELETE FROM bookmarks WHERE id = ?").run(req.params.id);
+app.delete("/api/bookmarks/:id", requireAuth, requirePermission("canDelete"), (req, res) => {
+  const info = db.prepare("DELETE FROM bookmarks WHERE id = ? AND user_uuid = ?").run(req.params.id, req.userUuid);
   if (info.changes === 0) return res.status(404).json({ success: false, error: "Bookmark not found" });
+  audit.log("BOOKMARK_DELETED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "delete",
+    outcome: "success",
+    resource: "bookmark",
+    details: { bookmark_id: req.params.id },
+  });
   res.json({ success: true });
 });
 
-app.patch("/api/bookmarks/:id/star", requireAuth, (req, res) => {
-  const row = db.prepare("SELECT starred FROM bookmarks WHERE id = ?").get(req.params.id);
+app.patch("/api/bookmarks/:id/star", requireAuth, requirePermission("canEdit"), (req, res) => {
+  const row = db.prepare("SELECT starred FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Bookmark not found" });
-  db.prepare("UPDATE bookmarks SET starred = ?, updated_at = ? WHERE id = ?")
-    .run(row.starred ? 0 : 1, new Date().toISOString(), req.params.id);
-  res.json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ?").get(req.params.id)) });
+  const newStarred = row.starred ? 0 : 1;
+  db.prepare("UPDATE bookmarks SET starred = ?, updated_at = ? WHERE id = ? AND user_uuid = ?")
+    .run(newStarred, new Date().toISOString(), req.params.id, req.userUuid);
+  const result = parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid));
+  audit.log("BOOKMARK_STARRED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "update",
+    outcome: "success",
+    resource: "bookmark",
+    details: { bookmark_id: req.params.id, starred: result.starred },
+  });
+  res.json({ success: true, data: result });
 });
 
-app.patch("/api/bookmarks/:id/archive", requireAuth, (req, res) => {
-  const row = db.prepare("SELECT archived FROM bookmarks WHERE id = ?").get(req.params.id);
+app.patch("/api/bookmarks/:id/archive", requireAuth, requirePermission("canEdit"), (req, res) => {
+  const row = db.prepare("SELECT archived FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Bookmark not found" });
-  db.prepare("UPDATE bookmarks SET archived = ?, updated_at = ? WHERE id = ?")
-    .run(row.archived ? 0 : 1, new Date().toISOString(), req.params.id);
-  res.json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ?").get(req.params.id)) });
+  const newArchived = row.archived ? 0 : 1;
+  db.prepare("UPDATE bookmarks SET archived = ?, updated_at = ? WHERE id = ? AND user_uuid = ?")
+    .run(newArchived, new Date().toISOString(), req.params.id, req.userUuid);
+  const result = parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid));
+  audit.log("BOOKMARK_ARCHIVED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "update",
+    outcome: "success",
+    resource: "bookmark",
+    details: { bookmark_id: req.params.id, archived: result.archived },
+  });
+  res.json({ success: true, data: result });
 });
 
 // ─── Folders ──────────────────────────────────────────────────────────────────
 
-app.get("/api/folders", requireAuth, (req, res) => {
-  const rows = db.prepare("SELECT * FROM folders ORDER BY created_at ASC").all();
+app.get("/api/folders", requireAuth, requirePermission("canRead"), (req, res) => {
+  const rows = db.prepare("SELECT * FROM folders WHERE user_uuid = ? ORDER BY created_at ASC").all(req.userUuid);
   res.json({ success: true, data: rows.map(parseFolder) });
 });
 
-app.post("/api/folders", requireAuth, (req, res) => {
+app.post("/api/folders", requireAuth, requirePermission("canWrite"), validateBody(FolderSchemas.create), (req, res) => {
   const { name } = req.body;
-  if (!name) return res.status(400).json({ success: false, error: "name is required" });
-  const folder = { id: req.body.id ?? generateId(), name, parent_id: req.body.parentId ?? null, color: req.body.color ?? "#06b6d4", created_at: new Date().toISOString() };
-  db.prepare("INSERT INTO folders (id, name, parent_id, color, created_at) VALUES (@id, @name, @parent_id, @color, @created_at)").run(folder);
-  res.status(201).json({ success: true, data: parseFolder(db.prepare("SELECT * FROM folders WHERE id = ?").get(folder.id)) });
+  const folder = { id: req.body.id ?? generateId(), user_uuid: req.userUuid, name, parent_id: req.body.parentId ?? null, color: req.body.color ?? "#06b6d4", created_at: new Date().toISOString() };
+  db.prepare("INSERT INTO folders (id, user_uuid, name, parent_id, color, created_at) VALUES (@id, @user_uuid, @name, @parent_id, @color, @created_at)").run(folder);
+  audit.log("FOLDER_CREATED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "create",
+    outcome: "success",
+    resource: "folder",
+    details: { folder_id: folder.id, name: folder.name },
+  });
+  res.status(201).json({ success: true, data: parseFolder(db.prepare("SELECT * FROM folders WHERE id = ? AND user_uuid = ?").get(folder.id, req.userUuid)) });
 });
 
-app.put("/api/folders/:id", requireAuth, (req, res) => {
-  const row = db.prepare("SELECT * FROM folders WHERE id = ?").get(req.params.id);
+app.put("/api/folders/:id", requireAuth, requirePermission("canEdit"), validateBody(FolderSchemas.update), (req, res) => {
+  const row = db.prepare("SELECT * FROM folders WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Folder not found" });
-  const updated = { name: req.body.name ?? row.name, color: req.body.color ?? row.color, parent_id: req.body.parentId !== undefined ? req.body.parentId : row.parent_id, id: req.params.id };
-  db.prepare("UPDATE folders SET name=@name, color=@color, parent_id=@parent_id WHERE id=@id").run(updated);
-  res.json({ success: true, data: parseFolder(db.prepare("SELECT * FROM folders WHERE id = ?").get(req.params.id)) });
+  const updated = { name: req.body.name ?? row.name, color: req.body.color ?? row.color, parent_id: req.body.parentId !== undefined ? req.body.parentId : row.parent_id, id: req.params.id, user_uuid: req.userUuid };
+  db.prepare("UPDATE folders SET name=@name, color=@color, parent_id=@parent_id WHERE id=@id AND user_uuid=@user_uuid").run(updated);
+  audit.log("FOLDER_UPDATED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "update",
+    outcome: "success",
+    resource: "folder",
+    details: { folder_id: req.params.id },
+  });
+  res.json({ success: true, data: parseFolder(db.prepare("SELECT * FROM folders WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid)) });
 });
 
-app.delete("/api/folders/:id", requireAuth, (req, res) => {
-  const info = db.prepare("DELETE FROM folders WHERE id = ?").run(req.params.id);
+app.delete("/api/folders/:id", requireAuth, requirePermission("canDelete"), (req, res) => {
+  const info = db.prepare("DELETE FROM folders WHERE id = ? AND user_uuid = ?").run(req.params.id, req.userUuid);
   if (info.changes === 0) return res.status(404).json({ success: false, error: "Folder not found" });
+  audit.log("FOLDER_DELETED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "delete",
+    outcome: "success",
+    resource: "folder",
+    details: { folder_id: req.params.id },
+  });
   res.json({ success: true });
 });
 
 // ─── Agent Keys ───────────────────────────────────────────────────────────────
 
-app.get("/api/agent-keys", requireAuth, (req, res) => {
-  const rows = db.prepare("SELECT * FROM agent_keys ORDER BY created_at DESC").all();
+app.get("/api/agent-keys", requireAuth, humanOnly, (req, res) => {
+  const rows = db.prepare("SELECT * FROM agent_keys WHERE user_uuid = ? ORDER BY created_at DESC").all(req.userUuid);
   res.json({ success: true, data: rows.map(parseAgentKey) });
 });
 
-app.post("/api/agent-keys", requireAuth, (req, res) => {
+app.post("/api/agent-keys", requireAuth, humanOnly, validateBody(AgentKeySchemas.create), (req, res) => {
   const { name } = req.body;
-  if (!name) return res.status(400).json({ success: false, error: "name is required" });
 
-  // No duplicate active key names
-  const dup = db.prepare("SELECT id FROM agent_keys WHERE name = ? AND is_active = 1").get(name);
+  // No duplicate active key names per user
+  const dup = db.prepare("SELECT id FROM agent_keys WHERE name = ? AND is_active = 1 AND user_uuid = ?").get(name, req.userUuid);
   if (dup) return res.status(409).json({ success: false, error: `An active agent key named "${name}" already exists` });
+
+  let expDate = null;
+  if (req.body.expirationType && req.body.expirationType !== "never") {
+    expDate = calculateExpiry(req.body.expirationType);
+  }
 
   const key = {
     id: req.body.id ?? generateId(),
+    user_uuid: req.userUuid,
     name,
     description: req.body.description ?? null,
-    api_key: req.body.apiKey ?? `ag-${generateString(64)}`,
+    api_key: req.body.apiKey ?? `lb-${generateString(64)}`,
     permissions: JSON.stringify(req.body.permissions ?? {}),
     expiration_type: req.body.expirationType ?? "never",
-    expiration_date: req.body.expirationDate ?? null,
+    expiration_date: expDate,
     rate_limit: req.body.rateLimit ?? null,
     is_active: 1,
     created_at: new Date().toISOString(),
     last_used: null,
   };
 
-  db.prepare(`INSERT INTO agent_keys (id,name,description,api_key,permissions,expiration_type,expiration_date,rate_limit,is_active,created_at,last_used)
-    VALUES (@id,@name,@description,@api_key,@permissions,@expiration_type,@expiration_date,@rate_limit,@is_active,@created_at,@last_used)`).run(key);
+  db.prepare(`INSERT INTO agent_keys (id,user_uuid,name,description,api_key,permissions,expiration_type,expiration_date,rate_limit,is_active,created_at,last_used)
+    VALUES (@id,@user_uuid,@name,@description,@api_key,@permissions,@expiration_type,@expiration_date,@rate_limit,@is_active,@created_at,@last_used)`).run(key);
 
-  res.status(201).json({ success: true, data: parseAgentKey(db.prepare("SELECT * FROM agent_keys WHERE id = ?").get(key.id)) });
+  audit.log("AGENT_KEY_CREATED", { actor: req.userUuid, actor_type: "human", resource: key.id, action: "create", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"], details: { name: key.name } });
+
+  res.status(201).json({ success: true, data: parseAgentKey(db.prepare("SELECT * FROM agent_keys WHERE id = ? AND user_uuid = ?").get(key.id, req.userUuid)) });
 });
 
-app.patch("/api/agent-keys/:id/revoke", requireAuth, (req, res) => {
-  const info = db.prepare("UPDATE agent_keys SET is_active = 0 WHERE id = ?").run(req.params.id);
+app.patch("/api/agent-keys/:id/revoke", requireAuth, humanOnly, (req, res) => {
+  const now = new Date().toISOString();
+  const info = db.prepare("UPDATE agent_keys SET is_active = 0, revoked_at = ?, revoked_by = ? WHERE id = ? AND user_uuid = ?").run(now, req.userUuid, req.userUuid, req.params.id, req.userUuid);
   if (info.changes === 0) return res.status(404).json({ success: false, error: "Agent key not found" });
+  audit.log("AGENT_KEY_REVOKED", { actor: req.userUuid, actor_type: "human", resource: req.params.id, action: "revoke", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"] });
   res.json({ success: true });
 });
 
-app.delete("/api/agent-keys/:id", requireAuth, (req, res) => {
-  const info = db.prepare("DELETE FROM agent_keys WHERE id = ?").run(req.params.id);
+app.delete("/api/agent-keys/:id", requireAuth, humanOnly, (req, res) => {
+  const info = db.prepare("DELETE FROM agent_keys WHERE id = ? AND user_uuid = ?").run(req.params.id, req.userUuid);
   if (info.changes === 0) return res.status(404).json({ success: false, error: "Agent key not found" });
   res.json({ success: true });
 });
 
 // ─── Settings ─────────────────────────────────────────────────────────────────
 
-app.get("/api/settings/:key", requireAuth, (req, res) => {
-  const row = db.prepare("SELECT value FROM settings WHERE key = ?").get(req.params.key);
+app.get("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
+  const row = db.prepare("SELECT value FROM settings WHERE key = ? AND user_uuid = ?").get(req.params.key, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Setting not found" });
   res.json({ success: true, data: JSON.parse(row.value) });
 });
 
-app.put("/api/settings/:key", requireAuth, (req, res) => {
-  db.prepare("INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value=excluded.value")
-    .run(req.params.key, JSON.stringify(req.body));
+app.put("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
+  // Use INSERT OR REPLACE with the composite (user_uuid, key) unique index
+  db.prepare("INSERT OR REPLACE INTO settings (user_uuid, key, value) VALUES (?, ?, ?)")
+    .run(req.userUuid, req.params.key, JSON.stringify(req.body));
   res.json({ success: true });
 });
 
@@ -503,15 +729,12 @@ app.use((_req, res) => res.status(404).json({ success: false, error: "Route not 
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 
-app.use((err, _req, res, _next) => {
-  console.error("[Server Error]", err);
-  res.status(500).json({ success: false, error: err.message ?? "Internal server error" });
-});
+app.use(errorHandler);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
 
 app.listen(PORT, () => {
-  console.log(`\n🦞 ClawChives API (SQLite) running on port ${PORT}`);
+  console.log(`\n🦞 ClawChives API (SQLite - Multi-User) running on port ${PORT}`);
   console.log(`   Health:       http://localhost:${PORT}/api/health`);
   console.log(`   Issue token:  POST http://localhost:${PORT}/api/auth/token`);
   console.log(`   Database:     ${DB_PATH}\n`);

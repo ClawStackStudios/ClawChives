@@ -17,8 +17,20 @@ export interface User {
 type View = "landing" | "login" | "setup" | "dashboard" | "settings";
 
 function App() {
-  const [currentView, setCurrentView] = useState<View>("landing");
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [currentView, setCurrentView] = useState<View>(() => {
+    const savedView = sessionStorage.getItem("cc_view") as View;
+    if (savedView && ["dashboard", "settings"].includes(savedView)) {
+      return savedView;
+    }
+    return "landing";
+  });
+
+  const [currentUser, setCurrentUser] = useState<User | null>(() => {
+    const uuid = sessionStorage.getItem("cc_user_uuid");
+    const username = sessionStorage.getItem("cc_username");
+    return uuid && username ? { uuid, username } : null;
+  });
+
   const [showDatabaseModal, setShowDatabaseModal] = useState(false);
 
   const db = useDatabaseAdapter();
@@ -37,14 +49,28 @@ function App() {
       const savedView = sessionStorage.getItem("cc_view") as View;
 
       if (token && savedUUID && savedUsername) {
+        // 1. Immediately restore state from storage (no flash to landing)
         setCurrentUser({ uuid: savedUUID, username: savedUsername });
         if (savedView && ["dashboard", "settings"].includes(savedView)) {
           setCurrentView(savedView);
         } else {
           setCurrentView("dashboard");
         }
-        
-        // Sync theme with backend
+
+        // 2. Validate token in background (don't block the UI)
+        const apiUrl = ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL ?? "http://localhost:4242").replace(/\/$/, "");
+        fetch(`${apiUrl}/api/auth/validate`, {
+          headers: { Authorization: `Bearer ${token}` },
+        }).then(res => {
+          if (res.status === 401 || res.status === 403) {
+            handleLogout();
+          }
+        }).catch(() => {
+          // Network errors/429s shouldn't kill the session
+          console.warn("Background auth validation failed, but keeping session alive.");
+        });
+
+        // 3. Sync theme with backend
         try {
           if (db) {
             const settings = await db.getAppearanceSettings();
@@ -56,10 +82,7 @@ function App() {
           console.error("Failed to sync appearance settings:", e);
         }
       } else {
-        sessionStorage.removeItem("cc_api_token");
-        sessionStorage.removeItem("cc_user_uuid");
-        sessionStorage.removeItem("cc_username");
-        sessionStorage.removeItem("cc_view");
+        handleLogout();
       }
     } catch (error) {
       console.error("Auth check failed:", error);

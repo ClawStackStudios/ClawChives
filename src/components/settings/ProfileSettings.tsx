@@ -3,7 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { User, Mail, Save, Upload, X } from "lucide-react";
+import { User, Mail, Save, Upload, X, Download } from "lucide-react";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 
 export function ProfileSettings() {
@@ -74,9 +74,9 @@ export function ProfileSettings() {
 
   return (
     <div className="space-y-6">
-      <Card>
+      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
-          <CardTitle>Profile Settings</CardTitle>
+          <CardTitle className="text-cyan-600 dark:text-cyan-400">Profile Settings</CardTitle>
           <CardDescription>
             Manage your account information and preferences
           </CardDescription>
@@ -85,7 +85,7 @@ export function ProfileSettings() {
           {/* Avatar Section */}
           <div className="flex items-start gap-6">
             <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden border-4 border-white shadow-lg">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden border-4 border-red-500 shadow-lg">
                 {avatar ? (
                   <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -177,7 +177,7 @@ export function ProfileSettings() {
             <Button
               onClick={handleSaveProfile}
               disabled={isSaving}
-              className="ml-auto bg-cyan-700 hover:bg-cyan-800"
+              className="ml-auto bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
             >
               <Save className="w-4 h-4 mr-2" />
               {isSaving ? "Saving..." : "Save Changes"}
@@ -187,9 +187,9 @@ export function ProfileSettings() {
       </Card>
 
       {/* Account Info Card */}
-      <Card>
+      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
-          <CardTitle>Account Information</CardTitle>
+          <CardTitle className="text-cyan-600 dark:text-cyan-400">Account Information</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-3 text-sm">
@@ -206,6 +206,32 @@ export function ProfileSettings() {
               <span className="font-medium text-slate-900 dark:text-slate-50">
                 {new Date().toLocaleDateString()}
               </span>
+            </div>
+            
+            <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
+              <Button
+                variant="outline"
+                className="w-full text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+                onClick={() => {
+                  const identity = sessionStorage.getItem("cc_identity");
+                  if (identity) {
+                    const blob = new Blob([identity], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    a.download = "clawchives_identity_key.json";
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                  } else {
+                    alert("No identity found. Are you logged in?");
+                  }
+                }}
+              >
+                <Download className="w-4 h-4 mr-2" />
+                Download Identity Key
+              </Button>
             </div>
           </div>
         </CardContent>

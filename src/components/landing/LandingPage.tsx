@@ -296,7 +296,7 @@ export function LandingPage({ onCreateAccount, onLogin }: LandingPageProps) {
                       </p>
                       <p className="flex items-center">
                         <span className="w-5 h-5 flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md font-black mr-3 text-[10px] flex-shrink-0">2</span> 
-                        Exchange hashed <code className="mx-1 px-1 bg-slate-200 dark:bg-slate-800 rounded">ag-</code> key for API token
+                        Exchange hashed <code className="mx-1 px-1 bg-slate-200 dark:bg-slate-800 rounded">lb-</code> key for API token
                       </p>
                       <p className="flex items-center">
                         <span className="w-5 h-5 flex items-center justify-center bg-amber-100 dark:bg-amber-900/30 text-amber-600 dark:text-amber-400 rounded-md font-black mr-3 text-[10px] flex-shrink-0">3</span> 

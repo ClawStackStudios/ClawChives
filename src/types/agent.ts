@@ -1,6 +1,6 @@
 // Agent type definitions
 
-export type PermissionLevel = "READ" | "WRITE" | "EDIT" | "MOVE" | "FULL";
+export type PermissionLevel = "READ" | "WRITE" | "EDIT" | "MOVE" | "FULL" | "CUSTOM";
 
 export type ExpirationType = "never" | "30days" | "90days" | "1year" | "custom";
 
@@ -34,6 +34,7 @@ export interface AgentKeyFormData {
   expirationType: ExpirationType;
   customExpirationDate?: string;
   rateLimit: number;
+  customPermissions?: AgentPermission;
 }
 
 export const PERMISSION_CONFIGS: Record<PermissionLevel, AgentPermission> = {
@@ -76,6 +77,14 @@ export const PERMISSION_CONFIGS: Record<PermissionLevel, AgentPermission> = {
     canEdit: true,
     canMove: true,
     canDelete: true,
+  },
+  CUSTOM: {
+    level: "CUSTOM",
+    canRead: false,
+    canWrite: false,
+    canEdit: false,
+    canMove: false,
+    canDelete: false,
   },
 };
 
@@ -126,5 +135,13 @@ export const PERMISSION_INFO: Record<PermissionLevel, {
     bgColor: "bg-red-50",
     borderColor: "border-red-200",
     icon: "🔑",
+  },
+  CUSTOM: {
+    label: "Custom",
+    description: "Granular control over specific actions (Read, Write, Edit, Move, Delete).",
+    color: "text-slate-700",
+    bgColor: "bg-slate-50",
+    borderColor: "border-slate-300",
+    icon: "⚙️",
   },
 };

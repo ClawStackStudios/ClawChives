@@ -182,7 +182,7 @@ class ApiClient {
       // Check key type
       let keyType = "unknown";
       if (this.apiKey.startsWith("hu-")) keyType = "human";
-      else if (this.apiKey.startsWith("ag-")) keyType = "agent";
+      else if (this.apiKey.startsWith("lb-")) keyType = "agent";
       else if (this.apiKey.startsWith("api-")) keyType = "api";
 
       return {

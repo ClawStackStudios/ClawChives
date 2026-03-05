@@ -21,9 +21,11 @@ import {
   XCircle,
   Copy,
   Eye,
-  EyeOff
+  EyeOff,
+  Download
 } from "lucide-react";
 import { AgentKeyGeneratorModal } from "./AgentKeyGeneratorModal";
+import { ConfirmModal } from "../ui/LobsterModal";
 
 export function AgentPermissions() {
   const [agents, setAgents] = useState<AgentKey[]>([]);
@@ -31,6 +33,7 @@ export function AgentPermissions() {
   const [loading, setLoading] = useState(true);
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
   const [visibleKeys, setVisibleKeys] = useState<Set<string>>(new Set());
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   useEffect(() => {
     loadAgents();
@@ -49,13 +52,11 @@ export function AgentPermissions() {
   };
 
   const handleDelete = async (id: string) => {
-    if (confirm("Are you sure you want to delete this agent key? This action cannot be undone.")) {
-      try {
-        await deleteAgentKey(id);
-        await loadAgents();
-      } catch (error) {
-        console.error("Failed to delete agent key:", error);
-      }
+    try {
+      await deleteAgentKey(id);
+      await loadAgents();
+    } catch (error) {
+      console.error("Failed to delete agent key:", error);
     }
   };
 
@@ -69,9 +70,27 @@ export function AgentPermissions() {
   };
 
   const handleCopyKey = async (key: string, id: string) => {
-    await navigator.clipboard.writeText(key);
-    setCopiedKey(id);
-    setTimeout(() => setCopiedKey(null), 2000);
+    try {
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        await navigator.clipboard.writeText(key);
+      } else {
+        // Fallback for non-secure contexts (e.g., HTTP IP access)
+        const textArea = document.createElement("textarea");
+        textArea.value = key;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-999999px";
+        textArea.style.top = "-999999px";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+      }
+      setCopiedKey(id);
+      setTimeout(() => setCopiedKey(null), 2000);
+    } catch (err) {
+      console.error("Failed to copy key:", err);
+    }
   };
 
   const toggleKeyVisibility = (id: string) => {
@@ -86,7 +105,8 @@ export function AgentPermissions() {
     });
   };
 
-  const maskKey = (key: string) => {
+  const maskKey = (key: string | undefined) => {
+    if (!key) return "••••••••";
     if (key.length <= 8) return "••••••••";
     return `${key.slice(0, 4)}${"•".repeat(key.length - 8)}${key.slice(-4)}`;
   };
@@ -116,8 +136,8 @@ export function AgentPermissions() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Agent Keys</h3>
-          <p className="text-sm text-gray-600">
+          <h3 className="text-lg font-semibold text-amber-600 dark:text-amber-400">Lobster Keys</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-300">
             Manage API keys for external agents and automation
           </p>
         </div>
@@ -128,7 +148,7 @@ export function AgentPermissions() {
       </div>
 
       {agents.length === 0 ? (
-        <Card className="border-dashed">
+        <Card className="border-2 border-red-500/20 border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Key className="w-12 h-12 text-gray-400 mb-4" />
             <h4 className="text-lg font-medium text-gray-700 mb-2">No Agent Keys</h4>
@@ -144,16 +164,17 @@ export function AgentPermissions() {
       ) : (
         <div className="space-y-4">
           {agents.map((agent) => {
-            const permissionInfo = PERMISSION_INFO[agent.permissions.level];
+            const permissionInfo = PERMISSION_INFO[agent.permissions?.level] ?? PERMISSION_INFO["READ"];
             const expired = isExpired(agent);
             const isVisible = visibleKeys.has(agent.id);
+            const safeKey = agent.apiKey ?? "";
             
             return (
               <Card 
                 key={agent.id} 
-                className={`transition-all ${
+                className={`border-2 border-red-500/30 dark:border-red-500/50 transition-all ${
                   !agent.isActive || expired 
-                    ? "opacity-60 bg-gray-50" 
+                    ? "opacity-60 bg-gray-50 dark:bg-slate-900/50" 
                     : "hover:shadow-md"
                 }`}
               >
@@ -165,9 +186,9 @@ export function AgentPermissions() {
                       </div>
                       <div>
                         <div className="flex items-center gap-2">
-                          <h4 className="font-semibold text-gray-900">{agent.name}</h4>
+                          <h4 className="font-semibold text-slate-900 dark:text-slate-50">{agent.name}</h4>
                           {!agent.isActive && (
-                            <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-xs rounded-full">
+                            <span className="px-2 py-0.5 bg-gray-200 text-slate-600 dark:text-slate-300 text-xs rounded-full">
                               Revoked
                             </span>
                           )}
@@ -178,7 +199,7 @@ export function AgentPermissions() {
                           )}
                         </div>
                         {agent.description && (
-                          <p className="text-sm text-gray-600 mt-1">{agent.description}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{agent.description}</p>
                         )}
                       </div>
                     </div>
@@ -188,35 +209,35 @@ export function AgentPermissions() {
                           variant="outline"
                           size="sm"
                           onClick={() => handleRevoke(agent.id)}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-slate-50"
                         >
                           <XCircle className="w-4 h-4 mr-1" />
                           Revoke
                         </Button>
                       )}
                       <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(agent.id)}
-                        className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                variant="outline"
+                size="sm"
+                onClick={() => setConfirmDeleteId(agent.id)}
+                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
                     </div>
                   </div>
 
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center gap-2 text-sm">
                       <Shield className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">Permissions:</span>
+                      <span className="text-slate-600 dark:text-slate-300">Permissions:</span>
                       <span className={`font-medium ${permissionInfo.color}`}>
                         {permissionInfo.label}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 text-sm">
                       <Clock className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">Created:</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-slate-600 dark:text-slate-300">Created:</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-50">
                         {formatDate(agent.createdAt)}
                       </span>
                     </div>
@@ -225,8 +246,8 @@ export function AgentPermissions() {
                   {agent.expirationDate && (
                     <div className="flex items-center gap-2 text-sm mb-4">
                       <Clock className="w-4 h-4 text-gray-500" />
-                      <span className="text-gray-600">Expires:</span>
-                      <span className={`font-medium ${expired ? "text-red-600" : "text-gray-900"}`}>
+                      <span className="text-slate-600 dark:text-slate-300">Expires:</span>
+                      <span className={`font-medium ${expired ? "text-red-600" : "text-slate-900 dark:text-slate-50"}`}>
                         {formatDate(agent.expirationDate)}
                       </span>
                       {expired && (
@@ -237,8 +258,8 @@ export function AgentPermissions() {
 
                   {agent.rateLimit && (
                     <div className="flex items-center gap-2 text-sm mb-4">
-                      <span className="text-gray-600">Rate Limit:</span>
-                      <span className="font-medium text-gray-900">
+                      <span className="text-slate-600 dark:text-slate-300">Rate Limit:</span>
+                      <span className="font-medium text-slate-900 dark:text-slate-50">
                         {agent.rateLimit} req/min
                       </span>
                     </div>
@@ -247,9 +268,9 @@ export function AgentPermissions() {
                   <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
-                        <Key className="w-4 h-4 text-gray-500" />
-                        <code className={`text-sm font-mono ${isVisible ? "text-gray-900" : "text-gray-500"}`}>
-                          {isVisible ? agent.apiKey : maskKey(agent.apiKey)}
+                        <Key className="w-4 h-4 text-slate-500 dark:text-slate-400" />
+                        <code className={`text-sm font-mono ${isVisible ? "text-slate-900 dark:text-slate-50" : "text-slate-500 dark:text-slate-400"}`}>
+                          {isVisible ? safeKey : maskKey(safeKey)}
                         </code>
                       </div>
                       <div className="flex items-center gap-2">
@@ -268,7 +289,7 @@ export function AgentPermissions() {
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => handleCopyKey(agent.apiKey, agent.id)}
+                          onClick={() => handleCopyKey(safeKey, agent.id)}
                           className="h-8 w-8 p-0"
                         >
                           {copiedKey === agent.id ? (
@@ -276,6 +297,32 @@ export function AgentPermissions() {
                           ) : (
                             <Copy className="w-4 h-4 text-gray-500" />
                           )}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const keyData = {
+                              type: "agent_key",
+                              key: safeKey,
+                              id: agent.id,
+                              name: agent.name,
+                              createdAt: new Date().toISOString()
+                            };
+                            const blob = new Blob([JSON.stringify(keyData, null, 2)], { type: "application/json" });
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement("a");
+                            a.href = url;
+                            a.download = `lobster_key_${agent.name.replace(/\s+/g, '_').toLowerCase()}.json`;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url);
+                          }}
+                          className="h-8 w-8 p-0"
+                          title="Download Key"
+                        >
+                          <Download className="w-4 h-4 text-gray-500 hover:text-cyan-600" />
                         </Button>
                       </div>
                     </div>
@@ -291,6 +338,18 @@ export function AgentPermissions() {
         isOpen={isGeneratorOpen}
         onClose={() => setIsGeneratorOpen(false)}
         onKeyGenerated={loadAgents}
+      />
+
+      {/* Confirm Delete Modal */}
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => { if (confirmDeleteId) handleDelete(confirmDeleteId); }}
+        title="Delete Lobster Key?"
+        message="Are you sure you want to delete this Lobster Key? Any Lobsters using it will lose access. This cannot be undone."
+        confirmLabel="Delete Key"
+        cancelLabel="Keep it"
+        variant="danger"
       />
     </div>
   );

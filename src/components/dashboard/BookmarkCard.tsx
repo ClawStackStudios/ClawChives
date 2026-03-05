@@ -1,7 +1,8 @@
 import * as React from "react";
-import { Star, Archive, Trash2, ExternalLink, Clock } from "lucide-react";
+import { useState } from "react";
+import { Star, Archive, Trash2, Pencil, ExternalLink, Clock } from "lucide-react";
 import { Button } from "../ui/button";
-
+import { ConfirmModal } from "../ui/LobsterModal";
 import type { Bookmark } from "../../services/types";
 
 interface BookmarkCardProps {
@@ -56,21 +57,27 @@ function formatRelativeTime(dateString: string) {
   return date.toLocaleDateString();
 }
 
-export function BookmarkCard({ 
-  bookmark, 
-  onEdit, 
-  onDelete, 
-  onToggleStar, 
+export function BookmarkCard({
+  bookmark,
+  onEdit,
+  onDelete,
+  onToggleStar,
   onToggleArchive,
-  onDragStart
+  onDragStart,
 }: BookmarkCardProps) {
   const faviconUrl = getFaviconUrl(bookmark.url);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const handleCardClick = () => {
+    window.open(bookmark.url, "_blank", "noopener,noreferrer");
+  };
 
   return (
-    <div 
-      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:border-cyan-300 transition-all cursor-pointer"
+    <div
+      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-700 transition-all cursor-pointer"
       draggable={!!onDragStart}
       onDragStart={(e) => onDragStart?.(e, bookmark.id)}
+      onClick={handleCardClick}
     >
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -83,36 +90,40 @@ export function BookmarkCard({
           )}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 
-            className="font-semibold text-slate-900 dark:text-slate-50 truncate hover:text-cyan-700 transition-colors"
-            onClick={() => onEdit(bookmark)}
+          <h3
+            className="font-semibold text-slate-900 dark:text-slate-50 truncate group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors"
           >
             {bookmark.title || "Untitled"}
           </h3>
-          <a 
-            href={bookmark.url} 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-sm text-slate-500 dark:text-slate-400 truncate hover:text-cyan-600 flex items-center gap-1"
+          <span
+            className="text-sm text-slate-500 dark:text-slate-400 truncate hover:text-cyan-600 flex items-center gap-1 max-w-full"
             onClick={(e) => e.stopPropagation()}
           >
-            {bookmark.url}
-            <ExternalLink className="w-3 h-3" />
-          </a>
+            <a
+              href={bookmark.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="truncate hover:text-cyan-600 flex items-center gap-1"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {bookmark.url}
+              <ExternalLink className="w-3 h-3 flex-shrink-0" />
+            </a>
+          </span>
         </div>
       </div>
 
       {bookmark.description && (
-        <p 
+        <p
           className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2 mb-3"
-          onClick={() => onEdit(bookmark)}
+          onClick={(e) => e.stopPropagation()}
         >
           {bookmark.description}
         </p>
       )}
 
       {bookmark.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mb-3">
+        <div className="flex flex-wrap gap-1.5 mb-3" onClick={(e) => e.stopPropagation()}>
           {bookmark.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
@@ -129,13 +140,28 @@ export function BookmarkCard({
         </div>
       )}
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+      <div className="flex items-center justify-between pt-3 border-t border-slate-100 dark:border-slate-800">
         <div className="flex items-center gap-1 text-xs text-slate-400">
           <Clock className="w-3 h-3" />
           {formatRelativeTime(bookmark.createdAt)}
         </div>
 
         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+          {/* Edit */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="h-8 w-8 p-0 text-slate-400 hover:text-cyan-600"
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit(bookmark);
+            }}
+            title="Edit Pinchmark"
+          >
+            <Pencil className="w-4 h-4" />
+          </Button>
+
+          {/* Star */}
           <Button
             variant="ghost"
             size="sm"
@@ -144,9 +170,12 @@ export function BookmarkCard({
               e.stopPropagation();
               onToggleStar(bookmark);
             }}
+            title={bookmark.starred ? "Unstar" : "Star"}
           >
             <Star className={`w-4 h-4 ${bookmark.starred ? "fill-current" : ""}`} />
           </Button>
+
+          {/* Archive */}
           <Button
             variant="ghost"
             size="sm"
@@ -155,24 +184,38 @@ export function BookmarkCard({
               e.stopPropagation();
               onToggleArchive(bookmark);
             }}
+            title={bookmark.archived ? "Unarchive" : "Archive"}
           >
             <Archive className="w-4 h-4" />
           </Button>
+
+          {/* Delete */}
           <Button
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
             onClick={(e) => {
               e.stopPropagation();
-              if (confirm("Delete this bookmark?")) {
-                onDelete(bookmark.id);
-              }
+              setConfirmOpen(true);
             }}
+            title="Delete"
           >
             <Trash2 className="w-4 h-4" />
           </Button>
         </div>
       </div>
+
+      {/* Delete Confirm Modal */}
+      <ConfirmModal
+        isOpen={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        onConfirm={() => onDelete(bookmark.id)}
+        title="Delete Pinchmark?"
+        message={`Are you sure you want to delete "${bookmark.title || "Untitled"}"? This cannot be undone.`}
+        confirmLabel="Delete Pinchmark"
+        cancelLabel="Keep it"
+        variant="danger"
+      />
     </div>
   );
 }

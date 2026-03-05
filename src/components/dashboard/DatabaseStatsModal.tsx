@@ -3,6 +3,7 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { X, Database, FileText, Folder, Tag, Star, Archive, Trash2, Search } from "lucide-react";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
+import { ConfirmModal, AlertModal } from "../ui/LobsterModal";
 
 interface DatabaseStatsModalProps {
   isOpen: boolean;
@@ -14,6 +15,9 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
   const [searchQuery, setSearchQuery] = useState("");
   const [allBookmarks, setAllBookmarks] = useState<any[]>([]);
   const [filteredBookmarks, setFilteredBookmarks] = useState<any[]>([]);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [confirmClearAll, setConfirmClearAll] = useState(false);
+  const [alertNotImpl, setAlertNotImpl] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
@@ -78,26 +82,22 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
 
   const handleDeleteBookmark = async (id: string) => {
     if (!db) return;
-    if (confirm("Are you sure you want to delete this bookmark?")) {
-      await db.deleteBookmark(id);
-      await loadData();
-    }
+    await db.deleteBookmark(id);
+    await loadData();
   };
 
   const handleClearDatabase = async () => {
-    if (confirm("Are you sure you want to clear ALL data? This cannot be undone.")) {
-      // no-op for now; normally would reset sqlite DB
-      alert("Database clearing not implemented via REST on frontend yet.");
-      await loadData();
-    }
+    // No longer possible from frontend via REST currently
+    setAlertNotImpl(true);
+    await loadData();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
-        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+      <div className="bg-white dark:bg-slate-900 border-2 border-red-500/50 dark:border-red-500/70 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-red-500/30 dark:border-red-500/50">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-cyan-100 rounded-lg">
               <Database className="w-5 h-5 text-cyan-700" />
@@ -118,81 +118,81 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
           {stats && (
             <>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950 dark:to-cyan-900/40 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <FileText className="w-4 h-4 text-cyan-700" />
-                    <span className="text-sm font-medium text-cyan-900">Bookmarks</span>
+                    <FileText className="w-4 h-4 text-cyan-700 dark:text-cyan-400" />
+                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-400">Pinchmarks</span>
                   </div>
-                  <p className="text-3xl font-bold text-cyan-900">{stats.totalBookmarks}</p>
+                  <p className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{stats.totalBookmarks}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Folder className="w-4 h-4 text-amber-700" />
-                    <span className="text-sm font-medium text-amber-900">Folders</span>
+                    <Folder className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-amber-900 dark:text-amber-400">Pods</span>
                   </div>
-                  <p className="text-3xl font-bold text-amber-900">{stats.totalFolders}</p>
+                  <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats.totalFolders}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-purple-50 to-purple-100 border border-purple-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-950 dark:to-purple-900/40 border border-purple-200 dark:border-purple-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Tag className="w-4 h-4 text-purple-700" />
-                    <span className="text-sm font-medium text-purple-900">Unique Tags</span>
+                    <Tag className="w-4 h-4 text-purple-700 dark:text-purple-400" />
+                    <span className="text-sm font-medium text-purple-900 dark:text-purple-400">Unique Tags</span>
                   </div>
-                  <p className="text-3xl font-bold text-purple-900">{stats.uniqueTags}</p>
+                  <p className="text-3xl font-bold text-purple-600 dark:text-purple-400">{stats.uniqueTags}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border border-slate-200 dark:border-slate-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Database className="w-4 h-4 text-slate-700 dark:text-slate-300" />
-                    <span className="text-sm font-medium text-slate-900 dark:text-slate-50">Size</span>
+                    <Database className="w-4 h-4 text-slate-700 dark:text-slate-400" />
+                    <span className="text-sm font-medium text-slate-900 dark:text-slate-300">Size</span>
                   </div>
-                  <p className="text-3xl font-bold text-slate-900 dark:text-slate-50">{stats.totalSizeMB} MB</p>
+                  <p className="text-3xl font-bold text-slate-700 dark:text-slate-300">{stats.totalSizeMB} MB</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-amber-50 to-amber-100 border border-amber-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-amber-50 to-amber-100 dark:from-amber-950 dark:to-amber-900/40 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Star className="w-4 h-4 text-amber-700" />
-                    <span className="text-sm font-medium text-amber-900">Starred</span>
+                    <Star className="w-4 h-4 text-amber-700 dark:text-amber-400" />
+                    <span className="text-sm font-medium text-amber-900 dark:text-amber-400">Starred</span>
                   </div>
-                  <p className="text-3xl font-bold text-amber-900">{stats.starredCount}</p>
+                  <p className="text-3xl font-bold text-amber-600 dark:text-amber-400">{stats.starredCount}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 border border-cyan-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-cyan-50 to-cyan-100 dark:from-cyan-950 dark:to-cyan-900/40 border border-cyan-200 dark:border-cyan-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Archive className="w-4 h-4 text-cyan-700" />
-                    <span className="text-sm font-medium text-cyan-900">Archived</span>
+                    <Archive className="w-4 h-4 text-cyan-700 dark:text-cyan-400" />
+                    <span className="text-sm font-medium text-cyan-900 dark:text-cyan-400">Archived</span>
                   </div>
-                  <p className="text-3xl font-bold text-cyan-900">{stats.archivedCount}</p>
+                  <p className="text-3xl font-bold text-cyan-600 dark:text-cyan-400">{stats.archivedCount}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-green-50 to-green-100 dark:from-green-950 dark:to-green-900/40 border border-green-200 dark:border-green-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <Database className="w-4 h-4 text-green-700" />
-                    <span className="text-sm font-medium text-green-900">Keys</span>
+                    <Database className="w-4 h-4 text-green-700 dark:text-green-400" />
+                    <span className="text-sm font-medium text-green-900 dark:text-green-400">Keys</span>
                   </div>
-                  <p className="text-3xl font-bold text-green-900">{stats.totalKeys}</p>
+                  <p className="text-3xl font-bold text-green-600 dark:text-green-400">{stats.totalKeys}</p>
                 </div>
 
-                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-4">
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-950 dark:to-blue-900/40 border border-blue-200 dark:border-blue-800 rounded-xl p-4">
                   <div className="flex items-center gap-2 mb-2">
-                    <FileText className="w-4 h-4 text-blue-700" />
-                    <span className="text-sm font-medium text-blue-900">Settings</span>
+                    <FileText className="w-4 h-4 text-blue-700 dark:text-blue-400" />
+                    <span className="text-sm font-medium text-blue-900 dark:text-blue-400">Settings</span>
                   </div>
-                  <p className="text-3xl font-bold text-blue-900">{stats.totalSettings}</p>
+                  <p className="text-3xl font-bold text-blue-600 dark:text-blue-400">{stats.totalSettings}</p>
                 </div>
               </div>
 
               <div className="mb-6">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">All Bookmarks</h3>
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-50">All Pinchmarks</h3>
                   <div className="flex items-center gap-2">
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                       <Input
-                        placeholder="Search bookmarks..."
+                        placeholder="Search pinchmarks..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-10 w-64"
@@ -261,7 +261,7 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => handleDeleteBookmark(bookmark.id)}
+                              onClick={() => setConfirmDeleteId(bookmark.id)}
                               className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -274,7 +274,7 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
 
                   {filteredBookmarks.length === 0 && (
                     <div className="text-center py-12 text-slate-500 dark:text-slate-400">
-                      No bookmarks found
+                      No Pinchmarks found 🦞
                     </div>
                   )}
                 </div>
@@ -282,11 +282,11 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
 
               <div className="flex justify-between items-center pt-6 border-t border-slate-200 dark:border-slate-800">
                 <div className="text-sm text-slate-600 dark:text-slate-400">
-                  Showing {filteredBookmarks.length} of {stats.totalBookmarks} bookmarks
+                  Showing {filteredBookmarks.length} of {stats.totalBookmarks} Pinchmarks
                 </div>
                 <Button
                   variant="destructive"
-                  onClick={handleClearDatabase}
+                  onClick={() => setConfirmClearAll(true)}
                   className="bg-red-600 hover:bg-red-700"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -297,6 +297,39 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
           )}
         </div>
       </div>
+
+      {/* Delete Bookmark Confirm */}
+      <ConfirmModal
+        isOpen={!!confirmDeleteId}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => { if (confirmDeleteId) handleDeleteBookmark(confirmDeleteId); }}
+        title="Delete Pinchmark?"
+        message="Are you sure you want to delete this Pinchmark from the database?"
+        confirmLabel="Delete Pinchmark"
+        cancelLabel="Keep it"
+        variant="danger"
+      />
+
+      {/* Clear All Confirm */}
+      <ConfirmModal
+        isOpen={confirmClearAll}
+        onClose={() => setConfirmClearAll(false)}
+        onConfirm={handleClearDatabase}
+        title="Clear All Data?"
+        message="Are you sure you want to clear ALL database data? This cannot be undone."
+        confirmLabel="Clear Everything"
+        cancelLabel="Cancel"
+        variant="danger"
+      />
+
+      {/* Not Implemented Alert */}
+      <AlertModal
+        isOpen={alertNotImpl}
+        onClose={() => setAlertNotImpl(false)}
+        title="Not Available"
+        message="Database clearing is not yet implemented via REST API on the frontend."
+        variant="error"
+      />
     </div>
   );
 }

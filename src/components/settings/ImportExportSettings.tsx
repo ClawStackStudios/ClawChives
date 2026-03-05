@@ -3,13 +3,17 @@ import { Button } from "../ui/button";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
-import { Upload, FileText, Database, FileSpreadsheet, CheckCircle } from "lucide-react";
+import { Database, FileSpreadsheet, CheckCircle, Upload, FileText } from "lucide-react";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
+import { generateUUID } from "../../lib/crypto";
+import { ConfirmModal, AlertModal } from "../ui/LobsterModal";
 
 export function ImportExportSettings() {
   const [importFile, setImportFile] = useState<File | null>(null);
   const [isImporting, setIsImporting] = useState(false);
   const [importResult, setImportResult] = useState<{ success: boolean; message: string; count?: number } | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showPurgedAlert, setShowPurgedAlert] = useState(false);
 
   const db = useDatabaseAdapter();
 
@@ -49,7 +53,7 @@ export function ImportExportSettings() {
           starred: bookmark.starred || false,
           archived: bookmark.archived || false,
           createdAt: bookmark.createdAt || new Date().toISOString(),
-          id: crypto.randomUUID(),
+          id: generateUUID(),
           updatedAt: new Date().toISOString(),
         });
         count++;
@@ -121,9 +125,9 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${b.url}" ADD_DATE="${new Date(b.cre
   return (
     <div className="space-y-6">
       {/* Import Section */}
-      <Card>
+      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
-          <CardTitle>Import Bookmarks</CardTitle>
+          <CardTitle className="text-cyan-600 dark:text-cyan-400">Import Bookmarks</CardTitle>
           <CardDescription>
             Import bookmarks from JSON files or other bookmark managers
           </CardDescription>
@@ -139,11 +143,11 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${b.url}" ADD_DATE="${new Date(b.cre
                 onChange={handleFileSelect}
                 className="flex-1"
               />
-              <Button
-                onClick={handleImport}
-                disabled={!importFile || isImporting}
-                className="bg-cyan-700 hover:bg-cyan-800"
-              >
+                <Button
+                  onClick={handleImport}
+                  disabled={!importFile || isImporting}
+                  className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
+                >
                 <Upload className="w-4 h-4 mr-2" />
                 {isImporting ? "Importing..." : "Import"}
               </Button>
@@ -174,9 +178,9 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${b.url}" ADD_DATE="${new Date(b.cre
       </Card>
 
       {/* Export Section */}
-      <Card>
+      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
-          <CardTitle>Export Bookmarks</CardTitle>
+          <CardTitle className="text-cyan-600 dark:text-cyan-400">Export Bookmarks</CardTitle>
           <CardDescription>
             Download your bookmarks in various formats for backup or migration
           </CardDescription>
@@ -223,32 +227,48 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${b.url}" ADD_DATE="${new Date(b.cre
       </Card>
 
       {/* Danger Zone */}
-      <Card className="border-red-200">
+      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
-          <CardTitle className="text-red-700">Danger Zone</CardTitle>
+          <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
           <CardDescription>
             Irreversible actions that affect your data
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button
-            variant="outline"
-            onClick={async () => {
-              if (confirm("Are you sure you want to delete ALL bookmarks? This cannot be undone.")) {
-                // Get all bookmarks to clear them one by one since there is no native clear method
-                const allBookmarks = await db.getBookmarks();
-                for (const b of allBookmarks) {
-                    await db.deleteBookmark(b.id);
-                }
-                alert("All bookmarks have been deleted.");
-              }
-            }}
-            className="text-red-600 border-red-300 hover:bg-red-50"
-          >
-            Delete All Bookmarks
-          </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowDeleteConfirm(true)}
+              className="text-red-600 border-red-300 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              Delete All Pinchmarks
+            </Button>
         </CardContent>
       </Card>
+
+      {/* Delete All Confirm Modal */}
+      <ConfirmModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={async () => {
+          const allBookmarks = await db.getBookmarks();
+          for (const b of allBookmarks) { await db.deleteBookmark(b.id); }
+          setShowPurgedAlert(true);
+        }}
+        title="Purge All Pinchmarks?"
+        message="Are you sure you want to delete ALL Pinchmarks? This will remove every single pinch from the reef. This cannot be undone."
+        confirmLabel="Purge the Reef 🦞"
+        cancelLabel="Keep my Pinchmarks"
+        variant="danger"
+      />
+
+      {/* Purged Success Alert */}
+      <AlertModal
+        isOpen={showPurgedAlert}
+        onClose={() => setShowPurgedAlert(false)}
+        title="Reef Purged 🦞"
+        message="All Pinchmarks have been purged from the reef."
+        variant="info"
+      />
     </div>
   );
 }

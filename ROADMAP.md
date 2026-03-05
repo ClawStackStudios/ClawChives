@@ -19,7 +19,7 @@ gantt
     IndexedDB Auth System       :done,    p1c, 2026-03-03, 1d
     IndexedDB Fixes (index)     :done,    p1d, 2026-03-04, 1d
     section Phase 2 — Agent & API
-    Agent Key System (ag-)      :done,    p2a, 2026-03-04, 1d
+    Agent Key System (lb-)      :done,    p2a, 2026-03-04, 1d
     Identity Key Export (hu-)   :done,    p2b, 2026-03-04, 1d
     Session Persistence         :done,    p2c, 2026-03-04, 1d
     Dual Database Architecture  :done,    p2d, 2026-03-04, 1d
@@ -58,15 +58,15 @@ gantt
 <summary>View completed & in-progress items</summary>
 
 - [x] **Identity Key System** — `hu-` human keys with UUID + JSON export (`clawchives_identity_key.json`)
-- [x] **Agent Key System** — `ag-` agent keys with permission levels, expiry, and rate limits
-- [x] **IndexedDB Hardening** — Fixed index-not-found migrations; scan-based lookups for resilience
-- [x] **Session Persistence** — `sessionStorage` preserves auth + view state across browser refreshes
-- [x] **Dual Database Architecture** — `VITE_DATABASE=INDEXEDDB | SQLITE` env var toggles storage backend
-- [x] **REST API Server** (`server.js`) — Express + SQLite with full CRUD for bookmarks, folders, agent keys, settings
-- [x] **Docker Dual-Profile** — `indexeddb` and `sqlite` compose profiles
-- [ ] Full unit test suite for services layer
+- [x] **Agent Key System** — `lb-` agent keys with expiration, rate limits, and **granular CUSTOM permissions**
+- [x] **SQLite-Only Architecture** — Dropped IndexedDB entirely for a centralized robust SQLite backend
+- [x] **REST API Server** (`server.js`) — Express + SQLite mapped securely to user UUIDs
+- [x] **Strict API Middleware** — `requirePermission` rigidly enforces `canRead/Write/Delete/Move/Edit`
+- [x] **File Download Fallbacks** — Download Identity keys and individual Lobster keys cross-origin
+- [x] **Lobsterized UI Modals** — Brand-colored Confirm/Alert/Block modals replacing browser dialogs
+- [x] **Docker Dual-Profile** — `dev` and `api` compose profiles mapped to local volumes
 - [ ] Export/Import UI for bookmarks (JSON & CSV)
-- [x] Dark mode toggle in Appearance Settings
+- [x] Liquid Metal Dark mode toggle via View Transitions
 
 </details>
 
@@ -76,8 +76,7 @@ gantt
 
 - [ ] Comprehensive component unit tests (Vitest + React Testing Library)
 - [ ] End-to-end test suite (Playwright)
-- [ ] WebSocket-based real-time bookmark sync in SQLite mode
-- [ ] Background service worker for IndexedDB backups
+- [ ] WebSocket-based real-time bookmark sync SQLite
 - [ ] Vite bundle chunking optimisation
 - [ ] Progressive Web App (PWA) manifest + offline support
 - [ ] Bookmark favicon auto-fetch
@@ -89,8 +88,9 @@ gantt
 - [ ] Lobster News Network API integration
 - [ ] Browser extension (Chrome/Firefox) for one-click bookmarking
 - [ ] Multi-device sync via user-controlled relay server
-- [ ] Webhook support for `ag-` keys
+- [ ] Webhook support for `lb-` keys
 - [ ] Public read-only share links for bookmark collections
+- [ ] r.jina.ai integration for bookmark summarization in markdown for lobster parsing
 
 ---
 

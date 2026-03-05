@@ -23,7 +23,7 @@ export function DatabaseReset() {
       <div className="flex items-start gap-3">
         <AlertTriangle className="w-5 h-5 text-red-600 mt-0.5" />
         <div className="flex-1">
-          <h4 className="font-semibold text-red-900">Reset Database</h4>
+          <h4 className="font-semibold text-red-600 dark:text-red-400">Reset Database</h4>
           <p className="text-sm text-red-700 mt-1">
             This will delete all your bookmarks, folders, tags, and settings. 
             This action cannot be undone.
@@ -33,7 +33,7 @@ export function DatabaseReset() {
             <Button
               variant="destructive"
               size="sm"
-              className="mt-3"
+              className="mt-3 bg-red-600 hover:bg-red-700"
               onClick={() => setShowConfirm(true)}
             >
               Reset Database
@@ -60,6 +60,7 @@ export function DatabaseReset() {
                 size="sm"
                 onClick={() => setShowConfirm(false)}
                 disabled={isResetting}
+                className="border-slate-300 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800"
               >
                 Cancel
               </Button>
