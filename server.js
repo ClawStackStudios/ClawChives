@@ -189,7 +189,8 @@ console.log(`[DB] SQLite database at ${DB_PATH}`);
 export const audit = createAuditLogger(db);
 scheduleTokenCleanup(db);
 
-const app = express();
+export const app = express();
+export { db };
 const PORT = parseInt(process.env.PORT ?? "4242", 10);
 
 // Trust proxy (behind Docker/LB)
@@ -228,12 +229,12 @@ const humanOnly = requireHuman(db);
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
-function generateString(length) {
+export function generateString(length) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from(crypto.randomBytes(length), (b) => chars[b % chars.length]).join("");
 }
 
-function generateId() { return crypto.randomUUID(); }
+export function generateId() { return crypto.randomUUID(); }
 
 function detectKeyType(key) {
   if (key?.startsWith("hu-")) return "human";
@@ -338,8 +339,11 @@ function requireAuth(req, res, next) {
       finalPermissions = HUMAN_PERMISSIONS;
       actualKeyType = "human";
     } else if (row.owner_type === "agent") {
-      const agent = db.prepare("SELECT user_uuid, permissions FROM agent_keys WHERE api_key = ?").get(row.owner_key);
+      const agent = db.prepare("SELECT user_uuid, permissions, is_active FROM agent_keys WHERE api_key = ?").get(row.owner_key);
       if (!agent) return res.status(401).json({ success: false, error: "Agent for this token no longer exists" });
+      if (!agent.is_active) {
+          return res.status(401).json({ success: false, error: "Lobster Key Revoked, Are you art of this reef?" });
+      }
       finalUserUuid = agent.user_uuid;
       finalPermissions = JSON.parse(agent.permissions || "{}");
       actualKeyType = "agent";
@@ -350,7 +354,7 @@ function requireAuth(req, res, next) {
   if (keyType === "agent") {
     const row = db.prepare("SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1").get(key);
     if (!row) {
-      return res.status(401).json({ success: false, error: "Invalid or revoked agent key" });
+      return res.status(401).json({ success: false, error: "Lobster Key Revoked, Are you art of this reef?" });
     }
     // Update last_used
     db.prepare("UPDATE agent_keys SET last_used = ? WHERE api_key = ?")
@@ -757,7 +761,7 @@ app.post("/api/agent-keys", requireAuth, humanOnly, validateBody(AgentKeySchemas
 
 app.patch("/api/agent-keys/:id/revoke", requireAuth, humanOnly, (req, res) => {
   const now = new Date().toISOString();
-  const info = db.prepare("UPDATE agent_keys SET is_active = 0, revoked_at = ?, revoked_by = ? WHERE id = ? AND user_uuid = ?").run(now, req.userUuid, req.userUuid, req.params.id, req.userUuid);
+  const info = db.prepare("UPDATE agent_keys SET is_active = 0, revoked_at = ?, revoked_by = ? WHERE id = ? AND user_uuid = ?").run(now, req.userUuid, req.params.id, req.userUuid);
   if (info.changes === 0) return res.status(404).json({ success: false, error: "Agent key not found" });
   audit.log("AGENT_KEY_REVOKED", { actor: req.userUuid, actor_type: "human", resource: req.params.id, action: "revoke", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"] });
   res.json({ success: true });
@@ -784,9 +788,20 @@ app.put("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
   res.json({ success: true });
 });
 
+// ─── Static Files & Catch-All ─────────────────────────────────────────────────
+
+// Serve static frontend files from 'dist' in production
+const distPath = path.join(__dirname, "dist");
+app.use(express.static(distPath));
+
+// For any non-API route, send index.html (React Router)
+app.get(/^(?!\/api\/).*/, (req, res, next) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
+
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 
-app.use((_req, res) => res.status(404).json({ success: false, error: "Route not found" }));
+app.use("/api", (_req, res) => res.status(404).json({ success: false, error: "Route not found" }));
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 
