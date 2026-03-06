@@ -62,6 +62,7 @@ No cloud. No landlords. Your reef, your rules.
 - 🐳 **Docker-First** — fully containerized with named volume mounts for seamless self-hosting.
 - 🌊 **Liquid Metal Theming** — a stunning circular-reveal View Transition on every theme switch.
 - 🦞 **r.jina.ai Reading Mode** — transform Pinchmarks to LLM-friendly markdown on-demand.
+- 🐚 **Locked Shell UI** — A rigid, consistent interface layout that never shifts, ensuring a familiar "Reef" for both Humans and Agents.
 
 ---
 
