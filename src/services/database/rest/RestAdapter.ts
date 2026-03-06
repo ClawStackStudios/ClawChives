@@ -16,7 +16,8 @@
 import type { IDatabaseAdapter } from "../adapter";
 import type { Bookmark, Folder, AgentKey, AppearanceSettings, ProfileSettings } from "../../types";
 
-const API_BASE = ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL ?? "http://localhost:4242").replace(/\/$/, "");
+// @ts-ignore: Vite replaces this at build-time
+const API_BASE = (import.meta.env.VITE_API_URL || "http://localhost:4242").replace(/\/$/, "");
 
 class ApiError extends Error {
   constructor(public status: number, message: string) {

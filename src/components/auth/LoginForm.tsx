@@ -53,7 +53,8 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
       const keyHash = await hashToken(token);
 
       // 4. Exchange for API Token
-      const apiUrl = ((import.meta as unknown as { env: Record<string, string> }).env.VITE_API_URL ?? "http://localhost:4242").replace(/\/$/, "");
+      // @ts-ignore: Vite replaces this at build-time
+      const apiUrl = (import.meta.env.VITE_API_URL || "http://localhost:4242").replace(/\/$/, "");
       const tokenResponse = await fetch(`${apiUrl}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
