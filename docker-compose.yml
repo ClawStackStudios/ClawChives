@@ -32,6 +32,6 @@ services:
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4242/api/health"]
       interval: 15s
-      timeout: 5s
-      retries: 3
-      start_period: 5s
+      timeout: 10s
+      retries: 5
+      start_period: 15s
