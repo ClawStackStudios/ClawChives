@@ -72,6 +72,7 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
       sessionStorage.setItem("cc_api_token", data.token);
       sessionStorage.setItem("cc_username", username);
       sessionStorage.setItem("cc_user_uuid", uuid);
+      sessionStorage.setItem("cc_key_type", "human");
 
       // ✅ All checks passed - pass UUID to parent for session management
       onSuccess(uuid);

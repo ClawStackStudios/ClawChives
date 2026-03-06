@@ -295,7 +295,6 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             <DashboardView
               bookmarks={bookmarks}
               folders={folders}
-              onEdit={handleEditBookmark}
             />
           )}
           {activeTab === "tags" && (

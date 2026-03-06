@@ -1,5 +1,50 @@
 import { z } from "zod";
 
+// SSRF-protected jinaUrl validator
+const jinaUrlSchema = z.string()
+  .regex(/^https:\/\/r\.jina\.ai\//, "jinaUrl must start with https://r.jina.ai/")
+  .refine((val) => {
+    if (!val) return true; // Null/undefined allowed
+
+    try {
+      // Extract the wrapped URL
+      const wrappedUrl = val.replace(/^https:\/\/r\.jina\.ai\//, '');
+      const parsed = new URL(wrappedUrl);
+
+      // Block non-HTTP(S) protocols
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        return false;
+      }
+
+      const hostname = parsed.hostname.toLowerCase();
+
+      // Block localhost variants
+      if (['localhost', '127.0.0.1', '::1', '0.0.0.0'].includes(hostname)) {
+        return false;
+      }
+
+      // Block private IP ranges (RFC 1918)
+      if (hostname.match(/^10\./)) return false;  // 10.0.0.0/8
+      if (hostname.match(/^172\.(1[6-9]|2[0-9]|3[01])\./)) return false;  // 172.16.0.0/12
+      if (hostname.match(/^192\.168\./)) return false;  // 192.168.0.0/16
+
+      // Block link-local (AWS metadata, etc.)
+      if (hostname.match(/^169\.254\./)) return false;  // 169.254.0.0/16
+
+      // Block IPv6 private ranges
+      if (hostname.startsWith('fc') || hostname.startsWith('fd')) return false;  // fc00::/7
+      if (hostname.startsWith('fe80:')) return false;  // fe80::/10
+
+      return true;
+    } catch {
+      return false;  // Invalid URL format
+    }
+  }, {
+    message: "jinaUrl wraps an invalid, private, or blocked URL (localhost/internal IPs not allowed)"
+  })
+  .optional()
+  .nullable();
+
 export const AuthSchemas = {
   register: z.object({
     uuid: z.string().uuid(),
@@ -27,6 +72,7 @@ export const BookmarkSchemas = {
     archived: z.boolean().optional(),
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().nullable(),
     createdAt: z.string().datetime().optional(),
+    jinaUrl: jinaUrlSchema,
   }),
   update: z.object({
     url: z.string().url().optional(),
@@ -38,6 +84,7 @@ export const BookmarkSchemas = {
     starred: z.boolean().optional(),
     archived: z.boolean().optional(),
     color: z.string().regex(/^#[0-9A-Fa-f]{6}$/).optional().nullable(),
+    jinaUrl: jinaUrlSchema,
   }),
 };
 

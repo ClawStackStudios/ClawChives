@@ -13,6 +13,7 @@ export interface Bookmark {
   color?: string;
   createdAt: string;
   updatedAt: string;
+  jinaUrl?: string; // Stores https://r.jina.ai/{original_url} (fetched client-side)
 }
 
 export interface Folder {

@@ -67,6 +67,7 @@ export function BookmarkCard({
 }: BookmarkCardProps) {
   const faviconUrl = getFaviconUrl(bookmark.url);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number } | null>(null);
 
   const handleCardClick = () => {
     window.open(bookmark.url, "_blank", "noopener,noreferrer");
@@ -74,11 +75,50 @@ export function BookmarkCard({
 
   return (
     <div
-      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-700 transition-all cursor-pointer"
+      className="group bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-4 hover:shadow-lg hover:border-cyan-300 dark:hover:border-cyan-700 transition-all cursor-pointer relative"
       draggable={!!onDragStart}
       onDragStart={(e) => onDragStart?.(e, bookmark.id)}
       onClick={handleCardClick}
+      onContextMenu={(e) => {
+        e.preventDefault();
+        setContextMenu({ x: e.clientX, y: e.clientY });
+      }}
     >
+      {contextMenu && (
+        <>
+          <div 
+            className="fixed inset-0 z-50" 
+            onClick={(e) => { e.stopPropagation(); setContextMenu(null); }} 
+            onContextMenu={(e) => { e.preventDefault(); e.stopPropagation(); setContextMenu(null); }} 
+          />
+          <div
+            className="fixed z-[51] bg-white dark:bg-slate-900 border-2 border-red-500/50 dark:border-red-500/70 rounded-xl shadow-2xl py-2 min-w-[200px]"
+            style={{ top: contextMenu.y, left: contextMenu.x }}
+          >
+            <button
+              onClick={(e) => { e.stopPropagation(); setContextMenu(null); window.open(bookmark.url, '_blank', "noopener,noreferrer"); }}
+              className="w-full text-left px-4 py-2 text-sm text-slate-700 dark:text-slate-300 hover:bg-cyan-50 dark:hover:bg-cyan-900/30 hover:text-cyan-700 dark:hover:text-cyan-300 transition-colors"
+            >
+              🌐 Open URL
+            </button>
+            {bookmark.jinaUrl ? (
+              <button
+                onClick={(e) => { e.stopPropagation(); setContextMenu(null); window.open(bookmark.jinaUrl, '_blank', "noopener,noreferrer"); }}
+                className="w-full text-left px-4 py-2 text-sm text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium transition-colors border-t border-red-500/10 dark:border-red-500/20"
+              >
+                🦞 Open r.jina.ai Version
+              </button>
+            ) : (
+               <button
+                onClick={(e) => { e.stopPropagation(); setContextMenu(null); window.open(`https://r.jina.ai/${bookmark.url}`, '_blank', "noopener,noreferrer"); }}
+                className="w-full text-left px-4 py-2 text-sm text-amber-600 dark:text-amber-500 hover:bg-amber-50 dark:hover:bg-amber-900/30 font-medium transition-colors border-t border-red-500/10 dark:border-red-500/20"
+              >
+                🦞 Open in r.jina.ai
+              </button>
+            )}
+          </div>
+        </>
+      )}
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {faviconUrl ? (

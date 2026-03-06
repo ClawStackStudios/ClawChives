@@ -85,6 +85,7 @@ db.exec(`
     starred     INTEGER DEFAULT 0,
     archived    INTEGER DEFAULT 0,
     color       TEXT,
+    jina_url    TEXT DEFAULT NULL,
     created_at  TEXT NOT NULL,
     updated_at  TEXT NOT NULL
   );
@@ -161,10 +162,12 @@ db.prepare("UPDATE api_tokens SET expires_at = datetime('now', '+90 days') WHERE
 runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoked_at TEXT", "agent_keys.revoked_at");
 runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoked_by TEXT", "agent_keys.revoked_by");
 runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoke_reason TEXT", "agent_keys.revoke_reason");
+runColumnMigration("ALTER TABLE bookmarks ADD COLUMN jina_url TEXT", "bookmarks.jina_url");
 
 // Step 3: Ensure composite unique index on bookmarks and settings (user_uuid scoping)
 db.exec(`
   CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_user_url ON bookmarks(user_uuid, url);
+  CREATE INDEX IF NOT EXISTS idx_bookmarks_jina_url ON bookmarks(jina_url) WHERE jina_url IS NOT NULL;
   CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_user_key  ON settings(user_uuid, key);
 
   -- Security Hardening Indexes
@@ -202,7 +205,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data:", "https:"],
-      connectSrc: ["'self'", "wss:", "ws:"],
+      connectSrc: ["'self'", "wss:", "ws:", "https://r.jina.ai"],
     },
   },
   crossOriginEmbedderPolicy: false,
@@ -247,6 +250,7 @@ function parseBookmark(row) {
     starred: Boolean(row.starred),
     archived: Boolean(row.archived),
     folderId: row.folder_id,
+    jinaUrl: row.jina_url ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     // remove snake_case dupes
@@ -307,6 +311,8 @@ function requireAuth(req, res, next) {
     canDelete: true,
   };
 
+  let actualKeyType = keyType;
+
   // api- tokens must exist in DB
   if (keyType === "api") {
     const row = db.prepare("SELECT * FROM api_tokens WHERE key = ?").get(key);
@@ -330,11 +336,13 @@ function requireAuth(req, res, next) {
     if (row.owner_type === "human") {
       finalUserUuid = row.owner_key;
       finalPermissions = HUMAN_PERMISSIONS;
+      actualKeyType = "human";
     } else if (row.owner_type === "agent") {
       const agent = db.prepare("SELECT user_uuid, permissions FROM agent_keys WHERE api_key = ?").get(row.owner_key);
       if (!agent) return res.status(401).json({ success: false, error: "Agent for this token no longer exists" });
       finalUserUuid = agent.user_uuid;
       finalPermissions = JSON.parse(agent.permissions || "{}");
+      actualKeyType = "agent";
     }
   }
 
@@ -349,6 +357,7 @@ function requireAuth(req, res, next) {
       .run(new Date().toISOString(), key);
     finalUserUuid = row.user_uuid;
     finalPermissions = JSON.parse(row.permissions || "{}");
+    actualKeyType = "agent";
   }
 
   if (!finalUserUuid) {
@@ -356,7 +365,7 @@ function requireAuth(req, res, next) {
   }
 
   req.apiKey = key;
-  req.keyType = keyType;
+  req.keyType = actualKeyType;
   req.userUuid = finalUserUuid;
   req.agentPermissions = finalPermissions || {};
   
@@ -483,6 +492,14 @@ app.post("/api/bookmarks", requireAuth, requirePermission("canWrite"), validateB
   const existing = db.prepare("SELECT id, title FROM bookmarks WHERE url = ? AND user_uuid = ?").get(url, req.userUuid);
   if (existing) return res.status(409).json({ success: false, error: `A bookmark for "${url}" already exists`, existing });
 
+  // Check: Only humans can set jinaUrl
+  if (req.body.jinaUrl !== undefined && req.keyType !== 'human') {
+    return res.status(403).json({
+      success: false,
+      error: 'Agent keys cannot create bookmarks with r.jina.ai conversion. Only human users can set jinaUrl.'
+    });
+  }
+
   const now = new Date().toISOString();
   const bookmark = {
     id:          req.body.id ?? generateId(),
@@ -496,12 +513,13 @@ app.post("/api/bookmarks", requireAuth, requirePermission("canWrite"), validateB
     starred:     req.body.starred ? 1 : 0,
     archived:    req.body.archived ? 1 : 0,
     color:       req.body.color ?? null,
+    jina_url:    req.body.jinaUrl ?? null,
     created_at:  req.body.createdAt ?? now,
     updated_at:  now,
   };
 
-  db.prepare(`INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,color,created_at,updated_at)
-    VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@created_at,@updated_at)`).run(bookmark);
+  db.prepare(`INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,color,jina_url,created_at,updated_at)
+    VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@jina_url,@created_at,@updated_at)`).run(bookmark);
 
   audit.log("BOOKMARK_CREATED", {
     actor: req.userUuid,
@@ -512,12 +530,30 @@ app.post("/api/bookmarks", requireAuth, requirePermission("canWrite"), validateB
     details: { bookmark_id: bookmark.id, title: bookmark.title },
   });
 
+  if (req.body.jinaUrl && req.keyType === 'human') {
+    audit.log("bookmark_jina_conversion_set", {
+      actor: req.userUuid,
+      actor_type: req.keyType,
+      action: "create",
+      outcome: "success",
+      resource: "bookmark",
+      details: { bookmark_id: bookmark.id, jina_url: req.body.jinaUrl },
+    });
+  }
+
   res.status(201).json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(bookmark.id, req.userUuid)) });
 });
 
 app.put("/api/bookmarks/:id", requireAuth, requirePermission("canEdit"), validateBody(BookmarkSchemas.update), (req, res) => {
   const row = db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Bookmark not found" });
+
+  if (req.body.jinaUrl !== undefined && req.keyType !== 'human') {
+    return res.status(403).json({
+      success: false,
+      error: 'Agent keys cannot set r.jina.ai conversion. Only human users can manage jinaUrl.'
+    });
+  }
 
   const updated = {
     url:         req.body.url         ?? row.url,
@@ -529,13 +565,14 @@ app.put("/api/bookmarks/:id", requireAuth, requirePermission("canEdit"), validat
     starred:     req.body.starred     !== undefined ? (req.body.starred ? 1 : 0) : row.starred,
     archived:    req.body.archived    !== undefined ? (req.body.archived ? 1 : 0) : row.archived,
     color:       req.body.color       !== undefined ? req.body.color : row.color,
+    jina_url:    req.body.jinaUrl     !== undefined ? req.body.jinaUrl : row.jina_url,
     updated_at:  new Date().toISOString(),
     id:          req.params.id,
     user_uuid:   req.userUuid,
   };
 
   db.prepare(`UPDATE bookmarks SET url=@url, title=@title, description=@description, favicon=@favicon, tags=@tags,
-    folder_id=@folder_id, starred=@starred, archived=@archived, color=@color, updated_at=@updated_at WHERE id=@id AND user_uuid=@user_uuid`)
+    folder_id=@folder_id, starred=@starred, archived=@archived, color=@color, jina_url=@jina_url, updated_at=@updated_at WHERE id=@id AND user_uuid=@user_uuid`)
     .run(updated);
 
   audit.log("BOOKMARK_UPDATED", {
@@ -546,6 +583,17 @@ app.put("/api/bookmarks/:id", requireAuth, requirePermission("canEdit"), validat
     resource: "bookmark",
     details: { bookmark_id: req.params.id },
   });
+
+  if (req.body.hasOwnProperty("jinaUrl") && req.keyType === 'human' && req.body.jinaUrl !== row.jina_url) {
+    audit.log("bookmark_jina_conversion_set", {
+      actor: req.userUuid,
+      actor_type: req.keyType,
+      action: "update",
+      outcome: "success",
+      resource: "bookmark",
+      details: { bookmark_id: req.params.id, jina_url: req.body.jinaUrl },
+    });
+  }
 
   res.json({ success: true, data: parseBookmark(db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid)) });
 });

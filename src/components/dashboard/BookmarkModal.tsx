@@ -45,6 +45,7 @@ function getTagColor(tag: string) {
 
 export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFoldersRefresh }: BookmarkModalProps) {
   const db = useDatabaseAdapter();
+  const userKeyType = sessionStorage.getItem("cc_key_type") || "unknown";
 
   const [url, setUrl] = useState("");
   const [title, setTitle] = useState("");
@@ -56,6 +57,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
   const [archived, setArchived] = useState(false);
   const [pinned, setPinned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [jinaConversion, setJinaConversion] = useState(false);
 
   useEffect(() => {
     if (bookmark) {
@@ -66,6 +68,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
       setSelectedFolder(bookmark.folderId || "");
       setStarred(bookmark.starred);
       setArchived(bookmark.archived);
+      setJinaConversion(!!bookmark.jinaUrl);
       // Detect if currently in Pinned folder
       const isPinnedFolder = folders.find((f) => f.name === "Pinned" && f.id === bookmark.folderId);
       setPinned(!!isPinnedFolder);
@@ -84,6 +87,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
     setStarred(false);
     setArchived(false);
     setPinned(false);
+    setJinaConversion(false);
   };
 
   const handleAddTag = () => {
@@ -139,6 +143,16 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
       }
     }
 
+    let finalJinaUrl = undefined;
+    if (jinaConversion && url.trim()) {
+      try {
+        new URL(url.trim());
+        finalJinaUrl = `https://r.jina.ai/${url.trim()}`;
+      } catch {
+        console.error("Invalid URL format for r.jina");
+      }
+    }
+
     const bookmarkData: Bookmark = bookmark ? {
       ...bookmark,
       url: url.trim(),
@@ -148,6 +162,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
       folderId: finalFolderId,
       starred,
       archived,
+      jinaUrl: finalJinaUrl !== undefined ? finalJinaUrl : bookmark?.jinaUrl,
       updatedAt: now,
     } : {
       id: generateUUID(),
@@ -158,6 +173,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
       folderId: finalFolderId,
       starred,
       archived,
+      jinaUrl: finalJinaUrl,
       createdAt: now,
       updatedAt: now,
     };
@@ -300,6 +316,22 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
               </div>
             )}
           </div>
+
+          {/* r.jina.ai Conversion (Human-only) */}
+          {userKeyType === 'human' && (
+            <div className="flex items-center gap-2 pt-4 border-t border-red-500/20 dark:border-red-500/30">
+              <input
+                type="checkbox"
+                id="jinaConversion"
+                checked={jinaConversion}
+                onChange={(e) => setJinaConversion(e.target.checked)}
+                className="w-4 h-4 text-cyan-600 rounded focus:ring-cyan-500"
+              />
+              <label htmlFor="jinaConversion" className="text-sm font-medium text-amber-600 dark:text-amber-500">
+                🦞 r.jina.ai Conversion (on-demand fetch)
+              </label>
+            </div>
+          )}
 
           {/* Checkboxes: Starred / Archived / Pinned */}
           <div className="flex flex-wrap gap-4 pt-4 border-t border-red-500/20 dark:border-red-500/30">

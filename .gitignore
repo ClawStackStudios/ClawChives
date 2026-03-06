@@ -34,3 +34,5 @@ clawchives_identity_key.json
 docker-compose.dev.yml
 
 security-audit-implementation/
+r.jina-feature-implementation/
+skill-creator/

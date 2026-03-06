@@ -5,7 +5,6 @@ import type { Bookmark as BookmarkType, Folder } from "../../services/types";
 interface DashboardViewProps {
   bookmarks: BookmarkType[];
   folders: Folder[];
-  onEdit: (b: BookmarkType) => void;
 }
 
 function getFaviconUrl(url: string) {
@@ -41,12 +40,10 @@ function MiniCard({ bookmark, onClick }: { bookmark: BookmarkType; onClick: () =
 function ScrollSection({
   title,
   items,
-  onEdit,
   emptyText,
 }: {
   title: string;
   items: BookmarkType[];
-  onEdit: (b: BookmarkType) => void;
   emptyText: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
@@ -102,7 +99,7 @@ function ScrollSection({
   );
 }
 
-export function DashboardView({ bookmarks, folders, onEdit }: DashboardViewProps) {
+export function DashboardView({ bookmarks, folders }: DashboardViewProps) {
   const allTags = [...new Set(bookmarks.flatMap((b) => b.tags))];
   const pinnedFolder = folders.find((f) => f.name === "Pinned");
 
@@ -139,19 +136,16 @@ export function DashboardView({ bookmarks, folders, onEdit }: DashboardViewProps
       <ScrollSection
         title="🕐 Recently Pinched"
         items={recent}
-        onEdit={onEdit}
         emptyText="No Pinchmarks yet — go pinch something!"
       />
       <ScrollSection
         title="📌 Top Pins"
         items={pins}
-        onEdit={onEdit}
         emptyText="No Pins yet — pin a Pinchmark to see it here"
       />
       <ScrollSection
         title="⭐ Favorites"
         items={favorites}
-        onEdit={onEdit}
         emptyText="Star a Pinchmark to add it to Favorites"
       />
     </div>

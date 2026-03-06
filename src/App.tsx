@@ -62,9 +62,14 @@ function App() {
         const apiUrl = (import.meta.env.VITE_API_URL || "http://localhost:4242").replace(/\/$/, "");
         fetch(`${apiUrl}/api/auth/validate`, {
           headers: { Authorization: `Bearer ${token}` },
-        }).then(res => {
+        }).then(async (res) => {
           if (res.status === 401 || res.status === 403) {
             handleLogout();
+          } else if (res.ok) {
+            const data = await res.json();
+            if (data.data?.keyType) {
+              sessionStorage.setItem("cc_key_type", data.data.keyType);
+            }
           }
         }).catch(() => {
           // Network errors/429s shouldn't kill the session
@@ -127,6 +132,7 @@ function App() {
     sessionStorage.removeItem("cc_api_token");
     sessionStorage.removeItem("cc_user_uuid");
     sessionStorage.removeItem("cc_username");
+    sessionStorage.removeItem("cc_key_type");
     sessionStorage.removeItem("cc_view");
     setCurrentUser(null);
     setCurrentView("landing");

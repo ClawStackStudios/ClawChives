@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui
 import { Palette, Layout, Grid, List, Sun, Moon, Monitor } from "lucide-react";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 
-import { useTheme, type Theme } from "../theme-provider";
+import { useTheme } from "../theme-provider";
 
 type Layout = "grid" | "list" | "masonry";
 
