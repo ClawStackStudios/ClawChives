@@ -866,8 +866,14 @@ docker-compose.yml     → Deployment config (env vars, volumes)
 4. Constant-time comparison for auth tokens
 5. sessionStorage for api- tokens (never localStorage)
 6. Vite env replacement: MUST use exact string import.meta.env.VITE_API_URL with // @ts-ignore
-7. CORS_ORIGIN must allow BOTH LAN IPs and reverse proxy domains
+7. CORS is intentionally open (allow-all): ClawChives is a LAN self-hosted app.
+   Users access from arbitrary LAN IPs — restricting CORS breaks the app.
+   DO NOT add CORS_ORIGIN defaults. Only document the opt-in restriction for reverse-proxy setups.
 8. Healthcheck start_period >= 15s (SQLite initialization time)
+9. jinaUrl/jina content IS exposed to agent keys on GET /api/bookmarks.
+   Agents legitimately need r.jina.ai content for automated processing.
+   Only WRITE operations (POST/PUT jinaUrl) are blocked for agents.
+   DO NOT strip jina fields from GET responses.
 ```
 
 ---

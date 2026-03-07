@@ -492,24 +492,13 @@ app.get("/api/bookmarks", requireAuth, requirePermission("canRead"), (req, res) 
 
   sql += " ORDER BY created_at DESC";
   const rows = db.prepare(sql).all(...params);
-  const results = rows.map(parseBookmark);
-  // Strip r.jina.ai fields from agent responses (human-only feature)
-  if (req.keyType === "agent") {
-    res.json({ success: true, data: results.map(({ jinaUrl, ...b }) => b) });
-  } else {
-    res.json({ success: true, data: results });
-  }
+  res.json({ success: true, data: rows.map(parseBookmark) });
 });
 
 app.get("/api/bookmarks/:id", requireAuth, requirePermission("canRead"), (req, res) => {
   const row = db.prepare("SELECT * FROM bookmarks WHERE id = ? AND user_uuid = ?").get(req.params.id, req.userUuid);
   if (!row) return res.status(404).json({ success: false, error: "Bookmark not found" });
-  const bookmark = parseBookmark(row);
-  if (req.keyType === "agent") {
-    const { jinaUrl, ...agentBookmark } = bookmark;
-    return res.json({ success: true, data: agentBookmark });
-  }
-  res.json({ success: true, data: bookmark });
+  res.json({ success: true, data: parseBookmark(row) });
 });
 
 app.post("/api/bookmarks", requireAuth, requirePermission("canWrite"), validateBody(BookmarkSchemas.create), (req, res) => {
