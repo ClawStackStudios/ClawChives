@@ -12,10 +12,11 @@ services:
       - NODE_ENV=production
       - PORT=4545
       - DATA_DIR=/app/data
-      # CORS_ORIGIN restricts which origins can access the API. Set this to your deployment origin.
-      # Examples: http://192.168.1.5:4545  |  https://bookmarks.yourdomain.com
-      # NEVER leave unset in production — defaults to allow-all if omitted.
-      - CORS_ORIGIN=http://localhost:4545
+      # CORS_ORIGIN is intentionally unset to allow all origins.
+      # ClawChives is a LAN self-hosted app — users access from any LAN IP.
+      # See CLAUDE.md: intentional open-CORS design constraint.
+      # Uncomment ONLY to restrict to a specific origin (e.g. behind a public reverse proxy):
+      # - CORS_ORIGIN=https://bookmarks.yourdomain.com
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4545/api/health"]
       interval: 15s
