@@ -817,11 +817,17 @@ app.put("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
 
 // Serve static frontend files from 'dist' in production
 const distPath = path.join(__dirname, "dist");
+console.log("🦞 [Server] Serving static files from:", distPath);
+console.log("🦞 [Server] dist/ exists:", fs.existsSync(distPath));
+console.log("🦞 [Server] index.html exists:", fs.existsSync(path.join(distPath, "index.html")));
+
 app.use(express.static(distPath));
 
 // For any non-API route, send index.html (React Router)
 app.get(/^(?!\/api\/).*/, (req, res, next) => {
-  res.sendFile(path.join(distPath, "index.html"));
+  const indexPath = path.join(distPath, "index.html");
+  console.log("🦞 [Server] SPA Fallback:", req.path, "→", indexPath);
+  res.sendFile(indexPath);
 });
 
 // ─── 404 ──────────────────────────────────────────────────────────────────────
