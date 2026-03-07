@@ -616,6 +616,19 @@ app.delete("/api/bookmarks/:id", requireAuth, requirePermission("canDelete"), (r
   res.json({ success: true });
 });
 
+app.delete("/api/folders", requireAuth, requirePermission("canDelete"), (req, res) => {
+  const info = db.prepare("DELETE FROM folders WHERE user_uuid = ?").run(req.userUuid);
+  audit.log("FOLDERS_PURGED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "delete",
+    outcome: "success",
+    resource: "folder",
+    details: { count: info.changes },
+  });
+  res.json({ success: true, count: info.changes });
+});
+
 app.delete("/api/bookmarks", requireAuth, requirePermission("canDelete"), (req, res) => {
   const info = db.prepare("DELETE FROM bookmarks WHERE user_uuid = ?").run(req.userUuid);
   audit.log("BOOKMARKS_PURGED", {
@@ -777,7 +790,7 @@ app.delete("/api/agent-keys/:id", requireAuth, humanOnly, (req, res) => {
 
 app.get("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
   const row = db.prepare("SELECT value FROM settings WHERE key = ? AND user_uuid = ?").get(req.params.key, req.userUuid);
-  if (!row) return res.status(404).json({ success: false, error: "Setting not found" });
+  if (!row) return res.json({ success: true, data: {} }); // Return empty object if setting not found, to let frontend apply defaults without 404 errors
   res.json({ success: true, data: JSON.parse(row.value) });
 });
 

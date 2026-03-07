@@ -116,7 +116,7 @@ export const AgentKeySchemas = {
       canDelete: z.boolean().optional(),
       level: z.string().optional(),
     }).optional(),
-    expirationType: z.enum(["never", "30d", "60d", "90d", "custom"]).optional(),
+    expirationType: z.enum(["never", "30d", "60d", "90d", "30days", "90days", "1year", "custom"]).optional(),
     expirationDate: z.string().datetime().optional().nullable(),
     rateLimit: z.number().int().min(1).max(10000).optional().nullable(),
   }),

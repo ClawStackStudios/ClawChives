@@ -42,7 +42,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
     name: "",
     description: "",
     permissionLevel: "READ",
-    expirationType: "30days",
+    expirationType: "30d",
     customExpirationDate: "",
     rateLimit: 0, // 0 = unlimited
     customPermissions: { ...PERMISSION_CONFIGS.CUSTOM },
@@ -70,7 +70,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
         name: "",
         description: "",
         permissionLevel: "READ",
-        expirationType: "30days",
+        expirationType: "30d",
         customExpirationDate: "",
         rateLimit: 0,
         customPermissions: { ...PERMISSION_CONFIGS.CUSTOM },
@@ -175,7 +175,7 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
       name: "",
       description: "",
       permissionLevel: "READ",
-      expirationType: "30days",
+      expirationType: "30d",
       customExpirationDate: "",
       rateLimit: 0,
       customPermissions: { ...PERMISSION_CONFIGS.CUSTOM },
@@ -425,9 +425,9 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="never">Never expires</SelectItem>
-                    <SelectItem value="30days">30 days</SelectItem>
-                    <SelectItem value="90days">90 days</SelectItem>
-                    <SelectItem value="1year">1 year</SelectItem>
+                    <SelectItem value="30d">30 days</SelectItem>
+                    <SelectItem value="60d">60 days</SelectItem>
+                    <SelectItem value="90d">90 days</SelectItem>
                     <SelectItem value="custom">Custom date</SelectItem>
                   </SelectContent>
                 </Select>
@@ -477,11 +477,11 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
                             {formatDate(
                               new Date(
                                 Date.now() +
-                                  (formData.expirationType === "30days"
+                                  (formData.expirationType === "30d"
                                     ? 30 * 24 * 60 * 60 * 1000
-                                    : formData.expirationType === "90days"
-                                    ? 90 * 24 * 60 * 60 * 1000
-                                    : 365 * 24 * 60 * 60 * 1000)
+                                    : formData.expirationType === "60d"
+                                    ? 60 * 24 * 60 * 60 * 1000
+                                    : 90 * 24 * 60 * 60 * 1000)
                               ).toISOString()
                             )}
                           </span>

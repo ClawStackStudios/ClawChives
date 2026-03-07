@@ -2,7 +2,7 @@
 
 export type PermissionLevel = "READ" | "WRITE" | "EDIT" | "MOVE" | "FULL" | "CUSTOM";
 
-export type ExpirationType = "never" | "30days" | "90days" | "1year" | "custom";
+export type ExpirationType = "never" | "30d" | "60d" | "90d" | "custom";
 
 export interface AgentPermission {
   level: PermissionLevel;

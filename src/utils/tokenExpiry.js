@@ -14,6 +14,19 @@ export function calculateExpiry(ttl) {
     return new Date(now + days * 24 * 60 * 60 * 1000).toISOString();
   }
 
+  // Parse frontend format: "30days", "90days", "1year"
+  if (ttl.endsWith("days")) {
+    const days = parseInt(ttl.slice(0, -4), 10);
+    if (isNaN(days) || days <= 0) {
+      throw new Error(`Invalid TTL format: ${ttl}`);
+    }
+    return new Date(now + days * 24 * 60 * 60 * 1000).toISOString();
+  }
+
+  if (ttl === "1year") {
+    return new Date(now + 365 * 24 * 60 * 60 * 1000).toISOString();
+  }
+
   // Custom date (ISO 8601 format)
   const customDate = new Date(ttl);
   if (isNaN(customDate.getTime())) {

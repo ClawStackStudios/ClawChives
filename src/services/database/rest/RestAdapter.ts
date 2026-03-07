@@ -109,6 +109,10 @@ export class RestAdapter implements IDatabaseAdapter {
     await request<void>(`/api/folders/${id}`, { method: "DELETE" });
   }
 
+  async deleteAllFolders(): Promise<void> {
+    await request<void>("/api/folders", { method: "DELETE" });
+  }
+
   // ── Agent Keys ─────────────────────────────────────────────────────────────
 
   getAgentKeys(): Promise<AgentKey[]> {
