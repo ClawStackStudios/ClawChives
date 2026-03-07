@@ -16,8 +16,8 @@ When an AI agent is invoked on a Lobsterized©™ project for the **first time**
 ```
 SCAN ORDER:
   1. Read this file (CRUSTAGENT.md) — absorb existing knowledge
-  2. Read CLAUDE.md (root) — project-specific AI instructions
-  3. Read src/CLAUDE.md — frontend patterns and constraints
+  2. Read CRUSTAGENT.md (root) — project-specific AI instructions
+  3. Read src/CRUSTAGENT.md — frontend patterns and constraints
   4. Read README.md — user-facing project summary
   5. Read ROADMAP.md — planned vs. shipped features
   6. Read SECURITY.md — threat model and known gaps
@@ -89,7 +89,7 @@ HIGH IMPACT (change with care):
   src/hooks/useAuth.ts            → Auth context provider
 
 DOCUMENTATION:
-  CLAUDE.md                       → AI agent primary instructions
+  CRUSTAGENT.md                       → AI agent primary instructions
   CRUSTAGENT.md                   → This file (CrustAgent©™ brain)
   project/Lobsterized-Philosophy.md → Five Pillars and patterns
   project/ClawKeys-Prompt.md      → ClawKeys©™ implementation spec
@@ -100,7 +100,7 @@ DOCUMENTATION:
 
 ### Known Pitfalls (Learned from Scars)
 ```
-[AGENT: scan git log and CLAUDE.md pitfall registry, add new findings here]
+[AGENT: scan git log and CRUSTAGENT.md pitfall registry, add new findings here]
 
 ACTIVE PITFALLS:
   #1 — Vite env replacement: MUST use exact literal import.meta.env.VITE_API_URL
@@ -248,7 +248,7 @@ BRANDING:
 ### Before You Write a Single Line
 ```
 1. Read this file (CRUSTAGENT.md) — absorb the reef
-2. Read CLAUDE.md — absorb project-specific instructions
+2. Read CRUSTAGENT.md — absorb project-specific instructions
 3. Identify the task scope — feature, fix, refactor, or audit?
 4. Verify Five Pillars still hold — if not, flag before proceeding
 5. Identify which stability-locked files are in scope — tread carefully
@@ -311,7 +311,7 @@ MANUAL:
 FORMAT:   YYYY-MM-DD | Model | Action taken | Outcome
 
 ---
-2026-03-07 | claude-haiku-4-5 | Initialized CRUSTAGENT.md | First scan complete
+2026-03-07 | CRUSTAGENT-haiku-4-5 | Initialized CRUSTAGENT.md | First scan complete
 ```
 
 ---
@@ -320,7 +320,7 @@ FORMAT:   YYYY-MM-DD | Model | Action taken | Outcome
 
 | File | Purpose | Stability |
 |------|---------|-----------|
-| [CLAUDE.md](../CLAUDE.md) | Primary AI instructions | Maintained by Lucas + agents |
+| [CRUSTAGENT.md](../CRUSTAGENT.md) | Primary AI instructions | Maintained by Lucas + agents |
 | [Lobsterized-Philosophy.md](Lobsterized-Philosophy.md) | Five Pillars + patterns | Authoritative |
 | [ClawKeys-Prompt.md](ClawKeys-Prompt.md) | ClawKeys©™ implementation spec | Authoritative |
 | [ClawKeys-Overview.md](ClawKeys-Overview.md) | ClawKeys©™ reference | Authoritative |
