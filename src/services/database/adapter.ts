@@ -24,6 +24,7 @@ export interface IDatabaseAdapter {
   saveFolder(folder: Folder): Promise<Folder>;
   updateFolder(folder: Folder): Promise<Folder>;
   deleteFolder(id: string): Promise<void>;
+  deleteAllFolders(): Promise<void>;
 
   // ── Agent Keys ─────────────────────────────────────────────────────────────
   getAgentKeys(): Promise<AgentKey[]>;

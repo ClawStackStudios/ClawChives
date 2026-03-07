@@ -87,9 +87,15 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
   };
 
   const handleClearDatabase = async () => {
-    // No longer possible from frontend via REST currently
-    setAlertNotImpl(true);
-    await loadData();
+    if (!db) return;
+    try {
+      await db.deleteAllBookmarks();
+      await db.deleteAllFolders();
+      await loadData();
+    } catch (e) {
+      console.error("Failed to clear database:", e);
+      setAlertNotImpl(true);
+    }
   };
 
   if (!isOpen) return null;

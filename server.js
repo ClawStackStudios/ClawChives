@@ -6,7 +6,7 @@
  * Database file: /app/data/db.sqlite (Docker) or ./data/db.sqlite (local)
  *
  * Key prefixes:
- *   hu-  Human identity keys   (login — validated client-side against IndexedDB)
+ *   hu-  Human identity keys   (login — validated server-side against SQLite)
  *   lb-  Agent keys            (generated in Settings → Agent Permissions)
  *   api- REST API tokens       (issued by POST /api/auth/token)
  *
@@ -189,7 +189,8 @@ console.log(`[DB] SQLite database at ${DB_PATH}`);
 export const audit = createAuditLogger(db);
 scheduleTokenCleanup(db);
 
-const app = express();
+export const app = express();
+export { db };
 const PORT = parseInt(process.env.PORT ?? "4242", 10);
 
 // Trust proxy (behind Docker/LB)
@@ -228,12 +229,12 @@ const humanOnly = requireHuman(db);
 
 // ─── Utilities ────────────────────────────────────────────────────────────────
 
-function generateString(length) {
+export function generateString(length) {
   const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   return Array.from(crypto.randomBytes(length), (b) => chars[b % chars.length]).join("");
 }
 
-function generateId() { return crypto.randomUUID(); }
+export function generateId() { return crypto.randomUUID(); }
 
 function detectKeyType(key) {
   if (key?.startsWith("hu-")) return "human";
@@ -338,8 +339,14 @@ function requireAuth(req, res, next) {
       finalPermissions = HUMAN_PERMISSIONS;
       actualKeyType = "human";
     } else if (row.owner_type === "agent") {
-      const agent = db.prepare("SELECT user_uuid, permissions FROM agent_keys WHERE api_key = ?").get(row.owner_key);
+      const agent = db.prepare("SELECT user_uuid, permissions, is_active FROM agent_keys WHERE api_key = ?").get(row.owner_key);
       if (!agent) return res.status(401).json({ success: false, error: "Agent for this token no longer exists" });
+      if (!agent.is_active) {
+          return res.status(401).json({ success: false, error: "Lobster Key Revoked, Are you art of this reef?" });
+      }
+      if (agent.expiration_date && new Date(agent.expiration_date) < new Date()) {
+        return res.status(401).json({ success: false, error: "Lobster Key expired" });
+      }
       finalUserUuid = agent.user_uuid;
       finalPermissions = JSON.parse(agent.permissions || "{}");
       actualKeyType = "agent";
@@ -350,7 +357,10 @@ function requireAuth(req, res, next) {
   if (keyType === "agent") {
     const row = db.prepare("SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1").get(key);
     if (!row) {
-      return res.status(401).json({ success: false, error: "Invalid or revoked agent key" });
+      return res.status(401).json({ success: false, error: "Lobster Key Revoked, Are you art of this reef?" });
+    }
+    if (row.expiration_date && new Date(row.expiration_date) < new Date()) {
+      return res.status(401).json({ success: false, error: "Lobster Key expired" });
     }
     // Update last_used
     db.prepare("UPDATE agent_keys SET last_used = ? WHERE api_key = ?")
@@ -420,7 +430,13 @@ app.post("/api/auth/token", authLimiter, validateBody(AuthSchemas.token), (req, 
       audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"] });
       return res.status(404).json({ success: false, error: "Identity not registered on this node" });
     }
-    if (user.key_hash !== keyHash) {
+    let keyMatch = false;
+    try {
+      keyMatch = crypto.timingSafeEqual(Buffer.from(user.key_hash), Buffer.from(keyHash));
+    } catch {
+      keyMatch = false;
+    }
+    if (!keyMatch) {
       audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"], details: { user_uuid: uuid } });
       return res.status(401).json({ success: false, error: "Invalid identity key" });
     }
@@ -612,6 +628,19 @@ app.delete("/api/bookmarks/:id", requireAuth, requirePermission("canDelete"), (r
   res.json({ success: true });
 });
 
+app.delete("/api/folders", requireAuth, requirePermission("canDelete"), (req, res) => {
+  const info = db.prepare("DELETE FROM folders WHERE user_uuid = ?").run(req.userUuid);
+  audit.log("FOLDERS_PURGED", {
+    actor: req.userUuid,
+    actor_type: req.keyType,
+    action: "delete",
+    outcome: "success",
+    resource: "folder",
+    details: { count: info.changes },
+  });
+  res.json({ success: true, count: info.changes });
+});
+
 app.delete("/api/bookmarks", requireAuth, requirePermission("canDelete"), (req, res) => {
   const info = db.prepare("DELETE FROM bookmarks WHERE user_uuid = ?").run(req.userUuid);
   audit.log("BOOKMARKS_PURGED", {
@@ -757,7 +786,7 @@ app.post("/api/agent-keys", requireAuth, humanOnly, validateBody(AgentKeySchemas
 
 app.patch("/api/agent-keys/:id/revoke", requireAuth, humanOnly, (req, res) => {
   const now = new Date().toISOString();
-  const info = db.prepare("UPDATE agent_keys SET is_active = 0, revoked_at = ?, revoked_by = ? WHERE id = ? AND user_uuid = ?").run(now, req.userUuid, req.userUuid, req.params.id, req.userUuid);
+  const info = db.prepare("UPDATE agent_keys SET is_active = 0, revoked_at = ?, revoked_by = ? WHERE id = ? AND user_uuid = ?").run(now, req.userUuid, req.params.id, req.userUuid);
   if (info.changes === 0) return res.status(404).json({ success: false, error: "Agent key not found" });
   audit.log("AGENT_KEY_REVOKED", { actor: req.userUuid, actor_type: "human", resource: req.params.id, action: "revoke", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"] });
   res.json({ success: true });
@@ -773,7 +802,7 @@ app.delete("/api/agent-keys/:id", requireAuth, humanOnly, (req, res) => {
 
 app.get("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
   const row = db.prepare("SELECT value FROM settings WHERE key = ? AND user_uuid = ?").get(req.params.key, req.userUuid);
-  if (!row) return res.status(404).json({ success: false, error: "Setting not found" });
+  if (!row) return res.json({ success: true, data: {} }); // Return empty object if setting not found, to let frontend apply defaults without 404 errors
   res.json({ success: true, data: JSON.parse(row.value) });
 });
 
@@ -784,9 +813,20 @@ app.put("/api/settings/:key", requireAuth, humanOnly, (req, res) => {
   res.json({ success: true });
 });
 
+// ─── Static Files & Catch-All ─────────────────────────────────────────────────
+
+// Serve static frontend files from 'dist' in production
+const distPath = path.join(__dirname, "dist");
+app.use(express.static(distPath));
+
+// For any non-API route, send index.html (React Router)
+app.get(/^(?!\/api\/).*/, (req, res, next) => {
+  res.sendFile(path.join(distPath, "index.html"));
+});
+
 // ─── 404 ──────────────────────────────────────────────────────────────────────
 
-app.use((_req, res) => res.status(404).json({ success: false, error: "Route not found" }));
+app.use("/api", (_req, res) => res.status(404).json({ success: false, error: "Route not found" }));
 
 // ─── Global Error Handler ─────────────────────────────────────────────────────
 
