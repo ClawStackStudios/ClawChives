@@ -63,7 +63,7 @@ db.exec(`
   CREATE TABLE IF NOT EXISTS users (
     uuid       TEXT PRIMARY KEY,
     username   TEXT NOT NULL UNIQUE,
-    key_hash   TEXT NOT NULL,
+    key_hash   TEXT NOT NULL UNIQUE,
     created_at TEXT NOT NULL
   );
 
@@ -163,6 +163,22 @@ runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoked_at TEXT", "agent_k
 runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoked_by TEXT", "agent_keys.revoked_by");
 runColumnMigration("ALTER TABLE agent_keys ADD COLUMN revoke_reason TEXT", "agent_keys.revoke_reason");
 runColumnMigration("ALTER TABLE bookmarks ADD COLUMN jina_url TEXT", "bookmarks.jina_url");
+
+// Ensure key_hash has a unique index (migration for existing DBs)
+const indexes = db.prepare("PRAGMA index_list('users')").all();
+const hasUniqueKeyHash = indexes.some(idx => 
+  idx.unique === 1 && 
+  db.prepare(`PRAGMA index_info('${idx.name}')`).all().some(col => col.name === 'key_hash')
+);
+
+if (!hasUniqueKeyHash) {
+  try {
+    db.exec('CREATE UNIQUE INDEX idx_users_key_hash ON users(key_hash)');
+    console.log('[DB Migration] ✅ Created unique index on key_hash');
+  } catch (e) {
+    console.warn('[DB Migration] ⚠️ Could not create unique index on key_hash (duplicates might exist)');
+  }
+}
 
 // Step 3: Ensure composite unique index on bookmarks and settings (user_uuid scoping)
 db.exec(`
@@ -438,20 +454,37 @@ app.post("/api/auth/token", authLimiter, validateBody(AuthSchemas.token), (req, 
   const expiresAt = calculateExpiry(ttl);
 
   if (type === "human") {
-    const user = db.prepare("SELECT * FROM users WHERE uuid = ?").get(uuid);
+    let user;
+    if (uuid) {
+      user = db.prepare("SELECT * FROM users WHERE uuid = ?").get(uuid);
+    } else if (keyHash) {
+      // Fallback: look up by keyHash if UUID is missing (Simplified Login)
+      user = db.prepare("SELECT * FROM users WHERE key_hash = ?").get(keyHash);
+    }
+
     if (!user) {
       audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"] });
-      return res.status(404).json({ success: false, error: "Identity not registered on this node" });
+      return res.status(404).json({ 
+        success: false, 
+        error: "Identity not registered on this node",
+        suggestion: "Try providing your username for better error details if this is a registration issue."
+      });
     }
+
     let keyMatch = false;
     try {
       keyMatch = crypto.timingSafeEqual(Buffer.from(user.key_hash), Buffer.from(keyHash));
     } catch {
       keyMatch = false;
     }
+
     if (!keyMatch) {
-      audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"], details: { user_uuid: uuid } });
-      return res.status(401).json({ success: false, error: "Invalid identity key" });
+      audit.log("AUTH_FAILURE", { action: "login", outcome: "failure", actor_type: "human", ip_address: req.ip, user_agent: req.headers["user-agent"], details: { user_uuid: user.uuid } });
+      return res.status(401).json({ 
+        success: false, 
+        error: "Invalid identity key",
+        suggestion: "Ensure you are using the correct ClawKey©™ for this server instance."
+      });
     }
 
     const token = `api-${generateString(32)}`;
@@ -460,7 +493,10 @@ app.post("/api/auth/token", authLimiter, validateBody(AuthSchemas.token), (req, 
     );
 
     audit.log("AUTH_SUCCESS", { actor: user.uuid, actor_type: "human", action: "login", outcome: "success", ip_address: req.ip, user_agent: req.headers["user-agent"] });
-    return res.status(201).json({ success: true, data: { token, type: "human", createdAt: new Date().toISOString(), expiresAt } });
+    return res.status(201).json({ 
+      success: true, 
+      data: { token, type: "human", createdAt: new Date().toISOString(), expiresAt, user: { uuid: user.uuid, username: user.username } } 
+    });
   } else if (type === "agent" || (ownerKey && detectKeyType(ownerKey) === "agent")) {
     const agentKey = ownerKey;
     if (!agentKey || !agentKey.startsWith("lb-")) return res.status(400).json({ success: false, error: "Invalid agent key" });

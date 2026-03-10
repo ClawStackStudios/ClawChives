@@ -56,7 +56,7 @@
 
 No cloud. No landlords. Your reef, your rules.
 
-- 🔐 **ShellCryption Auth** — login with a generated JSON identity file, not a password. Your key, your identity.
+- 🔐 **ShellCryption Auth** — login with a generated JSON identity file, or use **One-Field Login** with just your ClawKey©™.
 - 🤖 **Lobster Key System** — issue granular `lb-` API keys to your AI agents and scripts. Let your Lobsters scuttle the net.
 - 🗄️ **SQLite Bedrock** — a fast, reliable, zero-dependency backend for persistent local storage.
 - 🐳 **Docker-First** — fully containerized with named volume mounts for seamless self-hosting.
@@ -239,7 +239,7 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 
 | Prefix | Type | Length | Usage |
 |---|---|---|---|
-| `hu-` | **Human Key** | 64 chars | Your personal identity. Lives in `clawchives_identity_key.json`. |
+| `hu-` | **Human Key** | 64 chars | Your personal identity. Supports **One-Field Login** (key-only). |
 | `lb-` | **Lobster/Agent Key** | 64 chars | For your AI Lobsters and automated scripts. Generated in Settings with granular CUSTOM permissions. |
 | `api-` | **Session Token** | 32 chars | Short-lived REST API bearer. Issued via `POST /api/auth/token`. |
 

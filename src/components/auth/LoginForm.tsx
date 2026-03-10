@@ -26,6 +26,7 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
   const [pastedKey, setPastedKey] = useState("");
   const [pastedUuid, setPastedUuid] = useState("");
   const [pastedUsername, setPastedUsername] = useState("");
+  const [showAdvanced, setShowAdvanced] = useState(false);
 
   // ── Paste mode validation ──────────────────────────────────────────────────
   const pastedKeyValid = pastedKey.startsWith("hu-") && pastedKey.length === 67;
@@ -35,8 +36,7 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
         ? `Key must be 67 characters (hu- + 64). Current length: ${pastedKey.length}`
         : 'ClawKey©™ must start with "hu-"'
       : "";
-  const pasteFormReady =
-    pastedKeyValid && pastedUuid.trim().length > 0 && pastedUsername.trim().length > 0;
+  const pasteFormReady = pastedKeyValid;
 
   // ── Handlers ───────────────────────────────────────────────────────────────
   const handleModeSwitch = (mode: LoginMode) => {
@@ -131,23 +131,28 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
       const tokenResponse = await fetch(`${apiUrl}/api/auth/token`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "human", uuid, keyHash }),
+        body: JSON.stringify({ 
+          type: "human", 
+          uuid: uuid.length > 0 ? uuid : undefined, 
+          keyHash 
+        }),
       });
 
       if (!tokenResponse.ok) {
         const errData = await tokenResponse.json().catch(() => ({}));
-        throw new Error(errData.error || "Invalid ClawKey©™ or UUID. Please check your credentials.");
+        const suggestion = errData.suggestion ? `\n\nSuggestion: ${errData.suggestion}` : "";
+        throw new Error((errData.error || "Invalid ClawKey©™ or identity details.") + suggestion);
       }
 
       const { data } = await tokenResponse.json();
 
       // 3. Store API token in sessionStorage
       sessionStorage.setItem("cc_api_token", data.token);
-      sessionStorage.setItem("cc_username", username);
-      sessionStorage.setItem("cc_user_uuid", uuid);
+      sessionStorage.setItem("cc_username", data.user?.username || username || "Sovereign User");
+      sessionStorage.setItem("cc_user_uuid", data.user?.uuid || uuid);
       sessionStorage.setItem("cc_key_type", "human");
 
-      onSuccess(uuid);
+      onSuccess(data.user?.uuid || uuid);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Login failed. Please verify your ClawKey©™, UUID, and username.");
     } finally {
@@ -308,47 +313,62 @@ export function LoginForm({ onSuccess, onCancel }: LoginFormProps) {
               )}
             </div>
 
-            {/* UUID input */}
-            <div>
-              <Label htmlFor="paste-uuid">Your UUID (from identity file)</Label>
-              <Input
-                id="paste-uuid"
-                type="text"
-                value={pastedUuid}
-                onChange={(e) => { setPastedUuid(e.target.value); setError(""); }}
-                placeholder="550e8400-e29b-41d4-a716-446655440000"
-                className="mt-1 font-mono text-sm"
-                autoComplete="off"
-                spellCheck={false}
-              />
-            </div>
-
-            {/* Username input */}
-            <div>
-              <Label htmlFor="paste-username">Username</Label>
-              <Input
-                id="paste-username"
-                type="text"
-                value={pastedUsername}
-                onChange={(e) => { setPastedUsername(e.target.value); setError(""); }}
-                placeholder="your-username"
-                className="mt-1"
-                autoComplete="off"
-              />
-            </div>
-
-            {/* Power user info */}
-            <div className="bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-xl p-4">
+            {/* One-Field Login Info */}
+            <div className="bg-cyan-50 dark:bg-cyan-950/20 border border-cyan-200 dark:border-cyan-900/40 rounded-xl p-4">
               <div className="flex items-start gap-3">
-                <Lock className="w-5 h-5 text-amber-600 dark:text-amber-500 flex-shrink-0 mt-0.5" />
+                <CheckCircle className="w-5 h-5 text-cyan-600 dark:text-cyan-500 flex-shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-medium text-amber-900 dark:text-amber-500">Power user mode</p>
-                  <p className="text-sm text-amber-700 dark:text-amber-600/80 mt-1">
-                    Paste your raw ClawKey©™, UUID, and username directly from your identity file. All three fields are required.
+                  <p className="text-sm font-medium text-cyan-900 dark:text-cyan-500 text-left">One-Field Login</p>
+                  <p className="text-sm text-cyan-700 dark:text-cyan-600/80 mt-1 text-left">
+                    Your ClawKey©™ is all you need to login. Advanced options are available for troubleshooting.
                   </p>
                 </div>
               </div>
             </div>
+
+            {/* Advanced Toggle */}
+            <div className="flex justify-start">
+              <button
+                type="button"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+                className="text-xs text-slate-500 dark:text-slate-400 hover:text-cyan-600 dark:hover:text-cyan-400 transition-colors flex items-center gap-1"
+              >
+                {showAdvanced ? "Hide Advanced Options" : "Show Advanced Options (UUID/Username)"}
+              </button>
+            </div>
+
+            {showAdvanced && (
+              <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* UUID input */}
+                <div>
+                  <Label htmlFor="paste-uuid" className="text-left block mb-1">Your UUID (Optional)</Label>
+                  <Input
+                    id="paste-uuid"
+                    type="text"
+                    value={pastedUuid}
+                    onChange={(e) => { setPastedUuid(e.target.value); setError(""); }}
+                    placeholder="550e8400-e29b-41d4-a716-446655440000"
+                    className="font-mono text-sm"
+                    autoComplete="off"
+                    spellCheck={false}
+                  />
+                </div>
+
+                {/* Username input */}
+                <div>
+                  <Label htmlFor="paste-username" className="text-left block mb-1">Username (Optional)</Label>
+                  <Input
+                    id="paste-username"
+                    type="text"
+                    value={pastedUsername}
+                    onChange={(e) => { setPastedUsername(e.target.value); setError(""); }}
+                    placeholder="your-username"
+                    className=""
+                    autoComplete="off"
+                  />
+                </div>
+              </div>
+            )}
 
             <Button
               onClick={handlePasteLogin}
