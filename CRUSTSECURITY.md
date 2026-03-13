@@ -13,7 +13,6 @@ This document synthesizes various components of our security framework into a co
 ## Security Standards
 ### Key Management (ClawKeys)
 - All encryption keys must be generated using secure random generators.
-- Keys should be rotated every 90 days.
 - Keys must be stored in a secure key vault with strict access controls.
 
 ### Data Encryption (ShellCryption)
