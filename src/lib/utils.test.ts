@@ -21,15 +21,20 @@ describe("cn", () => {
     const inputs = ["class1", { class2: true }, ["class3"]] as Parameters<typeof cn>;
     const result = cn(...inputs);
 
-    expect(clsx).toHaveBeenCalled();
+    // Verify clsx was called with all inputs
+    expect(clsx).toHaveBeenCalledWith(inputs);
+
+    // Verify twMerge was called with the result from clsx
     expect(twMerge).toHaveBeenCalledWith("clsx-result");
+
+    // Verify final result is what twMerge returned
     expect(result).toBe("tw-merge-result");
   });
 
   test("handles empty inputs", () => {
     cn();
 
-    expect(clsx).toHaveBeenCalled();
+    expect(clsx).toHaveBeenCalledWith([]);
     expect(twMerge).toHaveBeenCalledWith("clsx-result");
   });
 });
