@@ -11,6 +11,7 @@ export function ProfileSettings() {
   const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
   const [avatar, setAvatar] = useState("");
+  const [uuid, setUuid] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [saveMessage, setSaveMessage] = useState("");
 
@@ -29,10 +30,15 @@ export function ProfileSettings() {
       setAvatar(settings.avatar || "");
     }
     
-    // Also load username from sessionStorage since we drop user object fetch
+    // Also load username and UUID from sessionStorage since we drop user object fetch
     const sessionUsername = sessionStorage.getItem("cc_username");
+    const sessionUuid = sessionStorage.getItem("cc_user_uuid");
+    
     if (sessionUsername) {
       setUsername(sessionUsername);
+    }
+    if (sessionUuid) {
+      setUuid(sessionUuid);
     }
   };
 
@@ -199,7 +205,11 @@ export function ProfileSettings() {
             </div>
             <div className="flex justify-between">
               <span className="text-slate-600 dark:text-slate-400">Storage</span>
-              <span className="font-medium text-slate-900 dark:text-slate-50">Local (Encrypted)</span>
+              <span className="font-medium text-slate-900 dark:text-slate-50">Local (ShellCrypted©™)</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-slate-600 dark:text-slate-400">UUID</span>
+              <span className="font-mono text-xs text-slate-900 dark:text-slate-50 opacity-70">{uuid || "N/A"}</span>
             </div>
             <div className="flex justify-between">
               <span className="text-slate-600 dark:text-slate-400">Created</span>
