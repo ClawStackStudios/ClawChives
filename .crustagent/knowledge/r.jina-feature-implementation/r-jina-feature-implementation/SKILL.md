@@ -11,6 +11,7 @@ This skill provides a complete implementation guide for adding r.jina.ai support
 
 **Core Philosophy:**
 - **Humans** make explicit decisions about which URLs to convert (via checkbox)
+- **Protocol Stripping:** The `https?://` prefix MUST be stripped from the source URL before prepending `https://r.jina.ai/`.
 - **Agents (lb-keys)** can READ Jina URLs but CANNOT create them (granular data control)
 - **Storage strategy:** Store only the Jina URL (not content), fetch on-demand like regular URLs
 - **Dual-layer UI:** Single-click for normal URL, right-click for r.jina.ai conversion option
@@ -128,7 +129,8 @@ const handleSave = async () => {
     // Validate URL is HTTP(S)
     try {
       new URL(url);
-      finalJinaUrl = `https://r.jina.ai/${url}`;
+      const cleanUrl = url.replace(/^https?:\/\//, '');
+      finalJinaUrl = `https://r.jina.ai/${cleanUrl}`;
     } catch {
       throw new Error("Invalid URL format");
     }
@@ -519,12 +521,12 @@ test('Human user can create bookmark with jinaUrl', async () => {
     body: JSON.stringify({
       url: 'https://example.com',
       title: 'Example',
-      jinaUrl: 'https://r.jina.ai/https://example.com'
+      jinaUrl: 'https://r.jina.ai/example.com'
     })
   });
   expect(response.status).toBe(201);
   const data = await response.json();
-  expect(data.data.jinaUrl).toBe('https://r.jina.ai/https://example.com');
+  expect(data.data.jinaUrl).toBe('https://r.jina.ai/example.com');
 });
 
 // Test 2: Agent key CANNOT create bookmark with jinaUrl

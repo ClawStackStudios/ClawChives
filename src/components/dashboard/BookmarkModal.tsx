@@ -147,7 +147,8 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
     if (jinaConversion && url.trim()) {
       try {
         new URL(url.trim());
-        finalJinaUrl = `https://r.jina.ai/${url.trim()}`;
+        const cleanUrl = url.trim().replace(/^https?:\/\//, '');
+        finalJinaUrl = `https://r.jina.ai/${cleanUrl}`;
       } catch {
         console.error("Invalid URL format for r.jina");
       }
