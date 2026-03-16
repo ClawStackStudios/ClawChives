@@ -125,8 +125,17 @@ try {
     FROM bookmarks
     WHERE jina_url IS NOT NULL
   `);
+  console.log('[DB] ✅ jina_conversions migration complete');
 } catch (e: any) {
   console.error('[DB] ❌ jina_conversions migration failed:', e.message);
+}
+
+// Drop dead index (jina_url no longer written to)
+try {
+  db.exec('DROP INDEX IF EXISTS idx_bookmarks_jina_url');
+  console.log('[DB] ✅ Dropped dead index idx_bookmarks_jina_url');
+} catch (e: any) {
+  console.warn('[DB] ⚠️ Could not drop idx_bookmarks_jina_url:', e.message);
 }
 
 // Ensure key_hash unique index
