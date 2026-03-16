@@ -6,7 +6,10 @@ const jinaUrlSchema = z.string()
   .refine((val) => {
     if (!val) return true;
     try {
-      const wrappedUrl = val.replace(/^https:\/\/r\.jina\.ai\//, '');
+      let wrappedUrl = val.replace(/^https:\/\/r\.jina\.ai\//, '');
+      if (!wrappedUrl.match(/^https?:\/\//)) {
+        wrappedUrl = 'https://' + wrappedUrl;
+      }
       const parsed = new URL(wrappedUrl);
       if (!['http:', 'https:'].includes(parsed.protocol)) return false;
       const hostname = parsed.hostname.toLowerCase();

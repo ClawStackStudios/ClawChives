@@ -36,6 +36,7 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 - ✅ User isolation via `user_uuid` in ALL queries.
 - ✅ `requireHuman` locks settings and key generation to master identity only.
 - ✅ `requirePermission(action)` geometrically locks CRUD endpoints.
+- ✅ **r.jina.ai Protocol Stripping**: Enforce `https?://` stripping before prepending reader prefix for clean indexing.
 
 ---
 
