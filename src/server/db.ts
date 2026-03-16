@@ -15,25 +15,13 @@ fs.mkdirSync(DATA_DIR, { recursive: true });
 // ─── Database Encryption (SQLCipher / ShellCryption™) ──────────────────────────
 const encryptionKey = process.env.DB_ENCRYPTION_KEY;
 
-// Validate encryption key and DATA_DIR at startup (prevents SQL injection)
-// Keys MUST be base64-encoded (alphanumeric + /+= only, no special chars)
+// Validate encryption key at startup (prevents SQL injection in PRAGMA statement)
 if (encryptionKey) {
   if (!/^[a-zA-Z0-9+/=]+$/.test(encryptionKey)) {
-    throw new Error('[DB] DB_ENCRYPTION_KEY must be base64-encoded (alphanumeric, +, /, = only). Use `openssl rand -base64 32` to generate a safe key.');
-  }
-  if (encryptionKey.length < 32) {
-    throw new Error('[DB] DB_ENCRYPTION_KEY must be at least 32 bytes long (use `openssl rand -base64 32`).');
+    throw new Error('[DB] DB_ENCRYPTION_KEY must be base64-encoded (alphanumeric, +, /, = only).');
   }
 }
 
-// Validate DATA_DIR is a safe absolute path (prevents directory traversal attacks)
-// Checks that the path has been fully resolved and doesn't contain suspicious patterns
-const resolvedDataDir = path.resolve(DATA_DIR);
-
-// Ensure path is absolute and doesn't try to escape using traversal patterns
-if (DATA_DIR.includes('..') || !path.isAbsolute(resolvedDataDir)) {
-  throw new Error(`[DB] DATA_DIR must not contain .. traversal (detected: ${DATA_DIR}). Use absolute paths or paths relative to project root.`);
-}
 
 function openDatabase(): Database.Database {
   const db = new Database(DB_PATH);
