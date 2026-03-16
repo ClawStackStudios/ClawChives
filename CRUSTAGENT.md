@@ -110,8 +110,7 @@ When working on ClawChives, AI agents should read these files in order:
 7. **.crustagent/knowledge/** - Deep project knowledge and philosophy
 
 ## Map to the Reef 🗺️
-- Root `CLAUDE.md`: Detailed transition logs and technical invariants.
-- Root `GEMINI.md`: High-level vision and future horizons.
+- `CRUSTAGENT.md`: Detailed transition logs and technical invariants.
 - `src/CRUSTAGENT.md`: Source-level patterns and stability locks.
 - `README.md`: Project overview and user documentation.
 - `CONTRIBUTING.md`: Development guidelines and contribution process.
@@ -121,8 +120,12 @@ When working on ClawChives, AI agents should read these files in order:
 - `.crustagent/vibecheck/truthpack/`: Project truth validation and stability locks.
 - `.crustagent/crustaudits/`: Automated audit reports and validation results.
 - `.crustagent/knowledge/`: Project knowledge base and documentation.
-- `.crustagent/rules/PERSONA_JOURNAL_PROTOCOL.md`: Protocol for rolling agent journals.
-- `.autoclaw/`: Persona journals location.
+- `.crustagent/memory/`: CrustAgent's memory store.
+
+---
+
+
+
 
 ```text
        _..._
