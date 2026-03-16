@@ -197,76 +197,93 @@ DB_ENCRYPTION_KEY=your-generated-key-here
 <details>
 <summary>Expand Docker instructions</summary>
 
-**Environment Variables:**
+**Overview:**
 
-```bash
-# ── Network & API ────────────────────────────────────────────────────────
-UI_PORT=4545                                    # UI container port
-API_PORT=4646                                   # API container port
-CORS_ORIGIN=http://localhost:4545               # Set this to your UI origin (or leave unset for LAN)
-
-# ── Database Encryption (SQLCipher / ShellCryption™ Layer 2) ──────────────
-# AES-256 encryption at rest. Generate a key with: openssl rand -base64 32
-# Leave unset for plaintext database (not recommended for production).
-# WARNING: In docker-compose.yml, this env var is visible via 'docker inspect'.
-#          For stronger protection, consider Docker Secrets or systemd services.
-# DB_ENCRYPTION_KEY=your-generated-key-here
-
-# ── Optional: Match database file permissions to your host user ──────────
-PUID=1000
-PGID=1000
-```
+ClawChives runs as a single container with both frontend and API. All data is persisted to `./data/db.sqlite` on your host machine via bind mount.
 
 **Option A: Production (Pull from GHCR) ⚓**
-Use this for a stable, sovereign deployment. It pulls the latest pre-built images from the GitHub Container Registry.
+
+Use this for a stable, sovereign deployment. It pulls the latest pre-built images from GitHub Container Registry.
+
 ```bash
 docker compose up -d
 ```
 
 **Option B: Development & Testing (Build Locally) 🛠️**
+
 Use this if you are modifying the source code and want to test changes immediately.
+
 ```bash
 docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-**Database Encryption (ShellCryption™ Layer 2):**
+**Environment Variables Reference:**
 
-ClawChives supports **AES-256 encryption at rest** via SQLCipher. If the database file is stolen, it's an unreadable encrypted blob without the key.
+| Variable | Default | Purpose |
+|----------|---------|---------|
+| `NODE_ENV` | `production` | Runtime mode (production or development) |
+| `PORT` | `4545` | Container internal port (mapped to host port in compose) |
+| `DATA_DIR` | `/app/data` | Where SQLite database is stored (bind mount) |
+| `DB_ENCRYPTION_KEY` | `""` (empty) | AES-256 encryption key. Leave empty for plaintext, or set to `openssl rand -base64 32` |
+| `PUID` | `1000` | Linux user ID for file permissions (get with `id -u`) |
+| `PGID` | `1000` | Linux group ID for file permissions (get with `id -g`) |
+| `CORS_ORIGIN` | `""` (unset) | Restrict API access to specific origin (for reverse proxy setup only) |
 
-To enable encryption, generate and set `DB_ENCRYPTION_KEY`:
+**Enabling Database Encryption (ShellCryption™ Layer 2):**
+
+ClawChives supports **AES-256 encryption at rest** via SQLCipher. If the database file is stolen, it's unreadable without the key.
+
+Generate a key and edit `docker-compose.yml`:
 
 ```bash
-# Generate a secure encryption key
-DB_KEY=$(openssl rand -base64 32)
-echo "Generated key: $DB_KEY"
-
-# Option 1: Set in docker-compose.yml (comment line 22-23 and uncomment line 23):
-# - DB_ENCRYPTION_KEY=$DB_KEY
-
-# Option 2: Set in .env file (if using env_file in compose):
-# DB_ENCRYPTION_KEY=$DB_KEY
+# Generate a secure 32-byte base64 key
+openssl rand -base64 32
 ```
 
-Then start with: `docker compose up -d --build`
+Then update the `DB_ENCRYPTION_KEY` line in `docker-compose.yml`:
+
+```yaml
+environment:
+  - DB_ENCRYPTION_KEY=your-generated-key-here
+```
+
+Restart the container:
+
+```bash
+docker compose up -d --build
+```
 
 > [!IMPORTANT]
-> **First-Time Encryption**: If you have an existing plaintext database and enable encryption, ClawChives will automatically migrate it. This is safe — your data is preserved.
+> **First-Time Encryption**: If you have an existing plaintext database and enable encryption, ClawChives will automatically migrate it. Your data is preserved.
 >
-> **Key Management**: Keep your `DB_ENCRYPTION_KEY` safe. If you lose it, your data becomes inaccessible. Store it separately from this repository.
+> **Key Management**: Keep your `DB_ENCRYPTION_KEY` safe. If you lose it, your data becomes inaccessible. Store it separately from this repository (e.g., in a password manager).
 
 **Monitoring & Maintenance:**
 
-- **View Logs**: `docker compose logs -f`
-- **Stop Stack**: `docker compose down`
-- **Volume Inspection**: `docker volume inspect clawchives_sqlite_data`
+```bash
+# View logs in real-time
+docker compose logs -f
+
+# Stop the stack
+docker compose down
+
+# Restart the stack
+docker compose restart
+
+# View database file location
+ls -lah ./data/db.sqlite
+
+# Backup your database
+cp ./data/db.sqlite ./data/db.sqlite.backup
+```
 
 > [!IMPORTANT]
 > **Data Sovereignty & Persistence**:
-> All pinchmarks and agent identities are stored in local bind mounts on your host system for maximum visibility and ease of backup.
+> All pinchmarks and agent identities are stored in local bind mounts on your host machine for maximum visibility and ease of backup.
 > - **Production**: `./data/db.sqlite`
 > - **Development**: `./data-dev/db.sqlite`
 >
-> You can directly copy or backup these directories. If they don't exist, Docker will create them as directories (root-owned) when the container starts. It is recommended to create them beforehand if you want specific permissions.
+> These directories can be directly backed up or migrated. If they don't exist, Docker will create them (root-owned) when the container starts. Recommend creating them beforehand with desired permissions: `mkdir -p data && chown $USER:$USER data`
 
 </details>
 

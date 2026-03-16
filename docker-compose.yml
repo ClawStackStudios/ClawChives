@@ -12,14 +12,10 @@ services:
       - NODE_ENV=production
       - PORT=4545
       - DATA_DIR=/app/data
-      # CORS_ORIGIN is intentionally unset to allow all origins.
-      # ClawChives is a LAN self-hosted app — users access from any LAN IP.
-      # See CLAUDE.md: intentional open-CORS design constraint.
-      # Uncomment ONLY to restrict to a specific origin (e.g. behind a public reverse proxy):
-      # - CORS_ORIGIN=https://bookmarks.yourdomain.com
-      # ── Database Encryption (SQLCipher / ShellCryption™) ────────────────────────
-      # Generate: openssl rand -base64 32
-      # - DB_ENCRYPTION_KEY=your-key-here
+      - DB_ENCRYPTION_KEY=""
+      - PUID=1000
+      - PGID=1000
+      # For detailed configuration, see README.md → Running with Docker section
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4545/api/health"]
       interval: 15s
