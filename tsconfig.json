@@ -24,6 +24,9 @@
     "paths": {
       "@/*": [
         "./src/*"
+      ],
+      "better-sqlite3-multiple-ciphers": [
+        "node_modules/@types/better-sqlite3"
       ]
     }
   },

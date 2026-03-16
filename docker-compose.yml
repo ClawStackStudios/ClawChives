@@ -17,6 +17,9 @@ services:
       # See CLAUDE.md: intentional open-CORS design constraint.
       # Uncomment ONLY to restrict to a specific origin (e.g. behind a public reverse proxy):
       # - CORS_ORIGIN=https://bookmarks.yourdomain.com
+      # ── Database Encryption (SQLCipher / ShellCryption™) ────────────────────────
+      # Generate: openssl rand -base64 32
+      # - DB_ENCRYPTION_KEY=your-key-here
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4545/api/health"]
       interval: 15s
