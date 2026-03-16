@@ -2,7 +2,7 @@
 
 > **The primary intelligence handshake and operational manual for all agents.**
 > 
-> This document synthesizes the architectural DNA of `CLAUDE.md` with the sovereign agentic directives of `GEMINI.md`. 
+
 > **Atomic Directive:** Retain the core, protect the keys, and keep the puns pinching. Data is sovereign. Security is the shell.
 
 ---
@@ -126,8 +126,35 @@ When working on ClawChives, AI agents should read these files in order:
 
 ---
 
+---
 
+## 🎓 Knowledge Base Access
 
+**For detailed project knowledge, consult:**
+
+### Knowledge Directory (`.crustagent/knowledge/`)
+- **ARCHITECTURAL-DNA.md** — Core identity, tech stack, design principles
+- **AUTH-SYSTEM.md** — Key hierarchy, critical fixes #1-3, security invariants
+- **LOBSTER-KEY-SYSTEM.md** — Agent keys, permissions, lifecycle, terminology
+- **DATABASE-SCHEMA.md** — SQLite backend, IndexedDB client, sync strategy
+- **API-SURFACE.md** — All REST endpoints, middleware chain, r.jina.ai integration
+- **SECURITY-POSTURE.md** — Current strengths, gaps, OWASP coverage, hardening plan
+- **COMMON-PITFALLS.md** — Known issues, debugging, gotchas, solutions
+- **PROJECT-PHASES.md** — Phase tracking, completed work, roadmap, future vision
+- **LAN-API-URL-Deployment-Fix.md** — Comprehensive guide to LAN deployment configuration
+
+### Rules Directory (`.crustagent/rules/`)
+- **INVARIANTS.md** — 15 critical stability locks (NEVER BREAK THESE)
+- **CRITICAL-FILES.md** — Change impact assessment, tier classification, stability locks per file
+
+### Source-Level Documentation
+- **src/CRUSTAGENT.md** — Source-level patterns, component architecture, type locations
+
+### Truthpack & Validation
+- **.crustagent/vibecheck/truthpack/** — Project truth validation and contracts
+- **.crustagent/crustaudits/** — Audit results and validation findings
+
+---
 
 ```text
        _..._
