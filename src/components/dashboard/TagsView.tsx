@@ -8,10 +8,11 @@
  * ─────────────────────────────────────────────────────────────
  */
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { X, Tag } from "lucide-react";
 import type { Bookmark } from "../../services/types";
 import { ConfirmModal, TagBlockedModal } from "../ui/LobsterModal";
+import { aggregateTags } from "../../lib/utils";
 
 interface TagsViewProps {
   bookmarks: Bookmark[];
@@ -39,13 +40,8 @@ export function TagsView({ bookmarks, onSelectTag, onDeleteTag }: TagsViewProps)
   const [blockedBookmarks, setBlockedBookmarks] = useState<Bookmark[]>([]);
   const [confirmTag, setConfirmTag] = useState<string | null>(null);
 
-  // Aggregate tags
-  const tagMap = new Map<string, number>();
-  bookmarks.forEach((b) => {
-    b.tags.forEach((t) => tagMap.set(t, (tagMap.get(t) ?? 0) + 1));
-  });
-
-  const tags = [...tagMap.entries()].sort((a, b) => b[1] - a[1]);
+  // Aggregate tags (memoized for performance)
+  const tags = useMemo(() => aggregateTags(bookmarks), [bookmarks]);
 
   const handleDeleteClick = (e: React.MouseEvent, tag: string, count: number) => {
     e.stopPropagation();
