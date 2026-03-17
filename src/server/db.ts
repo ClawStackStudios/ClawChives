@@ -6,8 +6,8 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// DATA_DIR: use env var or fall back to /data next to project root
-const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, '..', '..', '..', 'data');
+// DATA_DIR: use env var or fall back to ./data in project root
+const DATA_DIR = process.env.DATA_DIR ?? path.join(__dirname, '..', '..', 'data');
 const DB_PATH = path.join(DATA_DIR, 'db.sqlite');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
