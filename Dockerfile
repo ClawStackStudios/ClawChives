@@ -26,9 +26,8 @@ RUN npm run build
 FROM node:20-alpine
 
 # Install build tools needed for native modules (better-sqlite3),
-# su-exec to drop privileges, shadow for usermod/groupmod (PUID/PGID),
-# and locale support for UTF-8/emoji rendering in non-interactive mode
-RUN apk add --no-cache python3 make g++ su-exec shadow musl-locales
+# su-exec to drop privileges, and shadow for usermod/groupmod (PUID/PGID)
+RUN apk add --no-cache python3 make g++ su-exec shadow
 
 WORKDIR /app
 
