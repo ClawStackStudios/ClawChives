@@ -1,4 +1,4 @@
-import Database from 'better-sqlite3';
+import Database from 'better-sqlite3-multiple-ciphers';
 import path from 'path';
 import fs from 'fs';
 import { fileURLToPath } from 'url';
@@ -12,7 +12,73 @@ const DB_PATH = path.join(DATA_DIR, 'db.sqlite');
 
 fs.mkdirSync(DATA_DIR, { recursive: true });
 
-export const db = new Database(DB_PATH);
+// ─── Database Encryption (SQLCipher / ShellCryption™) ──────────────────────────
+const encryptionKey = process.env.DB_ENCRYPTION_KEY;
+
+// Validate encryption key at startup (prevents SQL injection in PRAGMA statement)
+if (encryptionKey) {
+  if (!/^[a-zA-Z0-9+/=]+$/.test(encryptionKey)) {
+    throw new Error('[DB] DB_ENCRYPTION_KEY must be base64-encoded (alphanumeric, +, /, = only).');
+  }
+}
+
+
+function openDatabase(): Database.Database {
+  const db = new Database(DB_PATH);
+
+  if (encryptionKey) {
+    // Apply SQLCipher key — must be FIRST pragma after open
+    db.pragma(`key = '${encryptionKey}'`);
+
+    // Verify key works — if DB exists but is plaintext, this will fail
+    try {
+      // Use schema query instead of user_version pragma for reliable detection
+      db.prepare('SELECT count(*) FROM sqlite_master').get();
+    } catch (e: any) {
+      // "file is not a database" on plaintext DB with wrong key applied
+      if (e.message.includes('not a database') || e.message.includes('is not a database')) {
+        console.log('[DB] Detected unencrypted database — migrating to encrypted...');
+        db.close();
+        encryptExistingDatabase(DB_PATH, encryptionKey);
+        const encrypted = new Database(DB_PATH);
+        encrypted.pragma(`key = '${encryptionKey}'`);
+        return encrypted;
+      }
+      throw e;
+    }
+  } else {
+    console.warn('[DB] ⚠️ DB_ENCRYPTION_KEY not set — database is unencrypted at rest.');
+  }
+
+  return db;
+}
+
+function encryptExistingDatabase(dbPath: string, key: string) {
+  // Use absolute path for temp file to prevent path traversal
+  const resolvedDbPath = path.resolve(dbPath);
+  const tempPath = resolvedDbPath + '.tmp';
+
+  try {
+    const plain = new Database(resolvedDbPath);
+
+    // CRITICAL: Use absolute path in ATTACH statement
+    // Never interpolate user-controlled paths directly into SQL
+    plain.exec(`
+      ATTACH DATABASE '${tempPath}' AS encrypted KEY '${key}';
+      SELECT sqlcipher_export('encrypted');
+      DETACH DATABASE encrypted;
+    `);
+    plain.close();
+    fs.renameSync(tempPath, resolvedDbPath);
+    console.log('[DB] ✅ Database encrypted successfully.');
+  } catch (e) {
+    // Clean up orphaned .tmp file on migration failure
+    try { fs.unlinkSync(tempPath); } catch {}
+    throw e;
+  }
+}
+
+export const db = openDatabase();
 db.pragma('journal_mode = WAL');
 db.pragma('foreign_keys = ON');
 
