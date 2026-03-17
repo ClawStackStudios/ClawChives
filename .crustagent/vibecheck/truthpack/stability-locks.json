@@ -29,9 +29,10 @@
       ]
     },
     "database": {
-      "engine": "better-sqlite3",
+      "engine": "better-sqlite3 (or better-sqlite3-multiple-ciphers with SQLCipher)",
       "journal_mode": "WAL",
       "foreign_keys": "ON",
+      "encryption": "AES-256 via DB_ENCRYPTION_KEY (SQLCipher drop-in)",
       "constraints": {
         "key_hash": "UNIQUE",
         "user_uuid": "REQUIRED"
@@ -40,6 +41,13 @@
     "runtime": {
       "node_version_target": "22",
       "tsx_watch_no_ignore": true
+    },
+    "testing": {
+      "framework": "Vitest + Supertest",
+      "real_database": "HardShell suite uses actual SQLite (never mocked)",
+      "test_phases": "Unit → Integration → Error Paths → Security",
+      "test_helpers_location": "tests/helpers/ (testDb.ts, testAuth.ts, testFactories.ts)",
+      "required_before_commit": true
     },
     "docker": {
       "npm_install_strategy": "npm install (NOT --omit=dev) — keeps tsx at runtime",
@@ -54,7 +62,22 @@
       "visual_hierarchy_lock": true
     }
   },
+  "deployment": {
+    "cloudflare_tunnel": "Fully supported — see README.md Public Deployment section",
+    "https_redirect": "ENFORCE_HTTPS middleware + x-forwarded-proto check",
+    "cors_modes": {
+      "development": "Allow all localhost + LAN IPs",
+      "lan_production": "Allow LAN IPs only (when CORS_ORIGIN unset)",
+      "strict": "Allowlist via CORS_ORIGIN env var (for CF Tunnel + reverse proxy)"
+    },
+    "environment_variables": {
+      "DB_ENCRYPTION_KEY": "AES-256 key (optional, plaintext if unset)",
+      "TRUST_PROXY": "true for CF Tunnel (reads x-forwarded-proto, real client IP)",
+      "CORS_ORIGIN": "Comma-separated list for strict mode (e.g., https://your-domain.com)",
+      "ENFORCE_HTTPS": "true to redirect HTTP → HTTPS"
+    }
+  },
   "status": "STABLE_LOCKED",
-  "last_lock_update": "2026-03-16T09:15:00Z",
+  "last_lock_update": "2026-03-17T00:00:00Z",
   "maintained_by": "CrustAgent©™"
 }

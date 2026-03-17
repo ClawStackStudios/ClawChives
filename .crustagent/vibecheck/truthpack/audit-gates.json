@@ -23,8 +23,16 @@
   {
     "gate": "test-suite",
     "enabled": true,
-    "reason": "Always run before commit",
-    "trigger": "Before every commit",
+    "framework": "Vitest + Supertest (HardShell 4-phase architecture)",
+    "reason": "HardShell suite covers unit, integration, error paths, and security — required before commit",
+    "trigger": "Before every commit (npm test)",
+    "phases": [
+      "Phase 1: Unit tests (isolated crypto, utils)",
+      "Phase 2: Integration tests (routes, auth flows, database transactions)",
+      "Phase 3: Error path tests (malformed input, constraint violations)",
+      "Phase 4: Security tests (auth bypass, CORS, permissions)"
+    ],
+    "setup": "testDb.ts (in-memory), testAuth.ts (token gen), testFactories.ts (data)",
     "off_switch": "Never (required)"
   },
   {
@@ -32,6 +40,28 @@
     "enabled": false,
     "reason": "Only run before deployment, not after every change",
     "trigger": "When user says 'deploy' or 'release'",
-    "checklist": ["tests passing", "no HIGH/CRITICAL vulns", "builds successfully"]
+    "checklist": [
+      "HardShell test suite passing (npm test)",
+      "no HIGH/CRITICAL vulns (npm audit)",
+      "builds successfully (npm run build)",
+      "Docker image builds cleanly",
+      "Environment variables validated (DB_ENCRYPTION_KEY, CORS_ORIGIN, etc.)",
+      "CF Tunnel setup verified if public deployment"
+    ]
+  },
+  {
+    "gate": "cf-tunnel-deployment",
+    "enabled": false,
+    "reason": "Only when deploying via Cloudflare Tunnel",
+    "trigger": "When user deploys public via CF Tunnel",
+    "checklist": [
+      "TRUST_PROXY=true set in environment",
+      "CORS_ORIGIN set to public domain",
+      "ENFORCE_HTTPS=true enabled",
+      "DB_ENCRYPTION_KEY set (via openssl rand -base64 32)",
+      "Database encrypted and backed up",
+      "cloudflared tunnel running or systemd service active",
+      "DNS CNAME configured in Cloudflare dashboard"
+    ]
   }
 ]

@@ -7,14 +7,17 @@
     "src/": "Feature-split source code",
     "src/server/": "Backend feature clusters (db, routes, middleware, utils)",
     "data/": "Persistent SQLite database storage",
-    "tests/": "Vitest and Supertest verification suites",
+    "tests/": "HardShell testing suite (unit, integration, error paths, security)",
+    "tests/helpers/": "testDb.ts, testAuth.ts, testFactories.ts (shared test utilities)",
+    "tests/unit/": "Unit tests for isolated components",
     "public/": "Static assets and HTML entry"
   },
   "technical_stack": {
     "frontend": "Vite + React + TSX + Tailwind CSS",
-    "backend": "Node.js + Express + better-sqlite3",
-    "infrastructure": "Docker + Container volume mounts",
-    "testing": "Vitest + Supertest"
+    "backend": "Node.js + Express + better-sqlite3 (or better-sqlite3-multiple-ciphers for SQLCipher)",
+    "infrastructure": "Docker + Container volume mounts + Cloudflare Tunnel ready",
+    "testing": "Vitest + Supertest (HardShell 4-phase: unit, integration, error paths, security)",
+    "encryption": "SQLCipher AES-256 (database at rest via DB_ENCRYPTION_KEY)"
   },
   "ports": {
     "frontend": 4545,
@@ -28,7 +31,7 @@
     "scuttle:prod-stop": "fuser -k clears ports 4545 and 4646",
     "scuttle:dev-stop": "alias for prod-stop",
     "build": "tsc + vite build",
-    "test": "vitest run (13 tests)"
+    "test": "vitest run (HardShell 4-phase testing suite)"
   },
   "gotchas": [
     "tsx --watch does NOT support --ignore flag on Node v22 — it will crash silently. Never add --ignore to tsx --watch.",
@@ -40,9 +43,28 @@
     "Docker: CMD must use npx (e.g. CMD [\"npx\", \"tsx\", \"server.ts\"]) to locate tsx via npm PATH.",
     "Docker: Entrypoint is pass-through only (exec su-exec node \"$@\") — don't add command logic like npx.",
     "Docker: Healthcheck start_period must be >= 15s for better-sqlite3 initialization.",
-    "Docker error 'su-exec: tsx: No such file or directory' = check Dockerfile npm install and CMD format."
+    "Docker error 'su-exec: tsx: No such file or directory' = check Dockerfile npm install and CMD format.",
+    "DB_ENCRYPTION_KEY: Leave unset for plaintext (dev), set to 'openssl rand -base64 32' for production.",
+    "CF Tunnel: Always set TRUST_PROXY=true, CORS_ORIGIN=https://your-domain, ENFORCE_HTTPS=true.",
+    "CORS: Three-mode system (dev, LAN, strict). Strict mode requires CORS_ORIGIN env var.",
+    "Testing: HardShell suite includes real DB (no mocks), integration paths, error scenarios, and security checks."
   ],
   "verified_by": "CrustAgent©™",
-  "last_audit": "2026-03-16",
-  "version": "2.0.0"
+  "last_audit": "2026-03-17",
+  "version": "2.0.0",
+  "testing_architecture": {
+    "phase_1": "Unit tests (isolated functions, crypto, utils)",
+    "phase_2": "Integration tests (API routes, database transactions, auth flows)",
+    "phase_3": "Error paths (malformed input, race conditions, constraint violations)",
+    "phase_4": "Security tests (auth bypass attempts, CORS validation, permission checks)",
+    "setup": "testDb.ts (in-memory fixtures), testAuth.ts (token generation), testFactories.ts (data factories)",
+    "coverage_target": "All critical paths, auth middleware, API routes, database operations"
+  },
+  "deployment_ready": {
+    "cloudflare_tunnel": "Full documentation added to README.md with 8-step setup",
+    "https_enforcement": "ENFORCE_HTTPS env var + httpsRedirect middleware",
+    "cors_security": "Three-mode CORS with CORS_ORIGIN allowlisting for CF Tunnel",
+    "database_encryption": "SQLCipher integration via DB_ENCRYPTION_KEY (AES-256 at rest)",
+    "production_checklist": "See README.md § Public Deployment (Cloudflare Tunnel)"
+  }
 }
