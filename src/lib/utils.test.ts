@@ -8,9 +8,39 @@ vi.mock("tailwind-merge", () => ({
   twMerge: vi.fn((_arg: string) => "tw-merge-result"),
 }));
 
-import { cn } from "./utils";
+import { cn, aggregateTags } from "./utils";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
+import type { Bookmark } from "../services/types";
+
+describe("aggregateTags", () => {
+  test("aggregates tags correctly and sorts them by count descending", () => {
+    const bookmarks: Bookmark[] = [
+      { id: "1", url: "", title: "", tags: ["a", "b"], starred: false, archived: false, createdAt: "", updatedAt: "" },
+      { id: "2", url: "", title: "", tags: ["a", "c"], starred: false, archived: false, createdAt: "", updatedAt: "" },
+      { id: "3", url: "", title: "", tags: ["a"], starred: false, archived: false, createdAt: "", updatedAt: "" },
+    ];
+
+    const result = aggregateTags(bookmarks);
+
+    expect(result).toEqual([
+      ["a", 3],
+      ["b", 1],
+      ["c", 1],
+    ]);
+  });
+
+  test("handles empty bookmarks array", () => {
+    expect(aggregateTags([])).toEqual([]);
+  });
+
+  test("handles bookmarks with no tags", () => {
+    const bookmarks: Bookmark[] = [
+      { id: "1", url: "", title: "", tags: [], starred: false, archived: false, createdAt: "", updatedAt: "" },
+    ];
+    expect(aggregateTags(bookmarks)).toEqual([]);
+  });
+});
 
 describe("cn", () => {
   beforeEach(() => {
