@@ -26,8 +26,9 @@ RUN npm run build
 FROM node:20-alpine
 
 # Install build tools needed for native modules (better-sqlite3),
-# su-exec to drop privileges, and shadow for usermod/groupmod (PUID/PGID)
-RUN apk add --no-cache python3 make g++ su-exec shadow
+# su-exec to drop privileges, shadow for usermod/groupmod (PUID/PGID),
+# and locale support for UTF-8/emoji rendering in non-interactive mode
+RUN apk add --no-cache python3 make g++ su-exec shadow musl-locales
 
 WORKDIR /app
 
@@ -59,6 +60,8 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=5 \
 ENV NODE_ENV=production
 ENV PORT=4545
 ENV DATA_DIR=/app/data
+ENV LANG=C.UTF-8
+ENV LC_ALL=C.UTF-8
 
 ENTRYPOINT ["/app/docker-entrypoint.sh"]
 CMD ["npx", "tsx", "server.ts"]
