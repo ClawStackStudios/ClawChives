@@ -7,10 +7,13 @@ import { Sidebar } from "./Sidebar";
 import { BookmarkModal } from "./BookmarkModal";
 import { DashboardView } from "./DashboardView";
 import { TagsView } from "./TagsView";
+import { SortDropdown } from "./SortDropdown";
+import { ViewToggle } from "./ViewToggle";
 import { AlertModal } from "../ui/LobsterModal";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 import { useInfiniteBookmarks } from "../../hooks/useInfiniteBookmarks";
-import { useDebounce } from "../../lib/utils";
+import { useDebounce, sortBookmarks } from "../../lib/utils";
+import type { SortBy } from "../../lib/utils";
 import { generateUUID } from "../../lib/crypto";
 import type { Bookmark, Folder } from "../../services/types";
 import { User } from "../../App";
@@ -34,9 +37,21 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; variant?: "info" | "error" } | null>(null);
+  const [sortBy, setSortBy] = useState<SortBy>(() => (sessionStorage.getItem("cc_sort_by") as SortBy) || "date-desc");
+  const [viewMode, setViewMode] = useState<"grid" | "list">(() => (sessionStorage.getItem("cc_view_mode") as "grid" | "list") || "grid");
 
   const showAlert = (title: string, message: string, variant: "info" | "error" = "error") =>
     setAlertModal({ title, message, variant });
+
+  const handleSortChange = (sort: SortBy) => {
+    setSortBy(sort);
+    sessionStorage.setItem("cc_sort_by", sort);
+  };
+
+  const handleViewChange = (mode: "grid" | "list") => {
+    setViewMode(mode);
+    sessionStorage.setItem("cc_view_mode", mode);
+  };
 
   const db = useDatabaseAdapter();
 
@@ -186,24 +201,27 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   /** ── Filtered bookmarks (memoized) ── */
   const filteredBookmarks = useMemo(
     () =>
-      flatBookmarks.filter((bookmark) => {
-        const matchesSearch =
-          bookmark.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-          bookmark.url.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-          bookmark.description?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
-          bookmark.tags?.some((t) => t.toLowerCase().includes(debouncedQuery.toLowerCase()));
+      sortBookmarks(
+        flatBookmarks.filter((bookmark) => {
+          const matchesSearch =
+            bookmark.title.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+            bookmark.url.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+            bookmark.description?.toLowerCase().includes(debouncedQuery.toLowerCase()) ||
+            bookmark.tags?.some((t) => t.toLowerCase().includes(debouncedQuery.toLowerCase()));
 
-        const matchesFolder = selectedFolder ? bookmark.folderId === selectedFolder : true;
-        const matchesFilter =
-          activeTab === "all" ||
-          (activeTab === "starred" && bookmark.starred) ||
-          (activeTab === "archived" && bookmark.archived);
+          const matchesFolder = selectedFolder ? bookmark.folderId === selectedFolder : true;
+          const matchesFilter =
+            activeTab === "all" ||
+            (activeTab === "starred" && bookmark.starred) ||
+            (activeTab === "archived" && bookmark.archived);
 
-        const matchesTag = tagFilter ? bookmark.tags.includes(tagFilter) : true;
+          const matchesTag = tagFilter ? bookmark.tags.includes(tagFilter) : true;
 
-        return matchesSearch && matchesFolder && matchesFilter && matchesTag;
-      }),
-    [flatBookmarks, debouncedQuery, selectedFolder, activeTab, tagFilter]
+          return matchesSearch && matchesFolder && matchesFilter && matchesTag;
+        }),
+        sortBy
+      ),
+    [flatBookmarks, debouncedQuery, selectedFolder, activeTab, tagFilter, sortBy]
   );
 
   /** ── Memoized bookmark counts ── */
@@ -271,6 +289,12 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
                   className="pl-10"
                 />
               </div>
+              {showGrid && (
+                <div className="flex items-center gap-2 ml-2">
+                  <SortDropdown sortBy={sortBy} onChange={handleSortChange} />
+                  <ViewToggle viewMode={viewMode} onChange={handleViewChange} />
+                </div>
+              )}
               {user && (
                 <div className="ml-4 flex items-center gap-2">
                   <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
@@ -348,6 +372,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             <div className="p-6">
               <BookmarkGrid
                 bookmarks={filteredBookmarks}
+                layout={viewMode}
                 onEdit={handleEditBookmark}
                 onDelete={handleDeleteBookmark}
                 onToggleStar={handleToggleStar}
