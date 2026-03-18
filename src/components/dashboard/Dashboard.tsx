@@ -168,8 +168,14 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
 
   const handleSelectFolder = (id: string | null) => {
     setSelectedFolder(id);
-    if (id) sessionStorage.setItem("cc_selected_folder", id);
-    else sessionStorage.removeItem("cc_selected_folder");
+    if (id) {
+      sessionStorage.setItem("cc_selected_folder", id);
+      // When folder is selected, switch to "all" tab but keep the folder (don't clear it)
+      setActiveTab("all");
+      sessionStorage.setItem("cc_active_tab", "all");
+    } else {
+      sessionStorage.removeItem("cc_selected_folder");
+    }
   };
 
   /** ── Tag filter ── */
