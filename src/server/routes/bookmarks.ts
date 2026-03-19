@@ -20,7 +20,7 @@ const BOOKMARK_SELECT = `
 /** Helper: Insert a single bookmark with duplicate check, jinaUrl guard, and transaction */
 function insertBookmark(
   authReq: AuthRequest,
-  input: Record<string, unknown> & { url: string; title: string; jinaUrl?: string }
+  input: Record<string, unknown> & { url: string; title: string; jinaUrl?: string | null }
 ): { bookmark: any } | { error: string; status: number } {
   // Duplicate URL check
   const existing = db.prepare('SELECT id, title FROM bookmarks WHERE url = ? AND user_uuid = ?').get(input.url, authReq.userUuid);
