@@ -95,6 +95,27 @@ router.get('/', requireAuth, requirePermission('canRead'), (req, res) => {
   res.json({ success: true, data: rows.map(parseBookmark) });
 });
 
+/** GET /api/bookmarks/folder-counts — Get bookmark count for each folder */
+router.get('/folder-counts', requireAuth, requirePermission('canRead'), (req, res) => {
+  const authReq = req as AuthRequest;
+  const rows = db.prepare(`
+    SELECT folder_id, COUNT(*) as count
+    FROM bookmarks
+    WHERE user_uuid = ?
+    GROUP BY folder_id
+  `).all(authReq.userUuid) as Array<{ folder_id: string | null; count: number }>;
+
+  // Build map: folderId -> count (null folder_id maps to 'uncategorized')
+  const counts: Record<string, number> = {};
+  rows.forEach(row => {
+    if (row.folder_id) {
+      counts[row.folder_id] = row.count;
+    }
+  });
+
+  res.json({ success: true, data: counts });
+});
+
 /** GET /api/bookmarks/:id */
 router.get('/:id', requireAuth, requirePermission('canRead'), (req, res) => {
   const authReq = req as AuthRequest;
@@ -246,27 +267,6 @@ router.post('/bulk', requireAuth, requirePermission('canWrite'), (req, res) => {
   });
 
   res.status(207).json({ success: true, imported, failed: errors.length, errors });
-});
-
-/** GET /api/bookmarks/folder-counts — Get bookmark count for each folder */
-router.get('/folder-counts', requireAuth, requirePermission('canRead'), (req, res) => {
-  const authReq = req as AuthRequest;
-  const rows = db.prepare(`
-    SELECT folder_id, COUNT(*) as count
-    FROM bookmarks
-    WHERE user_uuid = ?
-    GROUP BY folder_id
-  `).all(authReq.userUuid) as Array<{ folder_id: string | null; count: number }>;
-
-  // Build map: folderId -> count (null folder_id maps to 'uncategorized')
-  const counts: Record<string, number> = {};
-  rows.forEach(row => {
-    if (row.folder_id) {
-      counts[row.folder_id] = row.count;
-    }
-  });
-
-  res.json({ success: true, data: counts });
 });
 
 export default router;

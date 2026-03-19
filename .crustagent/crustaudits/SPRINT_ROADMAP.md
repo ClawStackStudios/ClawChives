@@ -74,57 +74,70 @@
 
 ---
 
-### Phase 3: HardShell Test Coverage (High Priority)
+### Phase 3: HardShell Test Coverage + Build Validation Gates ⏳ IN PROGRESS
 
-#### Task 3.1 — Mass Import Test Suite (1k URLs)
-- **File:** `tests/integration.test.js` (add new suite)
+#### Task 3.0 — Build Validation Gates (NEW) ⏳
+- **File:** `tests/build-gates.test.js` (NEW)
+- **Status:** CREATED, READY FOR TEST
+- **What:** Three-step build validation that gates all feature changes
+- **Steps:**
+  1. TypeScript lint: `npm run lint` (type checking)
+  2. NPM build: `npm run build` (tsc && vite build)
+  3. Docker build: `docker build .` (container validation)
+- **Acceptance:** All three steps pass; failing build blocks code merges
+- **Command:** `npm run test:phase3:build`
+
+#### Task 3.1 — Mass Import Test Suite (1k URLs) ⏳
+- **File:** `tests/phase3-integration.test.js` (NEW)
+- **Status:** CREATED, READY FOR TEST
 - **What:** Test importing 1000 URLs via bulk endpoint in batches
 - **Scenarios:**
-  - 1000 valid URLs import successfully
+  - 1000 valid URLs import successfully (100-item batches)
   - 500 valid + 500 duplicates → success count = 500, duplicates rejected
   - 1000 URLs with mixed invalid formats → detailed error report returned
-  - Lobster key bypasses rate limit, web key hits it at 76
-- **Est:** 60 min
-- **Acceptance:** All 4 scenarios passing, error handling is clear and actionable
+  - Lobster key bypasses rate limit (5 batches × 200 items each, no 429)
+- **Command:** `npm run test:phase3:integration`
 
-#### Task 3.2 — Large Library Load Test (1k+ Bookmarks)
-- **File:** `tests/performance.test.js` (add new suite)
-- **What:** Measure load time and DOM node count with 1000+ bookmarks
+#### Task 3.2 — Large Library Load Test (1k+ Bookmarks) ⏳
+- **File:** `tests/phase3-integration.test.js` (same suite)
+- **Status:** CREATED, READY FOR TEST
+- **What:** Measure load time and endpoint performance with large libraries
 - **Scenarios:**
-  - Load 1000 bookmarks: initial render < 500ms, constant ~20 DOM nodes (virtualized)
-  - Folder count calculation: < 100ms for all 5 folders
-  - Infinite scroll sentinel fires correctly without stalling
-- **Est:** 45 min
-- **Acceptance:** All performance targets met, no memory leaks detected
+  - Load 1000 bookmarks: API response < 500ms
+  - Folder count calculation: < 100ms via `GET /api/bookmarks/folder-counts`
+  - Virtual DOM nodes: ~15-20 constant (manual browser testing)
 
-#### Task 3.3 — Error Recovery Test
-- **File:** `tests/error-paths.test.js` (add new suite)
-- **What:** Test graceful degradation when bulk import partially fails
+#### Task 3.3 — Error Recovery Test ⏳
+- **File:** `tests/phase3-integration.test.js` (same suite)
+- **Status:** CREATED, READY FOR TEST
+- **What:** Test graceful degradation during partial failures
 - **Scenarios:**
-  - Network timeout mid-import: client shows "X of 1000 imported, Y failed"
-  - DB constraint violation: duplicate URLs are skipped with reason logged
-  - Auth token expires: retry with new token succeeds
-- **Est:** 45 min
-- **Acceptance:** All 3 scenarios handled cleanly, no orphaned data
+  - Partial import failures: mixed valid + invalid items handled correctly
+  - Duplicate URLs skipped: no DB corruption, original preserved
+  - Audit logging: failures recorded for compliance trail
 
 ---
 
-## 🎯 Execution Order
+## 🎯 Execution Status
 
-**Day 1 (Now):**
-1. Task 1.1 — Lobster Import Modal UI (30 min)
-2. Task 2.1 — Async Folder Counts (30 min)
-3. Task 1.2 — Rate Limit Bypass Logic (20 min)
+**Phase 1: Bulk Import Infrastructure ✅ COMPLETE**
+- Task 1.1 ✅ — Lobster Import Modal UI
+- Task 1.2 ✅ — Rate Limit Bypass Logic
+- Task 1.3 ✅ — Bulk Import Endpoint
+- Task 1.4 ✅ — Infrastructure Bug Fixes
+- Task 1.5 ✅ — Comprehensive Test Suite (20 tests)
+- Task 1.6 ✅ — Truthpack & Documentation Alignment
 
-**Day 2:**
-4. Task 1.3 — Bulk Import Endpoint (45 min)
-5. Task 2.2 — Backend Count Endpoint (20 min)
-6. Task 2.3 — Sentinel Optimization (15 min)
+**Phase 2: Large Library Optimization ✅ COMPLETE**
+- Task 2.1 ✅ — Async Pagination for Folder Counts
+- Task 2.2 ✅ — Backend Count Endpoint
+- Task 2.3 ✅ — Infinite Scroll Sentinel Optimization
 
-**Day 3 (Testing):**
-7. Task 3.1 — Mass Import Tests (60 min)
-8. Task 3.2 — Large Library Performance Tests (45 min)
-9. Task 3.3 — Error Recovery Tests (45 min)
+**Phase 3: HardShell Test Coverage + Build Gates ⏳ IN PROGRESS**
+- Task 3.0 ⏳ — Build Validation Gates (npm lint → npm build → docker build)
+- Task 3.1 ⏳ — Mass Import Test Suite (1k URLs, batching, duplicates)
+- Task 3.2 ⏳ — Large Library Load Test (performance targets)
+- Task 3.3 ⏳ — Error Recovery Test (partial failures, audit logs)
 
 ---
 
