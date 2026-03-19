@@ -47,6 +47,19 @@
       "real_database": "HardShell suite uses actual SQLite (never mocked)",
       "test_phases": "Unit → Integration → Error Paths → Security",
       "test_helpers_location": "tests/helpers/ (testDb.ts, testAuth.ts, testFactories.ts)",
+      "bulk_import_tests": {
+        "file": "tests/bulk-import.test.js",
+        "count": 20,
+        "coverage": [
+          "Auth & Permissions: unauthenticated (401), read-only (403), revoked (401), expired (401), write-enabled (207)",
+          "Body Validation: non-array, batch size > 1000, missing URL fields, invalid URL format",
+          "Import Logic: happy path (20+ unique URLs), response shape verification",
+          "Duplicates & Race Conditions: in-batch duplicates, pre-existing URLs, mixed splits",
+          "jinaUrl Guard: agents blocked per-item (not whole request)",
+          "Response Integrity: { url, reason } in errors, math checks (imported + failed = total)",
+          "Rate Limiter Bypass: Lobster keys (lb-*) skip apiLimiter"
+        ]
+      },
       "required_before_commit": true
     },
     "data_fetching": {
@@ -90,21 +103,36 @@
     }
   },
   "status": "STABLE_LOCKED",
-  "last_lock_update": "2026-03-18T04:00:00Z",
+  "last_lock_update": "2026-03-19T04:00:00Z",
   "phase_1_performance_complete": true,
+  "phase_1_bulk_import_complete": {
+    "status": "COMPLETE (2026-03-19)",
+    "completed": [
+      "POST /api/bookmarks/bulk endpoint with up to 1000 bookmarks per batch",
+      "Rate limiter bypass for Lobster keys (lb-* prefix)",
+      "Per-item validation and error reporting (HTTP 207 Multi-Status)",
+      "UNIQUE constraint duplicate detection (user_uuid, url)",
+      "jinaUrl guard (agents cannot use conversion URLs)",
+      "20-test comprehensive HardShell test suite",
+      "testFactories.ts bug fix (missing expiration_type)",
+      "testDb.ts bug fix (wrong table name in resetTestDatabase)"
+    ],
+    "tests_passing": "93 (73 existing + 20 new bulk import tests)"
+  },
   "phase_2_ui_queued": {
     "phase_2_next": [
       "Sort controls (Date newest/oldest, Name A-Z/Z-A)",
       "List view mode (connect prototype grid/list toggle)"
     ],
     "phase_3_queued": [
-      "Folder count badges (render calculated counts in sidebar)",
-      "Corrected folder behavior (fix CRUD, remove dead code)"
+      "Folder count badges (render calculated counts in sidebar) ✓ DONE (2026-03-18)",
+      "Corrected folder behavior (fix CRUD, remove dead code) ✓ DONE (2026-03-18)",
+      "Large library optimization (async folder counts, backend endpoint)"
     ],
     "phase_4_backlog": [
       "Bulk actions (multi-select, bulk delete/move/tag)"
     ],
-    "roadmap_document": ".crustagent/crustaudits/UX_ROADMAP.md"
+    "roadmap_document": ".crustagent/crustaudits/SPRINT_ROADMAP.md"
   },
   "performance_improvements": {
     "pagination": "690 items → 50 items per page (API + react-query) — 90% network reduction",

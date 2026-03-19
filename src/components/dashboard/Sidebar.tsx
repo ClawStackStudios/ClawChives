@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import { Plus, Folder, Star, Archive, LayoutDashboard, Tag, Pencil } from "lucide-react";
 import { Button } from "../ui/button";
 import { FolderEditModal } from "./FolderEditModal";
@@ -124,9 +124,19 @@ export function Sidebar({
     setFolderModalOpen(true);
   };
 
+  // Memoize folder counts: recalculate only when bookmarks array changes
+  const folderCounts = useMemo(() => {
+    const counts: Record<string, number> = {};
+    folders.forEach((folder) => {
+      counts[folder.id] = bookmarks.filter((b) => b.folderId === folder.id).length;
+    });
+    return counts;
+  }, [bookmarks, folders]);
+
+  // Stable getter function using memoized counts
   const folderBookmarkCount = useCallback(
-    (folderId: string) => bookmarks.filter((b) => b.folderId === folderId).length,
-    [bookmarks]
+    (folderId: string) => folderCounts[folderId] ?? 0,
+    [folderCounts]
   );
 
   return (

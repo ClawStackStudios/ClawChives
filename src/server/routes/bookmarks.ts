@@ -17,6 +17,59 @@ const BOOKMARK_SELECT = `
     ON b.id = jc.bookmark_id AND b.user_uuid = jc.user_uuid
 `;
 
+/** Helper: Insert a single bookmark with duplicate check, jinaUrl guard, and transaction */
+function insertBookmark(
+  authReq: AuthRequest,
+  input: Record<string, unknown> & { url: string; title: string; jinaUrl?: string }
+): { bookmark: any } | { error: string; status: number } {
+  // Duplicate URL check
+  const existing = db.prepare('SELECT id, title FROM bookmarks WHERE url = ? AND user_uuid = ?').get(input.url, authReq.userUuid);
+  if (existing) {
+    return { error: `A bookmark for "${input.url}" already exists`, status: 409 };
+  }
+
+  // 🛡️ jinaUrl human-only field check
+  if (input.jinaUrl !== undefined && authReq.keyType !== 'human') {
+    return { error: 'Agent keys cannot create bookmarks with r.jina.ai conversion. Only human users can set jinaUrl.', status: 403 };
+  }
+
+  const now = new Date().toISOString();
+  const bookmark = {
+    id:          (input.id as string) ?? generateId(),
+    user_uuid:   authReq.userUuid,
+    url:         input.url,
+    title:       input.title,
+    description: (input.description as string) ?? '',
+    favicon:     (input.favicon as string) ?? '',
+    tags:        JSON.stringify((input.tags as string[]) ?? []),
+    folder_id:   (input.folderId as string) ?? null,
+    starred:     (input.starred as boolean) ? 1 : 0,
+    archived:    (input.archived as boolean) ? 1 : 0,
+    color:       (input.color as string) ?? null,
+    created_at:  (input.createdAt as string) ?? now,
+    updated_at:  now,
+  };
+
+  const doCreate = db.transaction((bookmarkData: any, jinaUrl: string | null) => {
+    db.prepare('INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,color,created_at,updated_at) VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@created_at,@updated_at)').run(bookmarkData);
+    if (jinaUrl) {
+      db.prepare('INSERT INTO jina_conversions (bookmark_id, user_uuid, url, created_at) VALUES (?, ?, ?, ?)').run(bookmarkData.id, bookmarkData.user_uuid, jinaUrl, bookmarkData.created_at);
+    }
+  });
+
+  doCreate(bookmark, (input.jinaUrl as string) ?? null);
+
+  audit.log('BOOKMARK_CREATED', { actor: authReq.userUuid, actor_type: authReq.keyType, action: 'create', outcome: 'success', resource: 'bookmark', details: { bookmark_id: bookmark.id, title: bookmark.title } });
+
+  if (input.jinaUrl && authReq.keyType === 'human') {
+    audit.log('bookmark_jina_conversion_set', { actor: authReq.userUuid, actor_type: authReq.keyType, action: 'create', outcome: 'success', resource: 'bookmark', details: { bookmark_id: bookmark.id, jina_url: input.jinaUrl } });
+  }
+
+  // Fetch and return the created bookmark
+  const created = db.prepare(`${BOOKMARK_SELECT} WHERE b.id = ? AND b.user_uuid = ?`).get(bookmark.id, authReq.userUuid);
+  return { bookmark: parseBookmark(created) };
+}
+
 /** GET /api/bookmarks */
 router.get('/', requireAuth, requirePermission('canRead'), (req, res) => {
   const authReq = req as AuthRequest;
@@ -53,48 +106,13 @@ router.get('/:id', requireAuth, requirePermission('canRead'), (req, res) => {
 /** POST /api/bookmarks */
 router.post('/', requireAuth, requirePermission('canWrite'), validateBody(BookmarkSchemas.create), (req, res) => {
   const authReq = req as AuthRequest;
-  const { url, title } = req.body;
+  const result = insertBookmark(authReq, req.body);
 
-  const existing = db.prepare('SELECT id, title FROM bookmarks WHERE url = ? AND user_uuid = ?').get(url, authReq.userUuid);
-  if (existing) return res.status(409).json({ success: false, error: `A bookmark for "${url}" already exists`, existing });
-
-  // 🛡️ jinaUrl human-only field check (inline — not middleware level)
-  if (req.body.jinaUrl !== undefined && authReq.keyType !== 'human') {
-    return res.status(403).json({ success: false, error: 'Agent keys cannot create bookmarks with r.jina.ai conversion. Only human users can set jinaUrl.' });
+  if ('error' in result) {
+    return res.status(result.status).json({ success: false, error: result.error });
   }
 
-  const now = new Date().toISOString();
-  const bookmark = {
-    id:          req.body.id ?? generateId(),
-    user_uuid:   authReq.userUuid,
-    url, title,
-    description: req.body.description ?? '',
-    favicon:     req.body.favicon ?? '',
-    tags:        JSON.stringify(req.body.tags ?? []),
-    folder_id:   req.body.folderId ?? null,
-    starred:     req.body.starred ? 1 : 0,
-    archived:    req.body.archived ? 1 : 0,
-    color:       req.body.color ?? null,
-    created_at:  req.body.createdAt ?? now,
-    updated_at:  now,
-  };
-
-  const doCreate = db.transaction((bookmarkData: any, jinaUrl: string | null) => {
-    db.prepare('INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,color,created_at,updated_at) VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@created_at,@updated_at)').run(bookmarkData);
-    if (jinaUrl) {
-      db.prepare('INSERT INTO jina_conversions (bookmark_id, user_uuid, url, created_at) VALUES (?, ?, ?, ?)').run(bookmarkData.id, bookmarkData.user_uuid, jinaUrl, bookmarkData.created_at);
-    }
-  });
-
-  doCreate(bookmark, req.body.jinaUrl ?? null);
-
-  audit.log('BOOKMARK_CREATED', { actor: authReq.userUuid, actor_type: authReq.keyType, action: 'create', outcome: 'success', resource: 'bookmark', details: { bookmark_id: bookmark.id, title: bookmark.title } });
-
-  if (req.body.jinaUrl && authReq.keyType === 'human') {
-    audit.log('bookmark_jina_conversion_set', { actor: authReq.userUuid, actor_type: authReq.keyType, action: 'create', outcome: 'success', resource: 'bookmark', details: { bookmark_id: bookmark.id, jina_url: req.body.jinaUrl } });
-  }
-
-  res.status(201).json({ success: true, data: parseBookmark(db.prepare(`${BOOKMARK_SELECT} WHERE b.id = ? AND b.user_uuid = ?`).get(bookmark.id, authReq.userUuid)) });
+  res.status(201).json({ success: true, data: result.bookmark });
 });
 
 /** PUT /api/bookmarks/:id */
@@ -183,6 +201,72 @@ router.patch('/:id/archive', requireAuth, requirePermission('canEdit'), (req, re
   const result = parseBookmark(db.prepare(`${BOOKMARK_SELECT} WHERE b.id = ? AND b.user_uuid = ?`).get(req.params.id, authReq.userUuid));
   audit.log('BOOKMARK_ARCHIVED', { actor: authReq.userUuid, actor_type: authReq.keyType, action: 'update', outcome: 'success', resource: 'bookmark', details: { bookmark_id: req.params.id, archived: result?.archived } });
   res.json({ success: true, data: result });
+});
+
+/** POST /api/bookmarks/bulk — Bulk import via Lobster key or agent */
+router.post('/bulk', requireAuth, requirePermission('canWrite'), (req, res) => {
+  const authReq = req as AuthRequest;
+  const { bookmarks } = req.body;
+
+  if (!Array.isArray(bookmarks)) {
+    return res.status(400).json({ success: false, error: 'body.bookmarks must be an array' });
+  }
+
+  if (bookmarks.length > 1000) {
+    return res.status(400).json({ success: false, error: 'Batch size exceeds maximum of 1000 items' });
+  }
+
+  let imported = 0;
+  const errors: { url: string; reason: string }[] = [];
+
+  for (const item of bookmarks) {
+    const parsed = BookmarkSchemas.create.safeParse(item);
+    if (!parsed.success) {
+      const url = (item as any)?.url ?? '(unknown)';
+      const reason = parsed.error.issues[0]?.message ?? 'Invalid bookmark format';
+      errors.push({ url, reason });
+      continue;
+    }
+
+    const result = insertBookmark(authReq, parsed.data);
+    if ('error' in result) {
+      errors.push({ url: parsed.data.url, reason: result.error });
+    } else {
+      imported++;
+    }
+  }
+
+  audit.log('BOOKMARKS_BULK_IMPORTED', {
+    actor: authReq.userUuid,
+    actor_type: authReq.keyType,
+    action: 'create',
+    outcome: 'success',
+    resource: 'bookmark',
+    details: { imported, failed: errors.length, total: bookmarks.length },
+  });
+
+  res.status(207).json({ success: true, imported, failed: errors.length, errors });
+});
+
+/** GET /api/bookmarks/folder-counts — Get bookmark count for each folder */
+router.get('/folder-counts', requireAuth, requirePermission('canRead'), (req, res) => {
+  const authReq = req as AuthRequest;
+  const rows = db.prepare(`
+    SELECT folder_id, COUNT(*) as count
+    FROM bookmarks
+    WHERE user_uuid = ?
+    GROUP BY folder_id
+  `).all(authReq.userUuid) as Array<{ folder_id: string | null; count: number }>;
+
+  // Build map: folderId -> count (null folder_id maps to 'uncategorized')
+  const counts: Record<string, number> = {};
+  rows.forEach(row => {
+    if (row.folder_id) {
+      counts[row.folder_id] = row.count;
+    }
+  });
+
+  res.json({ success: true, data: counts });
 });
 
 export default router;

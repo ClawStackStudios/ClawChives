@@ -53,14 +53,50 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 
 ---
 
-## 📊 Current State (Phase 3 — Feature Expansion)
+## 📊 Current State (Phase 1 Complete — Bulk Import Sprint)
 
-### Done List ✅
+### Phase 1: Lobster Bulk Import ✅ COMPLETE (2026-03-19)
+- [x] **POST /api/bookmarks/bulk Endpoint**: Accepts up to 1000 bookmarks per batch with HTTP 207 Multi-Status responses.
+- [x] **Rate Limiter Bypass**: Lobster keys (`lb-` prefix) bypass `apiLimiter` for unlimited batch imports.
+- [x] **Per-Item Validation**: Individual URL validation with error reporting (`{ url, reason }`).
+- [x] **UNIQUE Constraint Detection**: Duplicate prevention via `UNIQUE INDEX (user_uuid, url)`.
+- [x] **jinaUrl Agent Guard**: Agents blocked from using conversion URLs (per-item error, not 403).
+- [x] **HardShell Test Suite**: 20 comprehensive tests covering auth, validation, duplicates, race conditions, response integrity.
+- [x] **Infrastructure Bug Fixes**: `testFactories.ts` + `testDb.ts` corrected.
+- [x] **Truthpack Alignment**: All JSON contracts, routes, and stability locks updated.
+
+### Earlier Phases: Foundation ✅
 - [x] **SQLite-Only Architecture**: Dropped IndexedDB for a centralized, robust backend.
 - [x] **One-Field Login**: Simplified authentication via `hu-` key lookup with `UNIQUE` `key_hash` indexing.
 - [x] **Agent System**: `lb-` keys with Granular CUSTOM permissions.
 - [x] **Liquid Metal Toggle**: Circular reveal transitions (State synced via API).
 - [x] **r.jina.ai Integration**: LLM-friendly reading mode (Human-only conversion).
+- [x] **Phase 3a Folder Badges**: Folder bookmarks counts rendered in sidebar (2026-03-18).
+- [x] **Phase 3b Folder Behavior**: CRUD corrections and dead code removal (2026-03-18).
+
+---
+
+## 🧪 Test Suite Status (93 Tests — ALL PASSING)
+
+**Command**: `npm run test`
+
+**Architecture (Semantic Layers)**:
+- **Layer 0 — Unit Tests (46)**: Parsers, crypto, utils, API helpers
+- **Layer 1 — Middleware Tests (31)**: Error handling, validation, HTTP status codes
+- **Layer 2 — Integration Tests (16)**: Security (3) + Bulk Import Feature (20)
+
+**Critical Coverage**:
+- ✅ Authentication & Authorization (5 tests)
+- ✅ Body Validation & Input Handling (5 tests)
+- ✅ Happy Path Imports (2 tests)
+- ✅ Duplicate Detection & Race Conditions (3 tests)
+- ✅ jinaUrl Agent Guard (1 test)
+- ✅ Response Integrity & Math Verification (3 tests)
+- ✅ Rate Limiter Bypass (1 test)
+
+**Test Helpers**:
+- `tests/helpers/testDb.ts` — Database isolation, cleanup, reset
+- `tests/helpers/testFactories.ts` — User/folder/bookmark/agent key creation (schema-correct)
 
 ---
 
@@ -73,11 +109,14 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 - **API Dev**: `npm run dev:server` (Port 4646).
 - **Build**: `npm run build` (tsc + vite build).
 - **Lint**: `npm run lint` (TypeScript verification).
+- **Test**: `npm run test` (Vitest all layers — 93 tests passing).
 - **Ports**: UI on `4545`, API on `4646 manually`.
 - **tsx Gotcha**: `tsx --watch` does NOT support `--ignore` on Node v22. Silent crash risk.
 - **Stability**: If API fails, run `npm rebuild better-sqlite3`.
 
 ---
+
+# DO NOT UPDATE THIS SECTION
 
 ## 🗺️ Complete File Map & Context References
 

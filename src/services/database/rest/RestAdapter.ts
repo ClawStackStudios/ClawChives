@@ -79,6 +79,27 @@ export class RestAdapter implements IDatabaseAdapter {
     });
   }
 
+  async saveBulkBookmarks(
+    bookmarks: Bookmark[]
+  ): Promise<{ imported: number; failed: number; errors: { url: string; reason: string }[] }> {
+    const token = getToken();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/api/bookmarks/bulk`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ bookmarks }),
+    });
+
+    const json = await res.json();
+    if (!res.ok && res.status !== 207) {
+      throw new ApiError(res.status, json.error ?? res.statusText);
+    }
+
+    return { imported: json.imported, failed: json.failed, errors: json.errors };
+  }
+
   async updateBookmark(bookmark: Bookmark): Promise<Bookmark> {
     return request<Bookmark>(`/api/bookmarks/${bookmark.id}`, {
       method: "PUT",

@@ -36,8 +36,11 @@ export interface TestAgentKey {
   name: string;
   apiKey: string;
   permissions: Record<string, boolean>;
+  rateLimit?: number;
+  isActive?: boolean;
+  expirationType?: string;
   createdAt: string;
-  revokedAt?: string;
+  expirationDate?: string;
 }
 
 /**
@@ -108,14 +111,28 @@ export function createTestAgentKey(
   const name = overrides?.name ?? `Test Agent ${Date.now()}`;
   const apiKey = overrides?.apiKey ?? `lb-${generateRandomKey(60)}`;
   const permissions = overrides?.permissions ?? { canRead: true, canWrite: false };
+  const rateLimit = overrides?.rateLimit ?? 100;
+  const isActive = overrides?.isActive ?? true;
+  const expirationType = overrides?.expirationType ?? 'expires';
   const createdAt = overrides?.createdAt ?? new Date().toISOString();
-  const revokedAt = overrides?.revokedAt ?? null;
+  const expirationDate = overrides?.expirationDate ?? new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString();
 
   db.prepare(
-    'INSERT INTO agent_keys (id, user_uuid, name, api_key, permissions, created_at, revoked_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
-  ).run(id, userUuid, name, apiKey, JSON.stringify(permissions), createdAt, revokedAt);
+    'INSERT INTO agent_keys (id, user_uuid, name, api_key, permissions, rate_limit, is_active, expiration_type, created_at, expiration_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+  ).run(
+    id,
+    userUuid,
+    name,
+    apiKey,
+    JSON.stringify(permissions),
+    rateLimit,
+    isActive ? 1 : 0,
+    expirationType,
+    createdAt,
+    expirationDate
+  );
 
-  return { id, userUuid, name, apiKey, permissions, createdAt, revokedAt };
+  return { id, userUuid, name, apiKey, permissions, rateLimit, isActive, expirationType, createdAt, expirationDate };
 }
 
 /**

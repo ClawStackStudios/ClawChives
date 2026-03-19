@@ -5,6 +5,7 @@
   { "method": "GET",  "path": "/api/auth/validate", "auth": true, "requireHuman": false },
   { "method": "GET",  "path": "/api/bookmarks", "auth": true, "permission": "canRead", "requireHuman": false },
   { "method": "POST", "path": "/api/bookmarks", "auth": true, "permission": "canWrite", "requireHuman": false },
+  { "method": "POST", "path": "/api/bookmarks/bulk", "auth": true, "permission": "canWrite", "requireHuman": false, "rateLimitBypass": "lobster-keys" },
   { "method": "GET",  "path": "/api/bookmarks/:id", "auth": true, "permission": "canRead", "requireHuman": false },
   { "method": "PUT",  "path": "/api/bookmarks/:id", "auth": true, "permission": "canEdit", "requireHuman": false },
   { "method": "DELETE", "path": "/api/bookmarks/:id", "auth": true, "permission": "canDelete", "requireHuman": false },

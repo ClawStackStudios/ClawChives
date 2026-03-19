@@ -7,6 +7,7 @@ import { Database, FileSpreadsheet, CheckCircle, Upload, FileText } from "lucide
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 import { generateUUID } from "../../lib/crypto";
 import { ConfirmModal, AlertModal } from "../ui/LobsterModal";
+import { LobsterImportModal } from "./LobsterImportModal";
 
 export function ImportExportSettings() {
   const [importFile, setImportFile] = useState<File | null>(null);
@@ -14,6 +15,7 @@ export function ImportExportSettings() {
   const [importResult, setImportResult] = useState<{ success: boolean; message: string; count?: number } | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPurgedAlert, setShowPurgedAlert] = useState(false);
+  const [lobsterImportOpen, setLobsterImportOpen] = useState(false);
 
   const db = useDatabaseAdapter();
 
@@ -126,6 +128,25 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${htmlEscape(b.url)}" ADD_DATE="${ne
 
   return (
     <div className="space-y-6">
+      {/* Lobster Import Section */}
+      <Card className="border-2 border-amber-500/30 dark:border-amber-500/50">
+        <CardHeader>
+          <CardTitle className="text-amber-600 dark:text-amber-400">Lobster Import</CardTitle>
+          <CardDescription>
+            Bulk import bookmarks via agent key — no rate limits for <span className="font-mono text-xs">lb-</span> Lobster keys
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button
+            onClick={() => setLobsterImportOpen(true)}
+            className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20"
+          >
+            <Upload className="w-4 h-4 mr-2" />
+            Open Lobster Import
+          </Button>
+        </CardContent>
+      </Card>
+
       {/* Import Section */}
       <Card className="border-2 border-red-500/30 dark:border-red-500/50">
         <CardHeader>
@@ -269,6 +290,12 @@ ${bookmarks.map((b: any) => `  <DT><A HREF="${htmlEscape(b.url)}" ADD_DATE="${ne
         title="Reef Purged 🦞"
         message="All Pinchmarks have been purged from the reef."
         variant="info"
+      />
+
+      {/* Lobster Import Modal */}
+      <LobsterImportModal
+        isOpen={lobsterImportOpen}
+        onClose={() => setLobsterImportOpen(false)}
       />
     </div>
   );

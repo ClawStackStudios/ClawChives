@@ -8,6 +8,44 @@
     "verified": true
   },
   {
+    "endpoint": "POST /api/bookmarks/bulk",
+    "payload": {
+      "bookmarks": [
+        {
+          "url": "string (required, must be valid URL)",
+          "title": "string (required)",
+          "description": "string (optional)",
+          "tags": "string[] (optional)",
+          "starred": "boolean (optional)",
+          "archived": "boolean (optional)",
+          "folderId": "string (optional, UUID)",
+          "jinaUrl": "string (optional, human-only, agents get 403 per-item)"
+        }
+      ]
+    },
+    "response": {
+      "status": 207,
+      "body": {
+        "success": "boolean",
+        "imported": "number (count of successfully created bookmarks)",
+        "failed": "number (count of failed items)",
+        "errors": [
+          {
+            "url": "string",
+            "reason": "string (validation or duplicate error message)"
+          }
+        ]
+      }
+    },
+    "constraints": {
+      "max_batch_size": 1000,
+      "rate_limit_bypass": "Lobster keys (lb-*) bypass apiLimiter",
+      "duplicate_check": "UNIQUE INDEX on (user_uuid, url)",
+      "jinaUrl_guard": "Agents cannot use jinaUrl field"
+    },
+    "verified": true
+  },
+  {
     "endpoint": "POST /api/agent-keys",
     "payload": {
       "name": "string",
