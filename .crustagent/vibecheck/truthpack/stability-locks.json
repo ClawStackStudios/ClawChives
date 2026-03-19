@@ -119,15 +119,23 @@
     ],
     "tests_passing": "93 (73 existing + 20 new bulk import tests)"
   },
-  "phase_2_ui_queued": {
-    "phase_2_next": [
+  "phase_2_large_library_optimization_complete": {
+    "status": "COMPLETE (2026-03-19)",
+    "completed": [
+      "Async pagination for folder counts (useMemo + useCallback in Sidebar)",
+      "Backend count endpoint (GET /api/bookmarks/folder-counts)",
+      "Infinite scroll sentinel optimization (verified position outside virtualization)"
+    ]
+  },
+  "phase_3_backlog": {
+    "phase_3_test_suites": [
+      "Mass import test suite (1k URLs) — Task 3.1",
+      "Large library load test (1k+ bookmarks) — Task 3.2",
+      "Error recovery test — Task 3.3"
+    ],
+    "phase_4_ui_features": [
       "Sort controls (Date newest/oldest, Name A-Z/Z-A)",
       "List view mode (connect prototype grid/list toggle)"
-    ],
-    "phase_3_queued": [
-      "Folder count badges (render calculated counts in sidebar) ✓ DONE (2026-03-18)",
-      "Corrected folder behavior (fix CRUD, remove dead code) ✓ DONE (2026-03-18)",
-      "Large library optimization (async folder counts, backend endpoint)"
     ],
     "phase_4_backlog": [
       "Bulk actions (multi-select, bulk delete/move/tag)"
