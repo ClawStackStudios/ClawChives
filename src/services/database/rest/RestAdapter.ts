@@ -124,6 +124,10 @@ export class RestAdapter implements IDatabaseAdapter {
   getFolders(): Promise<Folder[]> {
     return request<Folder[]>("/api/folders");
   }
+  
+  getFolderCounts(): Promise<Record<string, number>> {
+    return request<Record<string, number>>("/api/bookmarks/folder-counts");
+  }
 
   async saveFolder(folder: Folder): Promise<Folder> {
     return request<Folder>("/api/folders", {

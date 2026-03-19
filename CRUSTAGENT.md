@@ -90,8 +90,7 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 - [x] **Truthpack Alignment**: All JSON contracts, routes, and stability locks updated.
 
 ### Phase 2: Large Library Optimization ✅ COMPLETE (2026-03-19)
-- [x] **Async Folder Counts**: Frontend caching via `useMemo` + `useCallback` (Sidebar.tsx).
-- [x] **Backend Count Endpoint**: New `GET /api/bookmarks/folder-counts` with `GROUP BY folder_id`.
+- [x] **True Async Folder Counts**: Dedicated hook `useFolderCounts` + backend endpoint `/api/bookmarks/folder-counts`. Fixed memory-leak/accuracy bug in `Sidebar.tsx`.
 - [x] **Infinite Scroll Optimization**: Sentinel div confirmed outside virtualized container.
 
 ### Phase 3: Comprehensive Test Coverage + Build Validation Gates ✅ COMPLETE (2026-03-19)

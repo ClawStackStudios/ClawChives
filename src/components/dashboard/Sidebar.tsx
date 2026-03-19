@@ -1,6 +1,7 @@
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback } from "react";
 import { Plus, Folder, Star, Archive, LayoutDashboard, Tag, Pencil } from "lucide-react";
 import { Button } from "../ui/button";
+import { useFolderCounts } from "../../hooks/useFolderCounts";
 import { FolderEditModal } from "./FolderEditModal";
 import { InteractiveBrand } from "../Branding/InteractiveBrand";
 
@@ -27,7 +28,6 @@ interface SidebarProps {
     starred: number;
     archived: number;
   };
-  bookmarks: { folderId?: string }[];
 }
 
 export function Sidebar({
@@ -40,11 +40,13 @@ export function Sidebar({
   onEditFolder,
   onDeleteFolder,
   bookmarkCounts,
-  bookmarks,
 }: SidebarProps) {
   const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  // ── Fetch true folder counts from backend ──
+  const { data: folderCountsMap } = useFolderCounts();
 
   const inactiveBadge = "text-xs bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-full";
 
@@ -124,19 +126,9 @@ export function Sidebar({
     setFolderModalOpen(true);
   };
 
-  // Memoize folder counts: recalculate only when bookmarks array changes
-  const folderCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    folders.forEach((folder) => {
-      counts[folder.id] = bookmarks.filter((b) => b.folderId === folder.id).length;
-    });
-    return counts;
-  }, [bookmarks, folders]);
-
-  // Stable getter function using memoized counts
   const folderBookmarkCount = useCallback(
-    (folderId: string) => folderCounts[folderId] ?? 0,
-    [folderCounts]
+    (folderId: string) => folderCountsMap?.[folderId] ?? 0,
+    [folderCountsMap]
   );
 
   return (

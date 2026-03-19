@@ -23,6 +23,7 @@ export interface IDatabaseAdapter {
 
   // ── Folders ────────────────────────────────────────────────────────────────
   getFolders(): Promise<Folder[]>;
+  getFolderCounts(): Promise<Record<string, number>>;
   saveFolder(folder: Folder): Promise<Folder>;
   updateFolder(folder: Folder): Promise<Folder>;
   deleteFolder(id: string): Promise<void>;

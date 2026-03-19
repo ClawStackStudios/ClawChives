@@ -10,9 +10,11 @@ import { TagsView } from "./TagsView";
 import { SortDropdown } from "./SortDropdown";
 import { ViewToggle } from "./ViewToggle";
 import { AlertModal } from "../ui/LobsterModal";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 import { useInfiniteBookmarks } from "../../hooks/useInfiniteBookmarks";
 import { useBookmarkStats } from "../../hooks/useBookmarkStats";
+import { FOLDER_COUNTS_QUERY_KEY } from "../../hooks/useFolderCounts";
 import { useDebounce, sortBookmarks } from "../../lib/utils";
 import type { SortBy } from "../../lib/utils";
 import { generateUUID } from "../../lib/crypto";
@@ -55,6 +57,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   };
 
   const db = useDatabaseAdapter();
+  const queryClient = useQueryClient();
 
   // ── React Query: Infinite bookmarks ──
   const {
@@ -145,6 +148,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     if (!db) return;
     try {
       await db.saveFolder({ id: generateUUID(), name, color: "#06b6d4", createdAt: new Date().toISOString() });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       await loadData();
     } catch (error) { console.error("Failed to add folder:", error); showAlert("Pod Failed", "Failed to create Pod."); }
   };
@@ -155,6 +159,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
       const existing = folders.find((f) => f.id === id);
       if (!existing) return;
       await db.updateFolder({ ...existing, name: data.name, color: data.color });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       await loadData();
     } catch (error) { console.error("Failed to update folder:", error); showAlert("Pod Failed", "Failed to update Pod."); }
   };
@@ -163,6 +168,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     if (!db) return;
     try {
       await db.deleteFolder(id);
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       if (selectedFolder === id) {
         setSelectedFolder(null);
         sessionStorage.removeItem("cc_selected_folder");
@@ -281,7 +287,6 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onEditFolder={handleEditFolder}
           onDeleteFolder={handleDeleteFolder}
           bookmarkCounts={bookmarkCounts}
-          bookmarks={flatBookmarks}
         />
       </aside>
 
