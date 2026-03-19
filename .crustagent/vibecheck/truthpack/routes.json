@@ -5,7 +5,9 @@
   { "method": "GET",  "path": "/api/auth/validate", "auth": true, "requireHuman": false },
   { "method": "GET",  "path": "/api/bookmarks", "auth": true, "permission": "canRead", "requireHuman": false },
   { "method": "POST", "path": "/api/bookmarks", "auth": true, "permission": "canWrite", "requireHuman": false },
-  { "method": "POST", "path": "/api/bookmarks/bulk", "auth": true, "permission": "canWrite", "requireHuman": false, "rateLimitBypass": "lobster-keys" },
+  { "method": "POST", "path": "/api/bookmarks/bulk", "auth": true, "permission": "canWrite", "requireHuman": false, "rateLimitBypass": "lobster-keys", "header": "X-Session-Id (optional)" },
+  { "method": "GET",  "path": "/api/bookmarks/stats", "auth": true, "permission": "canRead", "requireHuman": false, "description": "Returns { total, starred, archived } counts" },
+  { "method": "GET",  "path": "/api/bookmarks/folder-counts", "auth": true, "permission": "canRead", "requireHuman": false },
   { "method": "GET",  "path": "/api/bookmarks/:id", "auth": true, "permission": "canRead", "requireHuman": false },
   { "method": "PUT",  "path": "/api/bookmarks/:id", "auth": true, "permission": "canEdit", "requireHuman": false },
   { "method": "DELETE", "path": "/api/bookmarks/:id", "auth": true, "permission": "canDelete", "requireHuman": false },
@@ -21,6 +23,8 @@
   { "method": "POST", "path": "/api/agent-keys", "auth": true, "requireHuman": true },
   { "method": "PATCH", "path": "/api/agent-keys/:id/revoke", "auth": true, "requireHuman": true },
   { "method": "DELETE", "path": "/api/agent-keys/:id", "auth": true, "requireHuman": true },
+  { "method": "POST", "path": "/api/lobster-session/start", "auth": true, "requireHuman": true, "description": "Generate ephemeral lb-eph- key (15min TTL)" },
+  { "method": "POST", "path": "/api/lobster-session/:id/close", "auth": true, "requireHuman": true, "description": "Revoke ephemeral key + return accumulated errors" },
   { "method": "GET",  "path": "/api/settings/:key", "auth": true, "requireHuman": true },
   { "method": "PUT",  "path": "/api/settings/:key", "auth": true, "requireHuman": true }
 ]

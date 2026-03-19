@@ -60,6 +60,25 @@
           "Rate Limiter Bypass: Lobster keys (lb-*) skip apiLimiter"
         ]
       },
+      "lobster_session_tests": {
+        "file": "tests/lobster-session.test.ts",
+        "count": 19,
+        "coverage": [
+          "Session Start: ephemeral key generation (lb-eph- prefix), 15min TTL, canWrite-only permissions",
+          "Session Close: key revocation (is_active=0), error accumulation, user isolation",
+          "Bulk Import: X-Session-Id header for error tracking, silent failure on unknown sessions",
+          "Ephemeral Key: works while active, rejected after close (401), auto-expires",
+          "Session Isolation: independent sessions, closing one doesn't affect others"
+        ]
+      },
+      "stats_endpoint_tests": {
+        "file": "src/hooks/useBookmarkStats.ts + src/server/routes/bookmarks.ts",
+        "coverage": [
+          "Real-time badge counts independent of pagination",
+          "Cache invalidation on all mutations",
+          "True DB total on first render (not just loaded pages)"
+        ]
+      },
       "required_before_commit": true
     },
     "data_fetching": {

@@ -53,7 +53,31 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 
 ---
 
-## 📊 Current State: Release 3 Sprint ✅ COMPLETE (2026-03-19)
+## 📊 Current State: Release 4 Sprint ✅ COMPLETE (2026-03-19)
+
+### Phase 4: Ephemeral Lobster Sessions + Accurate Badge Counts ✅ COMPLETE (2026-03-19)
+
+#### Phase 4a: Ephemeral Lobster Session Management
+- [x] **Session-Scoped Ephemeral Keys**: `POST /api/lobster-session/start` generates `lb-eph-*` keys valid for 15 minutes or until "Done"
+- [x] **Session Lifecycle**: `POST /api/lobster-session/:id/close` revokes key + returns accumulated import errors
+- [x] **import_sessions Table**: Lightweight tracking table with `id, user_uuid, key_id, started_at, closed_at, error_count, errors_json`
+- [x] **Error Accumulation**: Bulk endpoint appends per-item errors to session via `X-Session-Id` header (non-breaking, optional)
+- [x] **Audit Logging**: All session start/close events logged via `LOBSTER_SESSION_STARTED` and `LOBSTER_SESSION_CLOSED` audit records
+- [x] **HardShell Session Tests**: 19 comprehensive tests covering:
+  - Session lifecycle (start → active → close)
+  - Permission gating (human-only via `requireHuman`)
+  - Key generation (lb-eph- prefix, 15min expiry, canWrite-only permissions)
+  - Error accumulation on bulk import
+  - Session isolation (two sessions independent, closing one doesn't affect other)
+  - Ephemeral key usage (works while active, rejected after close, auto-expires)
+
+#### Phase 4b: Accurate Real-Time Badge Counts
+- [x] **GET /api/bookmarks/stats Endpoint**: New route returning `{ total, starred, archived }` counts from DB
+- [x] **useBookmarkStats() Hook**: Independent React Query hook (not pagination-dependent)
+- [x] **Stats Cache Invalidation**: All mutations (save/update/delete) invalidate `['bookmarks', 'stats']` query
+- [x] **Lobster Import Invalidation**: Session close also invalidates stats, ensuring badge updates after bulk import
+- [x] **Dashboard Integration**: Badge counts now use stats instead of `flatBookmarks.length` (true DB total, not just loaded pages)
+- [x] **Real-Time Updates**: Badge reflects accurate count on first render, no page refresh needed
 
 ### Phase 1: Lobster Bulk Import ✅ COMPLETE (2026-03-19)
 - [x] **POST /api/bookmarks/bulk Endpoint**: Accepts up to 1000 bookmarks per batch with HTTP 207 Multi-Status responses.
@@ -88,27 +112,40 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 
 ---
 
-## 🧪 Test Suite Status (109 Tests — ALL PASSING)
+## 🧪 Test Suite Status (131 Tests — ALL PASSING) 🎉
 
 **Commands**:
-- `npm run test` — All tests (Unit + Middleware + Integration)
-- `npm run test:phase3:build` — Build validation gates only
-- `npm run test:phase3:integration` — Phase 3 integration tests only
-- `npm run test:phase3:full` — All tests + Phase 3 integration + build gates
+- `npm run test` — All tests (Unit + Middleware + Integration + Lobster)
+- `npm run test:lobster-session` — Lobster session tests only (19 tests)
+- `npm run test:phase3:build` — Build validation gates only (10 tests)
+- `npm run test:phase3:integration` — Phase 3 integration tests only (6 tests)
+- `npm run test:phase3:full` — All Phase 3 tests (109 total)
+- `npm run test:phase4:full` — FULL SUITE: All tests + Lobster + build gates (131 tests)
 
 **Architecture (Semantic Layers)**:
 - **Layer 0 — Unit Tests (46)**: Parsers, crypto, utils, API helpers
 - **Layer 1 — Middleware Tests (31)**: Error handling, validation, HTTP status codes
-- **Layer 2 — Integration Tests (32)**: Security (3) + Bulk Import (20) + Phase 3 (9)
+- **Layer 2 — Integration Tests (54)**: Security (3) + Bulk Import (20) + Phase 3 (6) + Phase 4 Lobster (19) + Build Gates (10)
 
-**Phase 3 Test Coverage (9 tests)**:
-- ✅ **Task 3.1 — Mass Import**: 1000 URLs in batches, duplicate detection, mixed formats, rate limit bypass (2 tests)
-- ✅ **Task 3.2 — Performance**: < 500ms fetch of 1000 bookmarks, < 100ms folder counts (2 tests)
-- ✅ **Task 3.3 — Error Recovery**: Partial failures, duplicate skipping, data integrity (2 tests)
-- ✅ **Build Validation Gates**: TypeScript config, npm build readiness, Docker readiness (3 tests)
+**Phase 4 Test Coverage (19 tests) — Lobster Session Lifecycle**:
+- ✅ **Session Start** (5 tests): Auth blocking, human-only gating, key generation (lb-eph- prefix), expiration (15min ± 5s), permissions (canWrite only)
+- ✅ **Session Close** (5 tests): Auth blocking, user isolation (403 cross-user), revocation of ephemeral key (is_active=0), closed_at timestamp, error accumulation
+- ✅ **Bulk Import with Sessions** (4 tests): Error accumulation via X-Session-Id header, successful imports skip errors_json, unknown/closed sessions silently ignored
+- ✅ **Ephemeral Key Lifecycle** (3 tests): Key works while active, rejected after close (401), auto-expires after expiration_date
+- ✅ **Session Isolation** (2 tests): Two sessions independent (different keys), closing session A doesn't affect session B's key
+
+**Phase 3 Test Coverage (6 tests)**:
+- ✅ **Task 3.1 — Mass Import**: 1000 URLs in batches, duplicate detection (2 tests)
+- ✅ **Task 3.2 — Performance**: < 500ms fetch, < 100ms folder counts (2 tests)
+- ✅ **Task 3.3 — Error Recovery**: Partial failures, duplicate skipping (2 tests)
+
+**Build Validation Gates (10 tests)**:
+- ✅ TypeScript lint (`npm run lint`)
+- ✅ NPM build (`npm run build`)
+- ✅ Docker build readiness (`docker build .`)
 
 **Critical Coverage**:
-- ✅ Authentication & Authorization (5 tests)
+- ✅ Authentication & Authorization (10 tests, including Lobster human-only gating)
 - ✅ Body Validation & Input Handling (5 tests)
 - ✅ Happy Path Imports (2 tests)
 - ✅ Duplicate Detection & Race Conditions (3 tests)
@@ -117,6 +154,8 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 - ✅ Rate Limiter Bypass (1 test)
 - ✅ Mass Import at Scale (1000 URLs, 2 tests)
 - ✅ Performance under Load (2 tests)
+- ✅ **Session Lifecycle & Ephemeral Keys** (19 tests)
+- ✅ **Stats Query Isolation** (independent of pagination, real-time invalidation)
 
 **Test Helpers**:
 - `tests/helpers/testDb.ts` — Database isolation, cleanup, reset
