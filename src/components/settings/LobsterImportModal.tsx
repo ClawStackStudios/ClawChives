@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Upload, X, CheckCircle, AlertCircle, Copy, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../ui/button';
 import { startLobsterSession, closeLobsterSession, type SessionError } from '@/services/lobster/lobsterSessionService';
@@ -11,6 +12,7 @@ interface LobsterImportModalProps {
 type Step = 'idle' | 'session' | 'done';
 
 export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps) {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>('idle');
   const [sessionKey, setSessionKey] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -44,6 +46,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
     try {
       const { errors } = await closeLobsterSession(sessionId);
       setSessionErrors(errors);
+      await queryClient.invalidateQueries({ queryKey: ['bookmarks', 'infinite'] });
       setStep('done');
     } catch (e: any) {
       setError(e.message || 'Failed to close session');
@@ -52,7 +55,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
     }
   };
 
-  const handleClose = () => {
+  const handleClose = async () => {
     setStep('idle');
     setSessionKey(null);
     setSessionId(null);
@@ -60,6 +63,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
     setError(null);
     setIsMasked(true);
     setCopied(false);
+    await queryClient.invalidateQueries({ queryKey: ['bookmarks', 'infinite'] });
     onClose();
   };
 
@@ -80,7 +84,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
       console.error('Failed to revoke session key:', e);
     } finally {
       setIsLoading(false);
-      handleClose();
+      await handleClose();
     }
   };
 
