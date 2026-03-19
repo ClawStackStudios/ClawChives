@@ -15,6 +15,7 @@ import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 import { useInfiniteBookmarks } from "../../hooks/useInfiniteBookmarks";
 import { useBookmarkStats } from "../../hooks/useBookmarkStats";
 import { FOLDER_COUNTS_QUERY_KEY } from "../../hooks/useFolderCounts";
+import { useSidebarSearch } from "../../hooks/useSidebarSearch";
 import { useDebounce, sortBookmarks } from "../../lib/utils";
 import type { SortBy } from "../../lib/utils";
 import { generateUUID } from "../../lib/crypto";
@@ -76,6 +77,9 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   // ── Debounce search query (300ms) ──
   const debouncedQuery = useDebounce(searchQuery, 300);
 
+  // ── Filter folders by search (lightweight client-side) ──
+  const filteredFolders = useSidebarSearch(folders, searchQuery);
+
   // ── Load folders ──
   const loadData = async () => {
     if (!db) return;
@@ -90,6 +94,16 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   useEffect(() => {
     loadData();
   }, [db]);
+
+  // ── Prefetch folder counts + stats on app boot ──
+  useEffect(() => {
+    if (!db) return;
+    // Prefetch both queries on initial mount for snappy sidebar
+    queryClient.prefetchQuery({
+      queryKey: FOLDER_COUNTS_QUERY_KEY,
+      queryFn: () => db.getFolderCounts(),
+    });
+  }, [db, queryClient]);
 
   /** ── Bookmark handlers (via react-query) ── */
   const handleAddBookmark = () => { setEditingBookmark(null); setIsModalOpen(true); };
@@ -278,7 +292,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
         }`}
       >
         <Sidebar
-          folders={folders}
+          folders={filteredFolders}
           selectedFolder={selectedFolder}
           filterType={activeTab}
           onSelectFolder={handleSelectFolder}

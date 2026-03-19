@@ -2,7 +2,8 @@
  * useFolderCounts — Fetch bookmark counts per folder
  * ─────────────────────────────────────────────────────────────────────
  * Accurate counts from the backend, including non-loaded bookmarks.
- * Always refetches on any bookmark/folder mutation (staleTime: 0).
+ * Debounced staleTime (500ms) to reduce thrashing on rapid mutations.
+ * Cached for 1 minute to reuse data across component remounts.
  */
 
 import { useQuery } from '@tanstack/react-query';
@@ -16,6 +17,7 @@ export function useFolderCounts() {
     queryKey: FOLDER_COUNTS_QUERY_KEY,
     queryFn: () => db!.getFolderCounts(),
     enabled: !!db,
-    staleTime: 0, // Invalidate on mutations
+    staleTime: 500, // Hold fresh for 500ms to debounce rapid mutations (bulk import)
+    gcTime: 60000,  // Keep in cache for 60s (reuse across remounts)
   });
 }
