@@ -243,9 +243,13 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_agent_keys_active ON agent_keys(is_active);
 
   -- ── Composite indexes for hot query paths (99% of app traffic) ──
-  CREATE INDEX IF NOT EXISTS idx_bookmarks_user_folder ON bookmarks(user_uuid, folder_id);
+  -- Zero-Sort Index: satisfles ORDER BY created_at DESC for folder-filtered views
+  CREATE INDEX IF NOT EXISTS idx_bookmarks_user_folder_created ON bookmarks(user_uuid, folder_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_uuid, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_folders_user ON folders(user_uuid);
+
+  -- Drop now-redundant single-column/simple composite indexes
+  DROP INDEX IF EXISTS idx_bookmarks_user_folder;
 `);
 
 console.log(`[DB] SQLite database at ${DB_PATH}`);
