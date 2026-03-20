@@ -162,6 +162,16 @@ db.exec(`
     user_agent  TEXT,
     details     TEXT
   );
+
+  CREATE TABLE IF NOT EXISTS import_sessions (
+    id          TEXT PRIMARY KEY,
+    user_uuid   TEXT NOT NULL,
+    key_id      TEXT NOT NULL,
+    started_at  TEXT NOT NULL,
+    closed_at   TEXT,
+    error_count INTEGER DEFAULT 0,
+    errors_json TEXT DEFAULT '[]'
+  );
 `);
 
 // ─── Migrations ────────────────────────────────────────────────────────────────
@@ -231,6 +241,15 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_api_tokens_expires_at ON api_tokens(expires_at);
   CREATE INDEX IF NOT EXISTS idx_agent_keys_api_key ON agent_keys(api_key);
   CREATE INDEX IF NOT EXISTS idx_agent_keys_active ON agent_keys(is_active);
+
+  -- ── Composite indexes for hot query paths (99% of app traffic) ──
+  -- Zero-Sort Index: satisfles ORDER BY created_at DESC for folder-filtered views
+  CREATE INDEX IF NOT EXISTS idx_bookmarks_user_folder_created ON bookmarks(user_uuid, folder_id, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_uuid, created_at DESC);
+  CREATE INDEX IF NOT EXISTS idx_folders_user ON folders(user_uuid);
+
+  -- Drop now-redundant single-column/simple composite indexes
+  DROP INDEX IF EXISTS idx_bookmarks_user_folder;
 `);
 
 console.log(`[DB] SQLite database at ${DB_PATH}`);

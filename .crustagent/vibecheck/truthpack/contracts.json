@@ -8,6 +8,126 @@
     "verified": true
   },
   {
+    "endpoint": "POST /api/bookmarks/bulk",
+    "payload": {
+      "bookmarks": [
+        {
+          "url": "string (required, must be valid URL)",
+          "title": "string (required)",
+          "description": "string (optional)",
+          "tags": "string[] (optional)",
+          "starred": "boolean (optional)",
+          "archived": "boolean (optional)",
+          "folderId": "string (optional, UUID)",
+          "jinaUrl": "string (optional, human-only, agents get 403 per-item)"
+        }
+      ]
+    },
+    "response": {
+      "status": 207,
+      "body": {
+        "success": "boolean",
+        "imported": "number (count of successfully created bookmarks)",
+        "failed": "number (count of failed items)",
+        "errors": [
+          {
+            "url": "string",
+            "reason": "string (validation or duplicate error message)"
+          }
+        ]
+      }
+    },
+    "constraints": {
+      "max_batch_size": 1000,
+      "rate_limit_bypass": "Lobster keys (lb-*) bypass apiLimiter",
+      "duplicate_check": "UNIQUE INDEX on (user_uuid, url)",
+      "jinaUrl_guard": "Agents cannot use jinaUrl field"
+    },
+    "verified": true
+  },
+  {
+    "endpoint": "GET /api/bookmarks/stats",
+    "response": {
+      "status": 200,
+      "body": {
+        "success": "boolean",
+        "data": {
+          "total": "number (true DB total, not pagination-limited)",
+          "starred": "number (count of starred bookmarks)",
+          "archived": "number (count of archived bookmarks)"
+        }
+      }
+    },
+    "constraints": {
+      "auth": "required",
+      "permission": "canRead",
+      "accuracy": "Returns exact DB counts (not capped by page size)"
+    },
+    "verified": true
+  },
+  {
+    "endpoint": "GET /api/bookmarks/tags",
+    "response": {
+      "status": 200,
+      "body": {
+        "success": "boolean",
+        "data": [
+          "string (unique tags across entire library, not pagination-limited)"
+        ]
+      }
+    },
+    "constraints": {
+      "auth": "required",
+      "permission": "canRead",
+      "accuracy": "Returns all unique tags (fixes hardcapped ceiling at 50)"
+    },
+    "verified": true
+  },
+  {
+    "endpoint": "POST /api/lobster-session/start",
+    "response": {
+      "status": 201,
+      "body": {
+        "success": "boolean",
+        "data": {
+          "sessionId": "string (UUID)",
+          "sessionKey": "string (lb-eph-* ephemeral key, 64 char)"
+        }
+      }
+    },
+    "constraints": {
+      "auth": "required",
+      "requireHuman": true,
+      "ttl": "15 minutes",
+      "permissions": "canWrite-only (for bulk import)"
+    },
+    "verified": true
+  },
+  {
+    "endpoint": "POST /api/lobster-session/:id/close",
+    "response": {
+      "status": 200,
+      "body": {
+        "success": "boolean",
+        "data": {
+          "errorCount": "number",
+          "errors": [
+            {
+              "url": "string",
+              "reason": "string"
+            }
+          ]
+        }
+      }
+    },
+    "constraints": {
+      "auth": "required",
+      "requireHuman": true,
+      "effect": "Revokes ephemeral key, returns accumulated errors"
+    },
+    "verified": true
+  },
+  {
     "endpoint": "POST /api/agent-keys",
     "payload": {
       "name": "string",

@@ -72,11 +72,41 @@ export class RestAdapter implements IDatabaseAdapter {
     return request<Bookmark>(`/api/bookmarks/${id}`).catch(() => null);
   }
 
+  async getBookmarkStats(): Promise<{ total: number; starred: number; archived: number }> {
+    return request<{ total: number; starred: number; archived: number }>('/api/bookmarks/stats');
+  }
+
+  async getTags(): Promise<string[]> {
+    const response = await request<string[]>("/api/bookmarks/tags");
+    return response || [];
+  }
+
   async saveBookmark(bookmark: Bookmark): Promise<Bookmark> {
     return request<Bookmark>("/api/bookmarks", {
       method: "POST",
       body: JSON.stringify(bookmark),
     });
+  }
+
+  async saveBulkBookmarks(
+    bookmarks: Bookmark[]
+  ): Promise<{ imported: number; failed: number; errors: { url: string; reason: string }[] }> {
+    const token = getToken();
+    const headers: Record<string, string> = { "Content-Type": "application/json" };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+
+    const res = await fetch(`${API_BASE}/api/bookmarks/bulk`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ bookmarks }),
+    });
+
+    const json = await res.json();
+    if (!res.ok && res.status !== 207) {
+      throw new ApiError(res.status, json.error ?? res.statusText);
+    }
+
+    return { imported: json.imported, failed: json.failed, errors: json.errors };
   }
 
   async updateBookmark(bookmark: Bookmark): Promise<Bookmark> {
@@ -98,6 +128,10 @@ export class RestAdapter implements IDatabaseAdapter {
 
   getFolders(): Promise<Folder[]> {
     return request<Folder[]>("/api/folders");
+  }
+  
+  getFolderCounts(): Promise<Record<string, number>> {
+    return request<Record<string, number>>("/api/bookmarks/folder-counts");
   }
 
   async saveFolder(folder: Folder): Promise<Folder> {

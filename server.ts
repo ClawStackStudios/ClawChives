@@ -16,11 +16,12 @@ import { generateId, generateString } from './src/server/utils/crypto.js';
 import db from './src/server/db.js';
 import { createAuditLogger } from './src/server/utils/auditLogger.js';
 
-import authRoutes      from './src/server/routes/auth.js';
-import bookmarkRoutes  from './src/server/routes/bookmarks.js';
-import folderRoutes    from './src/server/routes/folders.js';
-import agentKeyRoutes  from './src/server/routes/agentKeys.js';
-import settingsRoutes  from './src/server/routes/settings.js';
+import authRoutes         from './src/server/routes/auth.js';
+import bookmarkRoutes     from './src/server/routes/bookmarks.js';
+import folderRoutes       from './src/server/routes/folders.js';
+import agentKeyRoutes     from './src/server/routes/agentKeys.js';
+import settingsRoutes     from './src/server/routes/settings.js';
+import lobsterSessionRoutes from './src/server/routes/lobsterSession.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
@@ -91,20 +92,27 @@ app.get('/api/health', (_req, res) => {
 });
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
-app.use('/api/auth',       authRoutes);
-app.use('/api/bookmarks',  bookmarkRoutes);
-app.use('/api/folders',    folderRoutes);
-app.use('/api/agent-keys', agentKeyRoutes);
-app.use('/api/settings',   settingsRoutes);
+app.use('/api/auth',              authRoutes);
+app.use('/api/bookmarks',         bookmarkRoutes);
+app.use('/api/folders',           folderRoutes);
+app.use('/api/agent-keys',        agentKeyRoutes);
+app.use('/api/settings',          settingsRoutes);
+app.use('/api/lobster-session',   lobsterSessionRoutes);
 
 // ─── Static Files (Production) ────────────────────────────────────────────────
 const distPath = path.join(__dirname, 'dist');
 app.use(express.static(distPath, {
+  maxAge: '1y',  // Default cache header for hashed assets
+  immutable: true, // Tells browsers hashed assets never change
   setHeaders(res, filePath) {
     if (filePath.endsWith('index.html')) {
+      // Bypass cache for index.html — always fetch fresh on new releases
       res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
       res.setHeader('Pragma', 'no-cache');
       res.setHeader('Expires', '0');
+    } else {
+      // Hashed assets (JS/CSS chunks) can be cached indefinitely
+      res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
     }
   },
 }));

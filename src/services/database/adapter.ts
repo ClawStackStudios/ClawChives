@@ -14,13 +14,17 @@ export interface IDatabaseAdapter {
   // ── Bookmarks ──────────────────────────────────────────────────────────────
   getBookmarks(limit?: number, offset?: number): Promise<Bookmark[]>;
   getBookmark(id: string): Promise<Bookmark | null>;
+  getBookmarkStats(): Promise<{ total: number; starred: number; archived: number }>;
+  getTags(): Promise<string[]>;
   saveBookmark(bookmark: Bookmark): Promise<Bookmark>;
+  saveBulkBookmarks(bookmarks: Bookmark[]): Promise<{ imported: number; failed: number; errors: { url: string; reason: string }[] }>;
   updateBookmark(bookmark: Bookmark): Promise<Bookmark>;
   deleteBookmark(id: string): Promise<void>;
   deleteAllBookmarks(): Promise<void>;
 
   // ── Folders ────────────────────────────────────────────────────────────────
   getFolders(): Promise<Folder[]>;
+  getFolderCounts(): Promise<Record<string, number>>;
   saveFolder(folder: Folder): Promise<Folder>;
   updateFolder(folder: Folder): Promise<Folder>;
   deleteFolder(id: string): Promise<void>;

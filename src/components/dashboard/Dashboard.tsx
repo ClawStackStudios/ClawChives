@@ -10,8 +10,13 @@ import { TagsView } from "./TagsView";
 import { SortDropdown } from "./SortDropdown";
 import { ViewToggle } from "./ViewToggle";
 import { AlertModal } from "../ui/LobsterModal";
+import { useQueryClient } from "@tanstack/react-query";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 import { useInfiniteBookmarks } from "../../hooks/useInfiniteBookmarks";
+import { useBookmarkStats } from "../../hooks/useBookmarkStats";
+import { useTags } from "../../hooks/useTags";
+import { FOLDER_COUNTS_QUERY_KEY } from "../../hooks/useFolderCounts";
+import { useSidebarSearch } from "../../hooks/useSidebarSearch";
 import { useDebounce, sortBookmarks } from "../../lib/utils";
 import type { SortBy } from "../../lib/utils";
 import { generateUUID } from "../../lib/crypto";
@@ -54,6 +59,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   };
 
   const db = useDatabaseAdapter();
+  const queryClient = useQueryClient();
 
   // ── React Query: Infinite bookmarks ──
   const {
@@ -66,8 +72,17 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     isFetchingNextPage,
   } = useInfiniteBookmarks();
 
+  // ── React Query: Bookmark stats (for accurate badge counts) ──
+  const { data: stats } = useBookmarkStats();
+
+  // ── React Query: All tags (for accurate stats/filters) ──
+  const { data: allTags } = useTags();
+
   // ── Debounce search query (300ms) ──
   const debouncedQuery = useDebounce(searchQuery, 300);
+
+  // ── Filter folders by search (lightweight client-side) ──
+  const filteredFolders = useSidebarSearch(folders, searchQuery);
 
   // ── Load folders ──
   const loadData = async () => {
@@ -83,6 +98,16 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
   useEffect(() => {
     loadData();
   }, [db]);
+
+  // ── Prefetch folder counts + stats on app boot ──
+  useEffect(() => {
+    if (!db) return;
+    // Prefetch both queries on initial mount for snappy sidebar
+    queryClient.prefetchQuery({
+      queryKey: FOLDER_COUNTS_QUERY_KEY,
+      queryFn: () => db.getFolderCounts(),
+    });
+  }, [db, queryClient]);
 
   /** ── Bookmark handlers (via react-query) ── */
   const handleAddBookmark = () => { setEditingBookmark(null); setIsModalOpen(true); };
@@ -141,6 +166,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     if (!db) return;
     try {
       await db.saveFolder({ id: generateUUID(), name, color: "#06b6d4", createdAt: new Date().toISOString() });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       await loadData();
     } catch (error) { console.error("Failed to add folder:", error); showAlert("Pod Failed", "Failed to create Pod."); }
   };
@@ -151,6 +177,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
       const existing = folders.find((f) => f.id === id);
       if (!existing) return;
       await db.updateFolder({ ...existing, name: data.name, color: data.color });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       await loadData();
     } catch (error) { console.error("Failed to update folder:", error); showAlert("Pod Failed", "Failed to update Pod."); }
   };
@@ -159,6 +186,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     if (!db) return;
     try {
       await db.deleteFolder(id);
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       if (selectedFolder === id) {
         setSelectedFolder(null);
         sessionStorage.removeItem("cc_selected_folder");
@@ -231,14 +259,14 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     [flatBookmarks, debouncedQuery, selectedFolder, activeTab, tagFilter, sortBy]
   );
 
-  /** ── Memoized bookmark counts ── */
+  /** ── Bookmark counts from DB stats (accurate total, not just loaded pages) ── */
   const bookmarkCounts = useMemo(
     () => ({
-      all: flatBookmarks.length,
-      starred: flatBookmarks.filter((b) => b.starred).length,
-      archived: flatBookmarks.filter((b) => b.archived).length,
+      all: stats?.total ?? 0,
+      starred: stats?.starred ?? 0,
+      archived: stats?.archived ?? 0,
     }),
-    [flatBookmarks]
+    [stats]
   );
 
   const handleTabChange = (tab: NavTab) => {
@@ -268,7 +296,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
         }`}
       >
         <Sidebar
-          folders={folders}
+          folders={filteredFolders}
           selectedFolder={selectedFolder}
           filterType={activeTab}
           onSelectFolder={handleSelectFolder}
@@ -277,7 +305,6 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onEditFolder={handleEditFolder}
           onDeleteFolder={handleDeleteFolder}
           bookmarkCounts={bookmarkCounts}
-          bookmarks={flatBookmarks}
         />
       </aside>
 
@@ -366,6 +393,8 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             <DashboardView
               bookmarks={flatBookmarks}
               folders={folders}
+              stats={stats}
+              allTags={allTags}
             />
           )}
           {activeTab === "tags" && (

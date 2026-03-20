@@ -12,6 +12,9 @@
 import { useInfiniteQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useDatabaseAdapter } from "../services/database/DatabaseProvider";
 import { BOOKMARKS_PAGE_SIZE } from "../services/queryClient";
+import { BOOKMARK_STATS_QUERY_KEY } from "./useBookmarkStats";
+import { FOLDER_COUNTS_QUERY_KEY } from "./useFolderCounts";
+import { TAGS_QUERY_KEY } from "./useTags";
 import type { Bookmark } from "../services/types";
 
 const BOOKMARKS_QUERY_KEY = ["bookmarks", "infinite"];
@@ -56,6 +59,10 @@ export function useInfiniteBookmarks() {
           };
         }
       );
+      // Invalidate stats if starred/archived/folder changed
+      queryClient.invalidateQueries({ queryKey: BOOKMARK_STATS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: TAGS_QUERY_KEY });
     },
   });
 
@@ -80,6 +87,10 @@ export function useInfiniteBookmarks() {
           };
         }
       );
+      // Invalidate stats — total count increased
+      queryClient.invalidateQueries({ queryKey: BOOKMARK_STATS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: TAGS_QUERY_KEY });
     },
   });
 
@@ -103,6 +114,10 @@ export function useInfiniteBookmarks() {
           };
         }
       );
+      // Invalidate stats — total count decreased
+      queryClient.invalidateQueries({ queryKey: BOOKMARK_STATS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
+      queryClient.invalidateQueries({ queryKey: TAGS_QUERY_KEY });
     },
   });
 

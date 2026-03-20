@@ -27,6 +27,7 @@ export const apiLimiter = rateLimit({
   max: parseInt(process.env.API_RATE_LIMIT || '100', 10),
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => req.method === 'POST' && req.path === '/bookmarks/bulk',
   message: {
     success: false,
     error: "The Reef is crowded! You've exceeded your rate limit. Please slow down your requests.",
@@ -39,7 +40,11 @@ export const createAgentKeyRateLimiter = () => {
 
   return async (req: Request, res: Response, next: NextFunction) => {
     const authReq = req as AuthRequest;
-    if (authReq.keyType === 'human' || !authReq.apiKey) return next();
+    if (
+      authReq.keyType === 'human' ||
+      !authReq.apiKey ||
+      (req.method === 'POST' && req.path === '/bookmarks/bulk')
+    ) return next();
 
     let limit: number | null = null;
     let agentApiKey: string | null = null;

@@ -185,7 +185,7 @@ export function resetTestDatabase(db: Database.Database): void {
 
     // Delete all data in reverse dependency order
     db.prepare('DELETE FROM audit_logs').run();
-    db.prepare('DELETE FROM tokens').run();
+    db.prepare('DELETE FROM api_tokens').run();
     db.prepare('DELETE FROM agent_keys').run();
     db.prepare('DELETE FROM bookmarks').run();
     db.prepare('DELETE FROM folders').run();

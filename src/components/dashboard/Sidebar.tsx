@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Plus, Folder, Star, Archive, LayoutDashboard, Tag, Pencil } from "lucide-react";
 import { Button } from "../ui/button";
+import { useFolderCounts } from "../../hooks/useFolderCounts";
 import { FolderEditModal } from "./FolderEditModal";
 import { InteractiveBrand } from "../Branding/InteractiveBrand";
 
@@ -27,7 +28,6 @@ interface SidebarProps {
     starred: number;
     archived: number;
   };
-  bookmarks: { folderId?: string }[];
 }
 
 export function Sidebar({
@@ -40,11 +40,13 @@ export function Sidebar({
   onEditFolder,
   onDeleteFolder,
   bookmarkCounts,
-  bookmarks,
 }: SidebarProps) {
   const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
+
+  // ── Fetch true folder counts from backend ──
+  const { data: folderCountsMap } = useFolderCounts();
 
   const inactiveBadge = "text-xs bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-full";
 
@@ -125,8 +127,8 @@ export function Sidebar({
   };
 
   const folderBookmarkCount = useCallback(
-    (folderId: string) => bookmarks.filter((b) => b.folderId === folderId).length,
-    [bookmarks]
+    (folderId: string) => folderCountsMap?.[folderId] ?? 0,
+    [folderCountsMap]
   );
 
   return (

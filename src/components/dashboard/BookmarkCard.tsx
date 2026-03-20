@@ -57,15 +57,17 @@ function formatRelativeTime(dateString: string) {
   return date.toLocaleDateString();
 }
 
-export function BookmarkCard({
-  bookmark,
-  layout = "grid",
-  onEdit,
-  onDelete,
-  onToggleStar,
-  onToggleArchive,
-  onDragStart,
-}: BookmarkCardProps) {
+export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
+  const {
+    bookmark,
+    layout = "grid",
+    onEdit,
+    onDelete,
+    onToggleStar,
+    onToggleArchive,
+    onDragStart,
+  } = props;
+  
   const faviconUrl = getFaviconUrl(bookmark.url);
   const userKeyType = sessionStorage.getItem("cc_key_type") || "unknown";
   const [confirmOpen, setConfirmOpen] = useState(false);
@@ -408,4 +410,11 @@ export function BookmarkCard({
       />
     </div>
   );
-}
+}, (prev, next) => {
+  // Only re-render if essential props change
+  return (
+    prev.bookmark.id === next.bookmark.id &&
+    prev.bookmark.updatedAt === next.bookmark.updatedAt &&
+    prev.layout === next.layout
+  );
+});

@@ -306,12 +306,160 @@ server-side via `calculateExpiry()`. The server enforces expiry on every request
 
 ---
 
+## 🦞 Ephemeral Lobster Sessions (Phase 4 — NEW)
+
+**Endpoints**:
+- `POST /api/lobster-session/start` — Generate ephemeral `lb-eph-*` key (15min TTL or until close)
+- `POST /api/lobster-session/:id/close` — Revoke key + return accumulated errors
+
+**Flow**:
+```
+1. User clicks "Ready" in LobsterImportModal
+2. startLobsterSession() → POST /api/lobster-session/start
+3. Backend creates ephemeral key (lb-eph-{48 random chars}), returns { sessionId, sessionKey }
+4. Modal displays masked key, user copies it
+5. External agent uses key to POST /api/bookmarks/bulk with X-Session-Id header
+6. Bulk endpoint appends per-item errors to import_sessions.errors_json
+7. User clicks "Done" → closeLobsterSession(sessionId)
+8. Backend revokes key (is_active = 0), returns accumulated errors
+9. Modal shows success or error list, badge counts update in real-time
+```
+
+**Key Files**:
+- `src/server/routes/lobsterSession.ts` — Session management endpoints
+- `src/services/lobster/lobsterSessionService.ts` — Frontend client service
+- `src/components/settings/LobsterImportModal.tsx` — 3-step modal (idle → session → done)
+- `src/server/db.ts` — `import_sessions` table schema
+- `tests/lobster-session.test.ts` — 19 comprehensive tests
+
+**Constraints**:
+- Session ID: `import_sessions.id` (UUID)
+- Key ID: `import_sessions.key_id` (references `agent_keys.id`)
+- Expiration: Hard 15-minute TTL or manual revoke on close
+- Permissions: Ephemeral key is **write-only** (`canWrite: true`, others false)
+- User Isolation: Sessions scoped to `authReq.userUuid`
+- Error Tracking: Per-item validation errors accumulated in `import_sessions.errors_json`
+
+---
+
+## 🌊 Real-Time Badge Counts (Phase 4 — NEW)
+
+**Problem**: Badge showed 50 (first infinite scroll page) until user navigated to "All Pinchmarks" or scrolled enough to load more pages.
+
+**Solution**: Independent stats endpoint + dedicated React Query hook.
+
+**Endpoint**:
+- `GET /api/bookmarks/stats` — Returns `{ total, starred, archived }` from DB (never pagination-dependent)
+
+**Frontend**:
+- `useBookmarkStats()` hook — Independent query (staleTime: 0, always refetch on mutation)
+- Invalidation: All mutations (`save`, `update`, `delete`, Lobster close) invalidate `['bookmarks', 'stats']`
+- Dashboard: `bookmarkCounts` now uses stats data instead of `flatBookmarks.length`
+
+**Result**: Badge shows **true DB total** on first render. Real-time updates after any mutation. No refresh needed.
+
+**Key Files**:
+- `src/server/routes/bookmarks.ts` — Added `GET /stats` endpoint (before `/:id` catch-all)
+- `src/services/database/rest/RestAdapter.ts` — Added `getBookmarkStats()` method
+- `src/services/database/adapter.ts` — Added `getBookmarkStats()` to interface
+- `src/hooks/useBookmarkStats.ts` — NEW React Query hook
+- `src/hooks/useInfiniteBookmarks.ts` — Invalidate stats on all mutations
+- `src/components/dashboard/Dashboard.tsx` — Use stats for badge display
+- `src/components/settings/LobsterImportModal.tsx` — Invalidate stats on session close
+
+---
+
+## 🌊 Bulk Import Endpoint (Phase 1 — EXISTING)
+
+**Endpoint**: `POST /api/bookmarks/bulk`
+
+**Rate Limiter**: Lobster keys (`lb-*` prefix) bypass `apiLimiter` (no 429 responses).
+
+**Request**:
+```json
+{
+  "bookmarks": [
+    {
+      "url": "string (required, valid URL)",
+      "title": "string (required)",
+      "description": "string (optional)",
+      "tags": "string[] (optional)",
+      "starred": "boolean (optional)",
+      "archived": "boolean (optional)",
+      "folderId": "string (optional, UUID)",
+      "jinaUrl": "string (optional, human-only — agents get per-item error)"
+    }
+  ]
+}
+```
+
+**Constraints**:
+- Max batch size: 1000 items
+- Duplicate prevention: `UNIQUE INDEX (user_uuid, url)`
+- jinaUrl guard: Agents cannot use conversion URLs (per-item blocking, not 403 for whole request)
+- Permission required: `canWrite`
+
+**Response**: HTTP 207 Multi-Status (always, never 500 on partial failures)
+```json
+{
+  "success": true,
+  "imported": number,
+  "failed": number,
+  "errors": [
+    { "url": "string", "reason": "string (validation or duplicate error)" }
+  ]
+}
+```
+
+**Implementation Files**:
+- `src/server/routes/bookmarks.ts` — `POST /bulk` route + `insertBookmark()` helper
+- `src/server/middleware/rateLimiter.ts` — `apiLimiter.skip` + per-agent rate limiter bypass
+- `src/services/database/adapter.ts` — `saveBulkBookmarks()` interface
+- `src/services/database/rest/RestAdapter.ts` — bulk fetch with raw response handling
+
+---
+
 ## 🔧 Utility Rules
 
 - **IDB store names:** always import from `src/services/utils/constants.ts` (`STORES.BOOKMARKS`, etc.) — never hardcode strings.
 - **IDB transactions:** always use `executeTransaction()` from `src/services/utils/database.ts`.
 - **HTTP errors:** always throw/use `ApiError` from `src/services/utils/errors.ts` (has `.status` and `.message`).
 - **Crypto:** always use `hashToken()` / `verifyToken()` / `generateHumanKey()` etc. from `src/lib/crypto.ts`. Never implement hashing or key generation inline.
+
+---
+
+## 🧪 Test Infrastructure (Phase 4 Complete — 131 Tests)
+
+**Test Helpers**:
+- `tests/helpers/testDb.ts` — Database isolation, full schema application, cleanup
+- `tests/helpers/testFactories.ts` — User/folder/bookmark/agent key/session factory functions (schema-correct)
+
+**Test Files**:
+- `src/server/utils/parsers.test.ts` — 26 unit tests (string parsing, URL validation)
+- `src/lib/crypto.test.ts` — 7 unit tests (OWASP key generation, constant-time compare)
+- `src/lib/utils.test.ts` — 5 unit tests (utility functions)
+- `src/lib/api.test.ts` — 1 unit test (API helpers)
+- `tests/unit/middleware/errorHandler.test.ts` — 31 middleware tests (HTTP codes, constraint errors)
+- `tests/security.test.js` — 3 integration tests (key generation, agent auth lifecycle)
+- `tests/bulk-import.test.js` — 20 integration tests (bulk import feature, 6 semantic categories)
+- `tests/lobster-session.test.ts` — 19 integration tests (session lifecycle, ephemeral keys, error accumulation, isolation)
+- `tests/phase3-integration.test.ts` — 6 integration tests (mass import, performance, error recovery)
+- `tests/build-gates.test.ts` — 10 build validation tests (TypeScript lint, npm build, Docker build)
+
+**Test Patterns**:
+- **Data Isolation**: Each test suite uses separate `DATA_DIR` (tests/data, tests/data-bulk)
+- **Auth Setup**: Raw DB inserts bypass rate limiting; no HTTP endpoints during setup
+- **Batch Size**: ≤ 100 items per test (avoids Express 413 body limit)
+- **Vitest Defaults**: No `vitest.config.ts` (parallel execution with DATA_DIR isolation)
+
+**Coverage Verified**:
+- ✅ Authentication (401 unauthenticated, revoked, expired)
+- ✅ Authorization (403 insufficient permissions)
+- ✅ Duplicate Detection (UNIQUE constraint)
+- ✅ Race Conditions (in-batch duplicates, pre-existing URLs)
+- ✅ jinaUrl Guard (per-item blocking for agents)
+- ✅ Response Integrity (error shape, math checks)
+- ✅ Rate Limiter Bypass (Lobster keys skip apiLimiter)
 
 ---
 
@@ -322,6 +470,7 @@ npm start          # Vite dev (port 4545) + API server (port 4646) — use this
 npm run dev        # Vite only — API will be unreachable, use npm start instead
 npm run build      # tsc + vite build (production)
 npm run start:api  # API server only (port 4646)
+npm run test       # Vitest all layers — 93 tests passing
 ```
 
 In production Docker, both UI and API run on port 4545 from a single container.
