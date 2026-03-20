@@ -14,6 +14,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 import { useInfiniteBookmarks } from "../../hooks/useInfiniteBookmarks";
 import { useBookmarkStats } from "../../hooks/useBookmarkStats";
+import { useTags } from "../../hooks/useTags";
 import { FOLDER_COUNTS_QUERY_KEY } from "../../hooks/useFolderCounts";
 import { useSidebarSearch } from "../../hooks/useSidebarSearch";
 import { useDebounce, sortBookmarks } from "../../lib/utils";
@@ -73,6 +74,9 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
 
   // ── React Query: Bookmark stats (for accurate badge counts) ──
   const { data: stats } = useBookmarkStats();
+
+  // ── React Query: All tags (for accurate stats/filters) ──
+  const { data: allTags } = useTags();
 
   // ── Debounce search query (300ms) ──
   const debouncedQuery = useDebounce(searchQuery, 300);
@@ -389,6 +393,8 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             <DashboardView
               bookmarks={flatBookmarks}
               folders={folders}
+              stats={stats}
+              allTags={allTags}
             />
           )}
           {activeTab === "tags" && (

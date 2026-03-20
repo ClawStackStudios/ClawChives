@@ -5,6 +5,12 @@ import type { Bookmark as BookmarkType, Folder } from "../../services/types";
 interface DashboardViewProps {
   bookmarks: BookmarkType[];
   folders: Folder[];
+  stats?: {
+    total: number;
+    starred: number;
+    archived: number;
+  };
+  allTags?: string[];
 }
 
 function getFaviconUrl(url: string) {
@@ -99,9 +105,12 @@ function ScrollSection({
   );
 }
 
-export function DashboardView({ bookmarks, folders }: DashboardViewProps) {
+export function DashboardView({ bookmarks, folders, stats: totalStats, allTags: providedTags }: DashboardViewProps) {
   // ── Memoized derived data ──
-  const allTags = useMemo(() => [...new Set(bookmarks.flatMap((b) => b.tags))], [bookmarks]);
+  const allTags = useMemo(() => {
+    if (providedTags) return providedTags;
+    return [...new Set(bookmarks.flatMap((b) => b.tags))];
+  }, [bookmarks, providedTags]);
 
   const pinnedFolder = useMemo(() => folders.find((f) => f.name === "Pinned"), [folders]);
 
@@ -122,7 +131,7 @@ export function DashboardView({ bookmarks, folders }: DashboardViewProps) {
   const favorites = useMemo(() => bookmarks.filter((b) => b.starred).slice(0, 10), [bookmarks]);
 
   const stats = [
-    { label: "Pinchmarks", value: bookmarks.length, icon: Bookmark, color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-700/50" },
+    { label: "Pinchmarks", value: totalStats?.total ?? bookmarks.length, icon: Bookmark, color: "text-cyan-600 dark:text-cyan-400", bg: "bg-cyan-50 dark:bg-cyan-900/20 border-cyan-200 dark:border-cyan-700/50" },
     { label: "Pods", value: folders.length, icon: FolderOpen, color: "text-amber-600 dark:text-amber-400", bg: "bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-700/50" },
     { label: "Tags", value: allTags.length, icon: Tag, color: "text-sky-600 dark:text-sky-400", bg: "bg-sky-50 dark:bg-sky-900/20 border-sky-200 dark:border-sky-700/50" },
   ];

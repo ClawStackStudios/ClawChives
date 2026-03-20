@@ -116,6 +116,19 @@ router.get('/folder-counts', requireAuth, requirePermission('canRead'), (req, re
   res.json({ success: true, data: counts });
 });
 
+/** GET /api/bookmarks/tags — Get unique list of all tags */
+router.get('/tags', requireAuth, requirePermission('canRead'), (req, res) => {
+  const authReq = req as AuthRequest;
+  const rows = db.prepare(`
+    SELECT DISTINCT json_each.value as tag
+    FROM bookmarks, json_each(tags)
+    WHERE user_uuid = ?
+    ORDER BY tag ASC
+  `).all(authReq.userUuid) as Array<{ tag: string }>;
+
+  res.json({ success: true, data: rows.map(r => r.tag) });
+});
+
 /** GET /api/bookmarks/stats — Return total counts for all, starred, archived */
 router.get('/stats', requireAuth, requirePermission('canRead'), (req, res) => {
   const authReq = req as AuthRequest;
