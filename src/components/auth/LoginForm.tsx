@@ -1,11 +1,11 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { Key, Lock, AlertCircle, Upload, ArrowLeft, CheckCircle, ClipboardPaste } from "lucide-react";
-import { validateIdentityFile, hashToken } from "../../lib/crypto";
+import { validateIdentityFile, hashToken } from '@/shared/lib/crypto';
 import { getApiBaseUrl } from "@/config/apiConfig";
-import { InteractiveBrand } from "../Branding/InteractiveBrand";
+import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 
 type LoginMode = "upload" | "paste";
 

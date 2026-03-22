@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Download, Shield, User, CheckCircle, ArrowRight, ArrowLeft, AlertCircle, Loader2, Copy, Check } from "lucide-react";
 import {
   generateHumanKey,
@@ -10,9 +10,9 @@ import {
   downloadIdentityFile,
   hashToken,
   type IdentityData,
-} from "../../lib/crypto";
+} from '@/shared/lib/crypto';
 import { getApiBaseUrl } from "@/config/apiConfig";
-import { InteractiveBrand } from "../Branding/InteractiveBrand";
+import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 
 type Step = "welcome" | "profile" | "generating" | "complete";
 

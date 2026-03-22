@@ -6,7 +6,7 @@ import { Dashboard } from "./components/dashboard/Dashboard";
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { DatabaseStatsModal } from "./components/dashboard/DatabaseStatsModal";
 import { useDatabaseAdapter } from "./services/database/DatabaseProvider";
-import { useTheme, type Theme } from "./components/theme-provider";
+import { useTheme, type Theme } from "@/shared/theme/theme-provider";
 import { getApiBaseUrl } from "./config/apiConfig";
 
 // Simplified user type

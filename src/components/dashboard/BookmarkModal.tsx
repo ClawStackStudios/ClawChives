@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { X, Plus, Tag, Folder, Star, Archive } from "lucide-react";
-import { generateUUID } from "../../lib/crypto";
+import { generateUUID } from '@/shared/lib/crypto';
 import { useDatabaseAdapter } from "../../services/database/DatabaseProvider";
 
 import type { Bookmark, Folder as FolderType } from "../../services/types";

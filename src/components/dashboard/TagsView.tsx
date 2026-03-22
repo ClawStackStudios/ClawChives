@@ -11,8 +11,8 @@
 import { useState, useMemo } from "react";
 import { X, Tag } from "lucide-react";
 import type { Bookmark } from "../../services/types";
-import { ConfirmModal, TagBlockedModal } from "../ui/LobsterModal";
-import { aggregateTags } from "../../lib/utils";
+import { ConfirmModal, TagBlockedModal } from '@/shared/ui/LobsterModal';
+import { aggregateTags } from '@/shared/lib/utils';
 
 interface TagsViewProps {
   bookmarks: Bookmark[];

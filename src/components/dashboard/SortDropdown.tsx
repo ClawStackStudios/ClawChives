@@ -1,5 +1,5 @@
 import { ArrowUpDown } from "lucide-react";
-import type { SortBy } from "../../lib/utils";
+import type { SortBy } from '@/shared/lib/utils';
 
 const SORT_OPTIONS: { value: SortBy; label: string }[] = [
   { value: "date-desc", label: "Newest First" },

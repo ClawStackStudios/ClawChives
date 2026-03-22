@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Upload, X, CheckCircle, AlertCircle, Copy, Eye, EyeOff } from 'lucide-react';
-import { Button } from '../ui/button';
+import { Button } from '@/shared/ui/button';
 import { startLobsterSession, closeLobsterSession, type SessionError } from '@/services/lobster/lobsterSessionService';
 
 interface LobsterImportModalProps {

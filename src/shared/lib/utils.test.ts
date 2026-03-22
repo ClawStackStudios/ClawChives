@@ -11,7 +11,7 @@ vi.mock("tailwind-merge", () => ({
 import { cn, aggregateTags } from "./utils";
 import { clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { Bookmark } from "../services/types";
+import type { Bookmark } from "@/services/types";
 
 describe("aggregateTags", () => {
   test("aggregates tags correctly and sorts them by count descending", () => {

@@ -1,7 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { useEffect, useState } from "react"
-import type { Bookmark } from "../services/types"
+import type { Bookmark } from "@/services/types";
 
 export type SortBy = "date-desc" | "date-asc" | "name-asc" | "name-desc"
 
@@ -17,7 +17,7 @@ export function cn(...inputs: ClassValue[]) {
 export function aggregateTags(bookmarks: Bookmark[]): [string, number][] {
   const tagMap = new Map<string, number>();
   bookmarks.forEach((b) => {
-    b.tags.forEach((t) => tagMap.set(t, (tagMap.get(t) ?? 0) + 1));
+    b.tags.forEach((t: string) => tagMap.set(t, (tagMap.get(t) ?? 0) + 1));
   });
 
   return [...tagMap.entries()].sort((a, b) => b[1] - a[1]);

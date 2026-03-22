@@ -1,9 +1,9 @@
 import { useState, useCallback } from "react";
 import { Plus, Folder, Star, Archive, LayoutDashboard, Tag, Pencil } from "lucide-react";
-import { Button } from "../ui/button";
+import { Button } from '@/shared/ui/button';
 import { useFolderCounts } from "../../hooks/useFolderCounts";
 import { FolderEditModal } from "./FolderEditModal";
-import { InteractiveBrand } from "../Branding/InteractiveBrand";
+import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 
 interface FolderItem {
   id: string;

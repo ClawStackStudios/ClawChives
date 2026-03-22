@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from '@/shared/ui/button';
 import { AlertTriangle, RefreshCw } from "lucide-react";
 import { resetDatabase } from "../../services/database";
 

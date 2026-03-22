@@ -1,13 +1,13 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 import { BookmarkModal } from "./BookmarkModal";
 import { FolderModal } from "./FolderModal";
 import { ConfirmModal } from "./ConfirmModal";
 import { BookmarkCard } from "./BookmarkCard";
 import { Plus, Search, Grid, LayoutGrid, FolderPlus, List } from "lucide-react";
-import { InteractiveBrand } from "../Branding/InteractiveBrand";
+import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 import type { Bookmark, Folder, IconSize } from "../../services/types";
 
 const MOCK_FOLDERS: Folder[] = [

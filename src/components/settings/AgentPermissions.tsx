@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Button } from "../ui/button";
+import { Button } from '@/shared/ui/button';
 import { 
   Card, 
   CardContent, 
-} from "../ui/card";
+} from '@/shared/ui/card';
 import { 
   getAllAgentKeys, 
   deleteAgentKey, 
@@ -25,7 +25,7 @@ import {
   Download
 } from "lucide-react";
 import { AgentKeyGeneratorModal } from "./AgentKeyGeneratorModal";
-import { ConfirmModal } from "../ui/LobsterModal";
+import { ConfirmModal } from '@/shared/ui/LobsterModal';
 
 export function AgentPermissions() {
   const [agents, setAgents] = useState<AgentKey[]>([]);

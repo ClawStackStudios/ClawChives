@@ -1,6 +1,6 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
 import { Upload, FileText, Database, FileSpreadsheet } from "lucide-react";
 
 export function ImportExport() {

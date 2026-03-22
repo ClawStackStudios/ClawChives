@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { Button } from "../ui/button";
+import { Button } from '@/shared/ui/button';
 import { Shield, Database, Users, Bot, Lock, Key, ArrowRight, Zap, Globe, FolderTree, Sun, Moon, Monitor } from "lucide-react";
-import { useTheme } from "../theme-provider";
-import { InteractiveBrand } from "../Branding/InteractiveBrand";
+import { useTheme } from '@/shared/theme/theme-provider';
+import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 
 interface LandingPageProps {
   onCreateAccount: () => void;

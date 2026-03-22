@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { X, Trash2, Folder } from "lucide-react";
-import { Button } from "../ui/button";
-import { Input } from "../ui/input";
-import { Label } from "../ui/label";
+import { Button } from '@/shared/ui/button';
+import { Input } from '@/shared/ui/input';
+import { Label } from '@/shared/ui/label';
 
 interface FolderEditModalProps {
   isOpen: boolean;
