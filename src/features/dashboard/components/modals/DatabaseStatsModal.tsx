@@ -44,15 +44,15 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
     try {
       if (!db) return;
       
-      const bookmarks = await db.getBookmarks();
+      // Fetch all bookmarks with a high limit so the table + tag counts are accurate
+      const bookmarks = await db.getBookmarks(10000);
+      const bookmarkStats = await db.getBookmarkStats();
       const folders = await db.getFolders();
       const keys = await db.getAgentKeys();
       const appearance = await db.getAppearanceSettings();
       const profile = await db.getProfileSettings();
       
       const uniqueTags = new Set(bookmarks.flatMap((b: any) => b.tags || [])).size;
-      const starredCount = bookmarks.filter((b: any) => b.starred).length;
-      const archivedCount = bookmarks.filter((b: any) => b.archived).length;
       
       const totalSizeMB = (
         (JSON.stringify(bookmarks).length + 
@@ -63,12 +63,12 @@ export function DatabaseStatsModal({ isOpen, onClose }: DatabaseStatsModalProps)
       ).toFixed(2);
       
       const statsData: DatabaseStats = {
-        totalBookmarks: bookmarks.length,
+        totalBookmarks: bookmarkStats.total,
         totalFolders: folders.length,
         uniqueTags,
         totalSizeMB: parseFloat(totalSizeMB),
-        starredCount,
-        archivedCount,
+        starredCount: bookmarkStats.starred,
+        archivedCount: bookmarkStats.archived,
         totalKeys: keys.length,
         totalSettings: (appearance ? 1 : 0) + (profile ? 1 : 0),
       };
