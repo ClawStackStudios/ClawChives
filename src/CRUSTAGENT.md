@@ -1,185 +1,170 @@
-# 🦞 src/CRUSTAGENT.md — Source-Level Intelligence Directive
+# 🦞 src/CRUSTAGENT.md — Source-Level Intelligence
 
 > **Atomic reference for agents scuttling through the `src/` directory.**
-> 
-> Focus: Component patterns, stability locks, and state invariants. No philosophy — just code.
+> Focus: Component patterns, stability locks, file map, and state invariants. No philosophy — just code.
 
 ---
 
 ## 📚 Knowledge Base Navigation
 
-For detailed architectural knowledge, consult:
-- **Root CRUSTAGENT.md** — Backend architecture, deployment, phase tracking
-- **.crustagent/knowledge/** — Topic-organized knowledge (14 files)
-- **.crustagent/rules/** — Stability locks & change impact assessment
+For broader architectural context, consult:
+- **Root `CRUSTAGENT.md`** — Backend architecture, deployment, phase tracking
+- **`.crustagent/knowledge/`** — Topic-organized deep knowledge
+- **`.crustagent/rules/`** — Stability locks & change impact assessment
 
 ---
 
-## 📂 Complete File Map & Directory Structure
+## 📂 Current File Map (Post Phase 6)
+
+<details>
+<summary>🗂️ Full src/ Directory Structure</summary>
 
 ```
 src/
-├── App.tsx                        # Root: auth state machine, view routing, session restore
-├── main.tsx                       # Vite entry point
-├── config/
-│   └── apiConfig.ts               # API URL resolution (centralized source of truth)
-├── lib/
-│   ├── crypto.ts                  # Key generation, SHA-256, constant-time compare, identity file
-│   ├── crypto.test.ts             # Unit tests for crypto primitives
-│   ├── api.ts                     # Low-level fetch helpers
-│   ├── exportImport.ts            # Bookmark import/export logic
-│   └── utils.ts                   # General utilities
-├── hooks/
-│   └── useAuth.ts                 # Auth context provider and hook
-├── types/
-│   ├── index.ts                   # Re-exports from services/types
-│   └── agent.ts                   # AgentKey, AgentPermission, PermissionLevel, PERMISSION_CONFIGS
-├── components/
-│   ├── theme-provider.tsx         # Theme context: light/dark/auto + clip-path transitions
-│   ├── landing/LandingPage.tsx
-│   ├── auth/
-│   │   ├── LoginForm.tsx          # Identity file upload → token exchange → session
-│   │   └── SetupWizard.tsx        # Key generation → register → token → session
+├── App.tsx                          # Root: auth state machine, view routing, refresh restore
+├── main.tsx                         # Vite entry point
+│
+├── features/                        # ◀ Feature-Sliced Domains (Phase 5/6)
+│   ├── auth/                        # Login, SetupWizard, useAuth hook
 │   ├── dashboard/
-│   │   ├── Dashboard.tsx          # Shell: loads bookmarks + folders
-│   │   ├── BookmarkCard.tsx       # Single card; r.jina.ai menu gated to humans
-│   │   ├── BookmarkModal.tsx      # Create/edit; jinaUrl checkbox gated to humans
-│   │   ├── Sidebar.tsx            # Folder tree + filter nav
-│   │   ├── FolderModal.tsx        # Create folder
-│   │   └── ...                    # BookmarkGrid, SearchBar, TagsView, etc.
+│   │   ├── components/
+│   │   │   ├── layout/
+│   │   │   │   ├── Sidebar.tsx          # Composes SidebarNav + FolderList
+│   │   │   │   ├── SidebarNav.tsx       # Top-level nav items
+│   │   │   │   └── FolderList.tsx       # Custom pod tree + counts
+│   │   │   └── modals/
+│   │   │       ├── DatabaseStatsModal.tsx  # Composes StatsCards + BookmarkTable
+│   │   │       ├── StatsCards.tsx          # DB stats cards
+│   │   │       └── BookmarkTable.tsx       # Full searchable pinchmark table
 │   └── settings/
-│       ├── AgentPermissions.tsx   # List + revoke lobster keys
-│       ├── AgentKeyGeneratorModal.tsx  # Create lobster key; shows lb- key ONCE
-│       ├── AppearanceSettings.tsx # Theme + layout settings
-│       ├── ImportExportSettings.tsx   # JSON/CSV/HTML export with safe escaping
-│       └── ...                    # ProfileSettings, DatabaseReset, etc.
-└── services/
+│       ├── components/
+│       │   ├── AgentPermissions.tsx     # Agent key list (uses AgentKeyCard)
+│       │   ├── AgentKeyCard.tsx         # Single agent key display + actions
+│       │   ├── agentPermissionsUtils.ts # maskKey, formatDate, isExpired
+│       │   ├── ImportExportSettings.tsx # Composes ImportSection + ExportSection
+│       │   ├── ImportSection.tsx        # Import UI + logic
+│       │   ├── ExportSection.tsx        # Export UI (JSON/HTML/CSV)
+│       │   ├── LobsterImportModal.tsx   # 3-step agent import (uses useLobsterSession)
+│       │   ├── useLobsterSession.ts     # Session lifecycle hook
+│       │   └── ImportSteps.tsx          # SessionStep + SessionResults components
+│       └── utils/
+│           └── importExportUtils.ts     # Legacy import logic (file parsing, mutation)
+│
+├── shared/                          # ◀ Global UI & Utilities
+│   ├── ui/
+│   │   ├── modals/                  # Decomposed Lobster modals
+│   │   │   ├── index.ts             # Barrel export
+│   │   │   ├── ModalContainer.tsx   # Shared backdrop + container
+│   │   │   ├── ConfirmModal.tsx     # Red/amber confirm dialog
+│   │   │   ├── AlertModal.tsx       # Cyan/red info modal
+│   │   │   └── TagBlockedModal.tsx  # Amber tag-deletion guard
+│   │   └── LobsterModal.tsx         # Barrel re-export (backwards compat)
+│   └── lib/
+│       ├── crypto.ts                # Key gen, SHA-256, AES-256-GCM, identity file
+│       ├── exportImport.ts          # Backwards-compat wrapper → exportHub
+│       └── export/
+│           ├── types.ts             # ExportData, ExportFormatter, ClawChivesExport
+│           ├── exportHub.ts         # Central formatter registry + processExport()
+│           └── formatters/
+│               ├── ClawChivesJSON.ts  # Native .clawchives format
+│               ├── NetscapeHTML.ts    # Browser-compatible HTML bookmarks
+│               └── CSVFormatter.ts   # Spreadsheet export
+│
+├── services/                        # ◀ Backend Adapter Layer
+│   ├── database/
+│   │   ├── adapter.ts               # IDatabaseAdapter interface
+│   │   ├── DatabaseProvider.tsx     # React context + useDatabase() hook
+│   │   └── rest/
+│   │       └── RestAdapter.ts       # 🔒 STABILITY LOCK — sole HTTP client
+│   ├── agents/
+│   │   └── agentKeyService.ts       # Lobster key CRUD
+│   ├── lobster/
+│   │   └── lobsterSessionService.ts # Ephemeral session API client
+│   └── types/index.ts               # Bookmark, Folder, User, AgentKey, etc.
+│
+└── server/                          # ◀ Backend (Express + SQLite)
     ├── database/
-    │   ├── rest/RestAdapter.ts    # SOLE HTTP client — stability lock (see below)
-    │   ├── schema.ts              # IndexedDB schema (all stores + indices)
-    │   ├── connection.ts          # IDB open/upgrade
-    │   ├── adapter.ts             # IDatabaseAdapter interface
-    │   └── DatabaseProvider.tsx   # React context that provides the adapter
-    ├── agents/
-    │   ├── agentKeyService.ts     # Lobster key CRUD — stability lock (see below)
-    │   └── agentPermissions.ts    # Client-side permission helpers
-    ├── auth/
-    │   ├── setupService.ts        # New-user account creation (IDB)
-    │   └── loginService.ts        # Auth helpers
-    ├── bookmarks/
-    │   ├── bookmarkService.ts     # IDB CRUD for bookmarks
-    │   ├── bookmarkSearch.ts      # Search + filter logic
-    │   └── bookmarkTags.ts        # Tag management
-    ├── folders/
-    │   ├── folderService.ts       # IDB CRUD for folders
-    │   └── folderHierarchy.ts     # Nested folder helpers
-    ├── settings/
-    │   ├── appearanceService.ts   # Theme/layout read+write (IDB)
-    │   └── profileService.ts      # Profile read+write (IDB)
-    ├── types/index.ts             # Bookmark, Folder, User, AppearanceSettings, ProfileSettings, AgentKey
+    │   ├── connection.ts            # DB init, WAL mode, foreign keys
+    │   ├── schema.ts                # Table definitions, migrations
+    │   └── migrations.ts            # Schema upgrade logic
+    ├── middleware/                  # auth, rateLimiter, validate
+    ├── routes/
+    │   ├── auth.ts                  # /api/auth/*
+    │   ├── folders.ts               # /api/folders/*
+    │   ├── agentKeys.ts             # /api/agent-keys/*
+    │   ├── settings.ts              # /api/settings/*
+    │   ├── lobsterSession.ts        # /api/lobster-session/*
+    │   └── bookmarks/               # Decomposed handlers
+    │       ├── read.ts              # GET /api/bookmarks (paginated)
+    │       ├── write.ts             # POST/PUT/DELETE
+    │       ├── bulk.ts              # POST /api/bookmarks/bulk
+    │       └── toggles.ts           # star, archive toggles
     └── utils/
-        ├── constants.ts           # STORES enum — always import store names from here
-        ├── database.ts            # executeTransaction() — always use for IDB ops
-        └── errors.ts              # ApiError class — use for all HTTP errors
+        ├── auditLogger.ts           # Structured action logging
+        ├── crypto.ts                # Server-side key hashing
+        ├── parsers.ts               # URL + string validation
+        └── tokenExpiry.ts           # calculateExpiry()
 ```
+
+</details>
 
 ---
 
-## 🔐 Hard Constraints: Key System
+## 🔐 Hard Constraints
 
-Keys are base-62 alphanumeric strings (`A-Z a-z 0-9`), generated with `crypto.getRandomValues(Uint32Array)` and `% 62` modulo mapping. No real crypto library — just high-entropy random strings that are matched via SHA-256 hashing.
+<details>
+<summary>🗝️ Key System — Entropy & Format</summary>
 
 | Key | Prefix | Body | Total | Entropy |
 |-----|--------|------|-------|---------|
 | Human identity | `hu-` | 64 chars | 67 | ~381 bits |
-| Lobster (agent) | `lb-` | 64 chars | 67 | ~381 bits |
+| Lobster/Agent | `lb-` | 64 chars | 67 | ~381 bits |
 | API session | `api-` | 32 chars | 36 | ~190 bits |
 
-**Server never receives `hu-` or `lb-` plaintext.** Only `SHA-256(key)` as a lowercase hex string (64 chars) is ever sent over the wire.
+> [!IMPORTANT]
+> **Modulo Bias Guard**: Character set is 62 (`A-Z a-z 0-9`). Because 256 is not evenly divisible by 62, raw `byte % 62` creates a ~25% bias. Implementation MUST use rejection sampling (already implemented in `crypto.ts`).
 
-Constant-time comparison lives in `src/lib/crypto.ts` (XOR accumulator, not `===`).
-Use `hashToken()` and `verifyToken()` from that file — never roll your own.
-
-### Identity File
-
-Downloaded as `clawchives_identity_{username}.json` after account creation.
-
+**Identity File Format:**
 ```json
 {
   "username": "lucaslobster",
   "uuid": "550e8400-e29b-41d4-a716-446655440000",
-  "token": "hu-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789AbCdEfGhIjKlMnOpQrStUv",
+  "token": "hu-AbCdEfGhIjKlMnOpQrStUvWxYz0123456789....",
   "createdAt": "2026-03-07T10:30:00.000Z"
 }
 ```
 
-`token` is the raw `hu-` key. It is never sent to the server — only its hash.
-The `uuid` is a client-generated UUID v4 that acts as the stable user identifier.
+`token` is the raw `hu-` key. Only its SHA-256 hash ever travels to the server.
 
----
+</details>
 
-## 🔐 Hard Constraint: Session & Theme State (Never Lose on Refresh)
+<details>
+<summary>🔒 Session State — Never Lose on Refresh</summary>
 
-All session state lives in `sessionStorage` under `cc_*` keys.
-On tab close, sessionStorage is cleared — this is intentional (security).
+All session state lives in `sessionStorage` under `cc_*` keys. On tab close, sessionStorage is cleared (intentional security).
 
 ```
 cc_api_token    → Bearer token for all API requests (api-*)
 cc_user_uuid    → User UUID (matches users.uuid in SQLite)
 cc_username     → Display username
-cc_key_type     → "human" | "agent"  — gates r.jina.ai UI components
-cc_view         → "dashboard" | "settings"  — restored on refresh
-cc_theme        → "light" | "dark" | "auto"  — restored on refresh
+cc_key_type     → "human" | "agent" — gates r.jina.ai UI
+cc_view         → "dashboard" | "settings" — restored on refresh
+cc_theme        → "light" | "dark" | "auto" — restored on refresh
 ```
 
 **Rules:**
-- Restore `cc_view` synchronously in `useState` initializer (before any async work) so there is no flash to the landing page on refresh.
-- Theme: apply `cc_theme` locally first, then sync from backend — never wait for backend before rendering.
+- Restore `cc_view` synchronously in `useState` initializer — no flash to landing page.
+- Apply `cc_theme` locally first, then sync from backend — never wait for backend before render.
 - Logout must clear ALL `cc_*` keys (no leaking stale state).
-- `cc_view` must only ever be `"dashboard"` or `"settings"`. Never write `"landing"`, `"login"`, or `"setup"` to `cc_view`.
-- `cc_key_type` must be written immediately after the token is stored (both `LoginForm.tsx` and `SetupWizard.tsx` must set it).
+- `cc_view` must only ever be `"dashboard"` or `"settings"`. Never write auth views to `cc_view`.
+- `cc_key_type` must be written immediately after token storage (both `LoginForm` and `SetupWizard` must set it).
 
----
+</details>
 
-## 🔐 Hard Constraint: Pinchmark + Pin Folder System
+<details>
+<summary>🗄️ SQLite — User Isolation Rule</summary>
 
-**"Pinchmark"** is the lobster-themed term for a bookmark. The codebase uses `bookmark` in variable/function names; `pinchmark` is the product concept.
-
-**Every pinchmark must:**
-- Have a `user_uuid` field tied to its owner (server enforces `WHERE user_uuid = ?`)
-- Have an `id` that is a UUID v4 generated client-side before `POST`
-
-**Pin system** (required design — follow this when implementing):
-
-A pinchmark can be **pinned** (`pinned: boolean` on the `Bookmark` type, default `false`).
-Pinned pinchmarks live in a special **Pin Folder**:
-
-```
-Pin Folder rules:
-  - System folder, identified by isPinFolder: true on the Folder record
-  - Created automatically when the first pinchmark is pinned
-  - Only one Pin Folder per user (enforced in both IDB and SQLite)
-  - Cannot be manually renamed, recolored, or moved by the user
-  - MUST auto-delete itself when it contains zero pinchmarks
-  - Deleting the last pinchmark from it triggers folder deletion
-  - Unpin = remove from Pin Folder + set pinned: false on the bookmark
-```
-
-Required schema additions when implementing:
-- `Bookmark`: add `pinned: boolean` field
-- `Folder`: add `isPinFolder: boolean` field
-- SQLite `bookmarks` table: `pinned INTEGER DEFAULT 0`
-- SQLite `folders` table: `is_pin_folder INTEGER DEFAULT 0`
-- IDB `bookmarks` store: index on `"pinned"`
-- IDB `folders` store: index on `"isPinFolder"`
-
----
-
-## 🔐 Hard Constraint: SQLite Table user_uuid Attachment
-
-Every table that stores user data **must** have `user_uuid TEXT NOT NULL`
-referencing `users.uuid`. Every server-side query that reads or writes user
-data **must** include `WHERE user_uuid = ?`.
+Every table that stores user data **must** have `user_uuid TEXT NOT NULL` referencing `users.uuid`. Every server-side query **must** include `WHERE user_uuid = ?`.
 
 ```
 bookmarks.user_uuid   → users.uuid
@@ -188,68 +173,53 @@ agent_keys.user_uuid  → users.uuid
 settings.user_uuid    → users.uuid
 ```
 
-Parameterized queries only (`db.prepare(...).run(?, ?)`) — no string
-interpolation ever. This is verified in the root CRUSTAGENT.md invariants.
+**Parameterized queries only.** `db.prepare(...).run(?, ?)` — no string interpolation. Ever.
+
+</details>
 
 ---
 
-## ⚡ Stability Lock: REST API Adapter
+## ⚡ Stability Locks
+
+<details>
+<summary>🔒 RestAdapter.ts — The Sole HTTP Client</summary>
 
 **File:** `src/services/database/rest/RestAdapter.ts`
 
-This is the **sole HTTP client** for the app. All components talk to it through
-the `DatabaseProvider` context. Once working and secure, method signatures and
-the auth pattern must not change.
-
-### Base URL (do not refactor this line)
+This is the **only** HTTP client for the app. All components talk through the `DatabaseProvider` context. Once working and secure, method signatures must not change.
 
 ```typescript
-// @ts-ignore: Vite replaces import.meta.env.VITE_API_URL at build-time — do NOT refactor this line
+// ⚠️ DO NOT REFACTOR THIS LINE — Vite replaces import.meta.env.VITE_API_URL at build-time
 const API_BASE = import.meta.env.PROD ? "" : (import.meta.env.VITE_API_URL || "http://localhost:4646").replace(/\/$/, "");
 ```
 
-`import.meta.env.PROD` must appear as an exact literal — TypeScript casting
-breaks Vite's string replacement and hardcodes `localhost:4646` in the build.
+`import.meta.env.PROD` must appear as an exact literal. TypeScript casting breaks Vite's string replacement.
 
-### Auth pattern
-
+**Auth pattern:**
 ```typescript
-Authorization: Bearer {cc_api_token}   // from sessionStorage
+Authorization: Bearer {cc_api_token}  // from sessionStorage
 ```
 
-### Response contract
-
-```typescript
-// Success: { data: T }   — adapter returns data, throws on error
-// Error:   { error: string }  — adapter throws ApiError(status, message)
-```
-
-### Method surface (do not change signatures)
-
+**Method surface (do not change signatures):**
 ```
 Bookmarks:  getBookmarks()  saveBookmark()  updateBookmark()  deleteBookmark()  deleteAllBookmarks()
 Folders:    getFolders()    saveFolder()    updateFolder()    deleteFolder()    deleteAllFolders()
 AgentKeys:  getAgentKeys()  saveAgentKey()  revokeAgentKey()  deleteAgentKey()
 Settings:   getAppearanceSettings()  saveAppearanceSettings()
             getProfileSettings()     saveProfileSettings()
+Stats:      getBookmarkStats()
 ```
 
----
+</details>
 
-## ⚡ Stability Lock: Lobster Key (Agent) System
+<details>
+<summary>🦞 Lobster Key (Agent) System</summary>
 
 **File:** `src/services/agents/agentKeyService.ts`
 
-Lobster keys (`lb-*`) give agents scoped access to the API. Created by humans
-in Settings → Agent Permissions. Once working and secure, this file's pattern
-must not change.
+Lobster keys (`lb-*`) give agents scoped access. Created by humans only (Settings → Agent Permissions). Uses the same Vite env literal pattern as `RestAdapter`.
 
-Uses the same Vite env literal pattern as RestAdapter for `getApiUrl()`.
-
-### Permission levels
-
-Defined in `src/types/agent.ts` as `PERMISSION_CONFIGS`:
-
+**Permission levels** (`src/types/agent.ts` → `PERMISSION_CONFIGS`):
 ```
 READ   → canRead only
 WRITE  → canRead + canWrite
@@ -259,276 +229,194 @@ FULL   → all permissions
 CUSTOM → all false by default (user sets individual booleans)
 ```
 
-### Key lifecycle
-
+**Key lifecycle:**
 ```
-Created (lb- key shown ONCE in AgentKeyGeneratorModal) → Active → Used
-  → [Expired by date/duration] | [Revoked by human] → Inactive
+Created (lb- key shown ONCE) → Active → Used
+  → [Expired by date] | [Revoked by human] → Inactive
 ```
 
-The raw `lb-` key is **shown exactly once** at creation and never stored or
-retrievable again from the UI. Agents must save it immediately.
+Raw `lb-` key shown exactly once at creation. Not stored, not retrievable.
 
-### Expiry types
+</details>
 
-`"never" | "30d" | "60d" | "90d" | "custom"` — all resolved to an ISO timestamp
-server-side via `calculateExpiry()`. The server enforces expiry on every request.
+<details>
+<summary>🌊 Modular Export System</summary>
+
+**Files:** `src/shared/lib/export/`
+
+The export system uses a **formatter registry pattern**. New export formats are added by implementing `ExportFormatter` and registering in `exportHub.ts` — no other component changes required.
+
+```typescript
+export interface ExportFormatter {
+  id: string;
+  label: string;
+  extension: string;
+  format: (data: ExportData) => Promise<string>;
+}
+```
+
+**Current formatters:**
+- `ClawChivesJSON.ts` — native sovereign format (supports AES-256-GCM encryption)
+- `NetscapeHTML.ts` — Netscape bookmark file (browser import compatible)
+- `CSVFormatter.ts` — spreadsheet export
+
+**To add a new format:** Create a new formatter file, implement `ExportFormatter`, add to `exportHub.ts` formatters array.
+
+</details>
 
 ---
 
 ## 🏗️ Component Patterns
 
-- **Base UI components** live in `src/components/ui/` (Shadcn/Radix). Use them;
-  don't create new base components.
-- **Feature components** live in `src/components/{feature}/`.
-- **Modals** use the `LobsterModal.tsx` wrapper for consistent framing.
-- **Human-only UI** (r.jina.ai checkbox, context menu item) is gated by:
+<details>
+<summary>🎨 Lobster-First UI Rules</summary>
+
+- **Base UI components** live in `src/shared/ui/` (shadcn/Radix). Use them — don't create new base primitives.
+- **Feature components** live in `src/features/{feature}/components/`.
+- **Shared modals** use `src/shared/ui/modals/` (`ConfirmModal`, `AlertModal`, `TagBlockedModal`).
+- **Human-only UI** (r.jina.ai controls) is gated by:
   ```typescript
   const keyType = sessionStorage.getItem("cc_key_type");
-  if (keyType === "human") { /* show r.jina.ai controls */ }
+  if (keyType === "human") { /* show Jina controls */ }
   ```
-- **API calls** always go through the `RestAdapter` via `useDatabaseAdapter()`.
-  Never call `fetch()` directly from a component.
-- **r.jina.ai fields** (`jinaUrl`) are returned on all `GET /api/bookmarks`
-  responses — both humans and agents receive them. Only `POST`/`PUT` of
-  `jinaUrl` is restricted to humans.
+- **API calls** always go through `useDatabaseAdapter()` — never call `fetch()` directly from a component.
 
----
+**Semantic color use:**
+```
+Cyan  (#0891b2) → Sovereignty, primary actions, pinchmarks
+Amber (#d97706) → AI energy, keys, alerts, agent features
+Red   (#ef4444) → Branding, delete, security barriers
+```
 
-## 🎯 Type Locations
+</details>
+
+<details>
+<summary>🎯 Type Locations</summary>
 
 | Type | File |
 |------|------|
-| `Bookmark`, `Folder`, `User`, `AppearanceSettings`, `ProfileSettings`, `AgentKey` | `src/services/types/index.ts` |
+| `Bookmark`, `Folder`, `User`, `AppearanceSettings`, `ProfileSettings` | `src/services/types/index.ts` |
 | `AgentKey`, `AgentPermission`, `PermissionLevel`, `PERMISSION_CONFIGS` | `src/types/agent.ts` |
 | `View` (`"landing" \| "login" \| "setup" \| "dashboard" \| "settings"`) | `src/App.tsx` |
-| `IdentityData` (identity JSON shape) | `src/lib/crypto.ts` |
+| `IdentityData` (identity JSON shape) | `src/shared/lib/crypto.ts` |
+| `ExportData`, `ExportFormatter`, `ClawChivesExport` | `src/shared/lib/export/types.ts` |
+| `ImportStep` (`"idle" \| "session" \| "done"`) | `src/features/settings/components/useLobsterSession.ts` |
+
+</details>
 
 ---
 
-## 🦞 Ephemeral Lobster Sessions (Phase 4 — NEW)
+## 🦞 Ephemeral Lobster Session Flow
 
-**Endpoints**:
-- `POST /api/lobster-session/start` — Generate ephemeral `lb-eph-*` key (15min TTL or until close)
-- `POST /api/lobster-session/:id/close` — Revoke key + return accumulated errors
+<details>
+<summary>🔄 Session Lifecycle (Phase 4)</summary>
 
-**Flow**:
+**Endpoints:**
+- `POST /api/lobster-session/start` — generates `lb-eph-*` key (15min TTL)
+- `POST /api/lobster-session/:id/close` — revokes key + returns accumulated errors
+
+**Flow:**
 ```
 1. User clicks "Ready" in LobsterImportModal
-2. startLobsterSession() → POST /api/lobster-session/start
-3. Backend creates ephemeral key (lb-eph-{48 random chars}), returns { sessionId, sessionKey }
-4. Modal displays masked key, user copies it
-5. External agent uses key to POST /api/bookmarks/bulk with X-Session-Id header
-6. Bulk endpoint appends per-item errors to import_sessions.errors_json
-7. User clicks "Done" → closeLobsterSession(sessionId)
+2. useLobsterSession.handleReady() → POST /api/lobster-session/start
+3. Backend creates lb-eph-{48 chars} key, returns { sessionId, sessionKey }
+4. SessionStep component displays masked key for copying
+5. External agent uses key → POST /api/bookmarks/bulk with X-Session-Id header
+6. Bulk endpoint accumulates per-item errors in import_sessions.errors_json
+7. User clicks "Done" → handleDone() → closeLobsterSession(sessionId)
 8. Backend revokes key (is_active = 0), returns accumulated errors
-9. Modal shows success or error list, badge counts update in real-time
+9. SessionResults shows success or error list; badge counts invalidate
 ```
 
-**Key Files**:
-- `src/server/routes/lobsterSession.ts` — Session management endpoints
-- `src/services/lobster/lobsterSessionService.ts` — Frontend client service
-- `src/components/settings/LobsterImportModal.tsx` — 3-step modal (idle → session → done)
-- `src/server/db.ts` — `import_sessions` table schema
-- `tests/lobster-session.test.ts` — 19 comprehensive tests
+**Key Constraints:**
+- Ephemeral key: `canWrite` only (no read, edit, delete, move)
+- Hard 15-minute TTL or manual close — whichever comes first
+- Session scoped to `authReq.userUuid` — user isolation enforced
+- Error accumulation: per-item, non-breaking (one bad URL ≠ failed session)
 
-**Constraints**:
-- Session ID: `import_sessions.id` (UUID)
-- Key ID: `import_sessions.key_id` (references `agent_keys.id`)
-- Expiration: Hard 15-minute TTL or manual revoke on close
-- Permissions: Ephemeral key is **write-only** (`canWrite: true`, others false)
-- User Isolation: Sessions scoped to `authReq.userUuid`
-- Error Tracking: Per-item validation errors accumulated in `import_sessions.errors_json`
-
----
-
-## 🌊 Real-Time Badge Counts (Phase 4 — NEW)
-
-**Problem**: Badge showed 50 (first infinite scroll page) until user navigated to "All Pinchmarks" or scrolled enough to load more pages.
-
-**Solution**: Independent stats endpoint + dedicated React Query hook.
-
-**Endpoint**:
-- `GET /api/bookmarks/stats` — Returns `{ total, starred, archived }` from DB (never pagination-dependent)
-
-**Frontend**:
-- `useBookmarkStats()` hook — Independent query (staleTime: 0, always refetch on mutation)
-- Invalidation: All mutations (`save`, `update`, `delete`, Lobster close) invalidate `['bookmarks', 'stats']`
-- Dashboard: `bookmarkCounts` now uses stats data instead of `flatBookmarks.length`
-
-**Result**: Badge shows **true DB total** on first render. Real-time updates after any mutation. No refresh needed.
-
-**Key Files**:
-- `src/server/routes/bookmarks.ts` — Added `GET /stats` endpoint (before `/:id` catch-all)
-- `src/services/database/rest/RestAdapter.ts` — Added `getBookmarkStats()` method
-- `src/services/database/adapter.ts` — Added `getBookmarkStats()` to interface
-- `src/hooks/useBookmarkStats.ts` — NEW React Query hook
-- `src/hooks/useInfiniteBookmarks.ts` — Invalidate stats on all mutations
-- `src/components/dashboard/Dashboard.tsx` — Use stats for badge display
-- `src/components/settings/LobsterImportModal.tsx` — Invalidate stats on session close
-
----
-
-## 🌊 Bulk Import Endpoint (Phase 1 — EXISTING)
-
-**Endpoint**: `POST /api/bookmarks/bulk`
-
-**Rate Limiter**: Lobster keys (`lb-*` prefix) bypass `apiLimiter` (no 429 responses).
-
-**Request**:
-```json
-{
-  "bookmarks": [
-    {
-      "url": "string (required, valid URL)",
-      "title": "string (required)",
-      "description": "string (optional)",
-      "tags": "string[] (optional)",
-      "starred": "boolean (optional)",
-      "archived": "boolean (optional)",
-      "folderId": "string (optional, UUID)",
-      "jinaUrl": "string (optional, human-only — agents get per-item error)"
-    }
-  ]
-}
-```
-
-**Constraints**:
-- Max batch size: 1000 items
-- Duplicate prevention: `UNIQUE INDEX (user_uuid, url)`
-- jinaUrl guard: Agents cannot use conversion URLs (per-item blocking, not 403 for whole request)
-- Permission required: `canWrite`
-
-**Response**: HTTP 207 Multi-Status (always, never 500 on partial failures)
-```json
-{
-  "success": true,
-  "imported": number,
-  "failed": number,
-  "errors": [
-    { "url": "string", "reason": "string (validation or duplicate error)" }
-  ]
-}
-```
-
-**Implementation Files**:
-- `src/server/routes/bookmarks.ts` — `POST /bulk` route + `insertBookmark()` helper
-- `src/server/middleware/rateLimiter.ts` — `apiLimiter.skip` + per-agent rate limiter bypass
-- `src/services/database/adapter.ts` — `saveBulkBookmarks()` interface
-- `src/services/database/rest/RestAdapter.ts` — bulk fetch with raw response handling
+</details>
 
 ---
 
 ## 🔧 Utility Rules
 
-- **IDB store names:** always import from `src/services/utils/constants.ts` (`STORES.BOOKMARKS`, etc.) — never hardcode strings.
-- **IDB transactions:** always use `executeTransaction()` from `src/services/utils/database.ts`.
-- **HTTP errors:** always throw/use `ApiError` from `src/services/utils/errors.ts` (has `.status` and `.message`).
-- **Crypto:** always use `hashToken()` / `verifyToken()` / `generateHumanKey()` etc. from `src/lib/crypto.ts`. Never implement hashing or key generation inline.
+<details>
+<summary>⚙️ Always-Use List</summary>
+
+| Task | Module | Function |
+|---|---|---|
+| Hash/verify a key | `src/shared/lib/crypto.ts` | `hashToken()` / `verifyToken()` |
+| Generate a key | `src/shared/lib/crypto.ts` | `generateHumanKey()` / `generateAgentKey()` |
+| Encrypt data | `src/shared/lib/crypto.ts` | `encryptData()` / `decryptData()` |
+| Export bookmarks | `src/shared/lib/export/exportHub.ts` | `processExport()` |
+| HTTP errors | `src/services/utils/errors.ts` | `ApiError` |
+
+</details>
 
 ---
 
-## 🧪 Test Infrastructure (Phase 4 Complete — 131 Tests)
+## 🧪 Test Infrastructure
 
-**Test Helpers**:
-- `tests/helpers/testDb.ts` — Database isolation, full schema application, cleanup
-- `tests/helpers/testFactories.ts` — User/folder/bookmark/agent key/session factory functions (schema-correct)
-
-**Test Files**:
-- `src/server/utils/parsers.test.ts` — 26 unit tests (string parsing, URL validation)
-- `src/lib/crypto.test.ts` — 7 unit tests (OWASP key generation, constant-time compare)
-- `src/lib/utils.test.ts` — 5 unit tests (utility functions)
-- `src/lib/api.test.ts` — 1 unit test (API helpers)
-- `tests/unit/middleware/errorHandler.test.ts` — 31 middleware tests (HTTP codes, constraint errors)
-- `tests/security.test.js` — 3 integration tests (key generation, agent auth lifecycle)
-- `tests/bulk-import.test.js` — 20 integration tests (bulk import feature, 6 semantic categories)
-- `tests/lobster-session.test.ts` — 19 integration tests (session lifecycle, ephemeral keys, error accumulation, isolation)
-- `tests/phase3-integration.test.ts` — 6 integration tests (mass import, performance, error recovery)
-- `tests/build-gates.test.ts` — 10 build validation tests (TypeScript lint, npm build, Docker build)
-
-**Test Patterns**:
-- **Data Isolation**: Each test suite uses separate `DATA_DIR` (tests/data, tests/data-bulk)
-- **Auth Setup**: Raw DB inserts bypass rate limiting; no HTTP endpoints during setup
-- **Batch Size**: ≤ 100 items per test (avoids Express 413 body limit)
-- **Vitest Defaults**: No `vitest.config.ts` (parallel execution with DATA_DIR isolation)
-
-**Coverage Verified**:
-- ✅ Authentication (401 unauthenticated, revoked, expired)
-- ✅ Authorization (403 insufficient permissions)
-- ✅ Duplicate Detection (UNIQUE constraint)
-- ✅ Race Conditions (in-batch duplicates, pre-existing URLs)
-- ✅ jinaUrl Guard (per-item blocking for agents)
-- ✅ Response Integrity (error shape, math checks)
-- ✅ Rate Limiter Bypass (Lobster keys skip apiLimiter)
-
----
-
-## 🔧 Dev Workflow
+<details>
+<summary>🧬 Test Files & Commands</summary>
 
 ```bash
-npm start          # Vite dev (port 4545) + API server (port 4646) — use this
-npm run dev        # Vite only — API will be unreachable, use npm start instead
-npm run build      # tsc + vite build (production)
-npm run start:api  # API server only (port 4646)
-npm run test       # Vitest all layers — 93 tests passing
+npm run test                    # All 131 tests
+npm run test:lobster-session    # Lobster session (19 tests)
+npm run test:phase3:full        # Phase 3 suite (109 tests)
+npm run test:phase4:full        # Full suite (131 tests)
 ```
 
-In production Docker, both UI and API run on port 4545 from a single container.
-The Vite build uses `import.meta.env.PROD = true` → `API_BASE = ""` (same-origin).
+**Test helpers:**
+- `tests/helpers/testDb.ts` — DB isolation, full schema, cleanup
+- `tests/helpers/testFactories.ts` — User/folder/bookmark/agent key factories
+
+**Test files:**
+- `src/server/utils/parsers.test.ts` — 26 unit tests
+- `src/shared/lib/crypto.test.ts` — 7 unit tests
+- `tests/unit/middleware/errorHandler.test.ts` — 31 middleware tests
+- `tests/security.test.js` — 3 integration tests
+- `tests/bulk-import.test.js` — 20 integration tests
+- `tests/lobster-session.test.ts` — 19 integration tests
+- `tests/phase3-integration.test.ts` — 6 integration tests
+- `tests/build-gates.test.ts` — 10 build validation tests
+
+</details>
 
 ---
 
-## 🔐 Logic & Stability Invariants (Advanced)
+## 🔧 Dev Workflow & Gotchas
 
-### 1. API Communication (The Stability Lock)
-- **Port 4646**: The API server is locked to port 4646. The frontend is at 4545.
-- **Adapter Only**: Never use `fetch`/`axios` directly in components. Use `useDatabaseAdapter()` from `src/services/database/DatabaseProvider.tsx`.
-- **URL Resolution**: Always use `getApiBaseUrl()` from `src/config/apiConfig.ts`.
-- **Vite Env Replacement**: Do NOT refactor the literal `import.meta.env.VITE_API_URL` string. It breaks the build-time replacement.
+<details>
+<summary>🚢 Commands & Known Issues</summary>
 
-### 2. State & Session Invariants
-- **sessionStorage**: All session state lives here (`cc_api_token`, `cc_user_uuid`, `cc_key_type`, `cc_view`).
-- **One-Field Login**: Paste mode in `LoginForm.tsx` only requires the `hu-` key. UUID and Username are hidden by default (`showAdvanced`).
-- **Theme Restore**: Synchronously initialize `cc_view` and `cc_theme` in `ThemeContext` or `DatabaseProvider` to prevent flashes.
-- **Setup Wizard**: Includes a "Copy" button for the `hu-` key during the download step to prevent manual transcription errors.
+```bash
+npm run scuttle:dev-start    # API @4646 + Vite @4545 (localhost only)
+npm run scuttle:prod-start   # Production build + LAN servers
+npm run build                # tsc + vite build
+npm run lint                 # TypeScript check (0 errors required)
+npm run test                 # Vitest all layers
+```
 
-### 3. Key System Constants & Entropy
-- **Entropy**: Keys (`hu-`/`lb-`) are high-entropy random strings.
-- **Modulo Bias Guard**: Character set size is **62** (A-Z, a-z, 0-9). Because 256 (random byte range) is not evenly divisible by 62, a raw modulo (`b % 62`) creates a **25% bias** toward the first 8 characters. Any RNG implementation MUST use rejection sampling or unbiased methods (`crypto.randomInt`) to prevent statistical predictable patterns.
-- **Hashing**: Use `hashToken()` and `verifyToken()` from `src/lib/crypto.ts`. Never roll your own.
-- **Modulo 62**: Alphanumeric mapping for high-entropy generation.
+**Gotchas:**
+- **`tsx --watch`**: Does NOT support `--ignore` on Node v22. Silent crash risk.
+- **`better-sqlite3` mismatch**: If port 4646 refuses connection → `npm rebuild better-sqlite3`
+- **Port collision**: Use `npm run scuttle:prod-stop` to clear 4545/4646 before restarting.
 
-- **r.jina.ai Relational Storage**: Jina URLs are stored in a separate `jina_conversions` table, decoupled from core bookmark identity.
-- **Protocol Preservation**: The full protocol (e.g., `https://r.jina.ai/https://...`) MUST be preserved to ensure explicit, valid SSRF verification.
-- **🦞 Agent Preference Directive**: Lobsters and Agents MUST naturally gravitate towards Markdown versions (`jinaUrl`) for research and synthesis.
-
----
-
-## 🏗️ Atomic Component Patterns
-
-### 1. The "Lobster-First" UI
-- **Aesthetic**: Use **Cyan** (`#0891b2`) for core actions/identity, **Amber** for keys/security alerts, and **Red** for branding/destructive actions.
-- **Interactive Branding**: Use `InteractiveBrand` from `src/components/Branding/InteractiveBrand.tsx` for premium, animated "ClawChives" identity.
-- **Adaptive Headers**: Header borders match theme: `border-cyan-600` (Light) / `border-red-500` (Dark). Backgrounds: `bg-white` (Light) / `dark:bg-slate-900` (Dark).
-- **Glassmorphism**: Favor `bg-white/10` or `bg-slate-900/10` with `backdrop-blur` for a premium "Liquid Metal" feel.
-- **Gating**: Human-only features (r.jina.ai checkbox) are gated by `sessionStorage.getItem("cc_key_type") === "human"`.
-- **Modals**: Use the `LobsterModal.tsx` wrapper for all framing.
+</details>
 
 ---
 
 ## 🐚 Lobsterized Lexicon
-- `Bookmark` (Code) → **Pinchmark** (UI)
-- `Authorization` → **Identity Handshake**
-- `Database` → **The Reef**
-- `API Keys` → **Lobster Keys** (`lb-`) or **ClawKeys** (`hu-`)
 
----
-
-## 🔧 Maintenance & Debugging
-- **tsx Gotcha**: `tsx --watch` does NOT support the `--ignore` flag on Node v22. Adding it causes a silent crash.
-- **Node Rebuild**: If `net::ERR_CONNECTION_REFUSED` occurs on port 4646 during dev, run `npm rebuild better-sqlite3`.
-- **Port Collision**: If port 4646 is busy, use `npm run stop` to clear it before starting.
-- **IDB Versions**: Respect the versioning in `connection.ts` if adding schema stores (Legacy support).
+| Code Term | UI Term |
+|---|---|
+| `bookmark` | **Pinchmark** |
+| `folder` | **Pod** |
+| `database` | **The Reef** |
+| `agent key` | **Lobster Key** (`lb-`) |
+| `identity key` | **ClawKey** (`hu-`) |
+| `authorization` | **Identity Handshake** |
 
 ---
 

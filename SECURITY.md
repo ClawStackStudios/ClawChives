@@ -68,11 +68,12 @@ ClawChives uses a **key-file identity system** — there are no passwords or acc
 <details>
 <summary>Server-Side (Express & SQLite)</summary>
 
-- **`requireAuth`**: Validates the `api-` token via the SQLite `api_tokens` table. It immediately injects `req.agentPermissions` for downstream handlers based on whether the token belongs to a human or an `lb-` agent key.
+- **`requireAuth`**: Validates the `api-` token via the SQLite `api_tokens` table. Injects `req.agentPermissions` based on whether the token belongs to a human or `lb-` agent key.
 - **`requireHuman`**: Restricts sensitive configuration routes (`/api/settings`, `/api/agent-keys`) to human tokens only. Lobster keys cannot mutate system configuration.
-- **Key Uniqueness**: `key_hash` is strictly enforced as `UNIQUE` to support collision-free one-field lookups.
-- **`requirePermission(action)`**: Generates strict locks (e.g., `canWrite`, `canDelete`) around all CRUD routes based on the Granular Custom permissions assigned to the underlying `lb-` key.
+- **Key Uniqueness**: `key_hash` is strictly `UNIQUE` for collision-free one-field lookups.
+- **`requirePermission(action)`**: Strict locks (`canWrite`, `canDelete`, etc.) around all CRUD routes per agent key's granular permissions.
 - SQLite uses **WAL journal mode** and **foreign key enforcement** for data integrity.
+- **Parameterized queries only** — `db.prepare(...).run(?, ?)` across all route handlers. Never string interpolation.
 
 </details>
 

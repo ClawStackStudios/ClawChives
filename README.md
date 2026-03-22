@@ -23,8 +23,8 @@
 [![TailwindCSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
-[![Phase](https://img.shields.io/badge/Phase-3_Feature_Expansion-blue?style=for-the-badge)](#)
+[![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-yellow.svg?style=for-the-badge)](LICENSE)
+[![Phase](https://img.shields.io/badge/Phase-6_Complete-blue?style=for-the-badge)](#)
 
 ---
 
@@ -71,24 +71,24 @@
 
 ```mermaid
 graph TD
-    subgraph Client ["🌐 Browser"]
-        UI[React / Tailwind UI]
-        Auth["Auth Module\nSetupWizard + LoginForm"]
+    subgraph Frontend ["🌐 Browser"]
+        UI["React / Tailwind UI\nVite + TypeScript"]
+        Features["src/features/\nauth | dashboard | settings"]
+        Shared["src/shared/\nui | lib | theme"]
         Provider["DatabaseProvider\nuseDatabase() hook"]
         REST[RestAdapter]
-        Theme[ThemeProvider\nLiquid Metal Toggle]
+        Theme["ThemeProvider\nLiquid Metal Toggle"]
     end
 
-    subgraph Server ["🖥️ server.js (Express)"]
-        API["REST API\nPort 4646"]
+    subgraph Server ["🖥️ Express API (Port 4646)"]
+        API["Routes / Middleware"]
         DB[(SQLite db.sqlite)]
     end
 
-    UI --> Auth
-    UI --> Theme
-    UI --> Provider
+    UI --> Features
+    Features --> Provider
     Provider --> REST
-    REST -->|"fetch + Bearer token"| API
+    REST -->|"Bearer token"| API
     API --> DB
 ```
 
@@ -445,15 +445,20 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 
 ```
 src/
-├── components/           # Feature-scoped UI (auth, dashboard, settings)
-├── services/             # Business logic + database adapter
-├── hooks/                # React custom hooks (useAuth, etc.)
-├── lib/                  # Utilities (crypto, API client, export/import)
+├── features/             # Feature-sliced domains (auth, dashboard, settings)
+├── shared/               # Global UI components, utilities, export system
+│   ├── ui/modals/        # Lobster modal components
+│   └── lib/export/       # Modular export system (JSON, HTML, CSV formatters)
+├── services/             # Database adapter + API client
 ├── types/                # TypeScript interfaces
 └── server/               # Backend (Express, SQLite, routes, middleware)
+    ├── database/          # connection, schema, migrations
+    ├── middleware/         # auth, rateLimiter, validate
+    ├── routes/            # auth, folders, agentKeys, settings, bookmarks/
+    └── utils/             # auditLogger, crypto, parsers
 ```
 
-**For complete directory breakdown with all files and descriptions:**
+**For complete directory breakdown with all files:**
 → See [BLUEPRINT.md § Directory Structure](./BLUEPRINT.md#-complete-directory-structure)
 
 ---
