@@ -207,3 +207,90 @@ export async function verifyToken(plaintextToken: string, storedHash: string): P
 
   return result === 0;
 }
+
+// ─── AES-256-GCM Encryption ──────────────────────────────────────────────────
+
+/**
+ * AES-256-GCM encryption using Web Crypto API
+ * Password is derived via PBKDF2 with random salt
+ */
+export async function encryptData(data: string, password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const salt = crypto.getRandomValues(new Uint8Array(16));
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+
+  const passwordKey = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+
+  const keyMaterial = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    passwordKey,
+    256
+  );
+
+  const key = await crypto.subtle.importKey('raw', keyMaterial, 'AES-GCM', false, ['encrypt']);
+  const dataBytes = encoder.encode(data);
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    dataBytes
+  );
+
+  const combined = new Uint8Array(salt.length + iv.length + ciphertext.byteLength);
+  combined.set(salt, 0);
+  combined.set(iv, salt.length);
+  combined.set(new Uint8Array(ciphertext), salt.length + iv.length);
+
+  return btoa(String.fromCharCode(...combined));
+}
+
+/**
+ * AES-256-GCM decryption using Web Crypto API
+ */
+export async function decryptData(encrypted: string, password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const decoder = new TextDecoder();
+  const combined = Uint8Array.from(atob(encrypted), (c) => c.charCodeAt(0));
+
+  const salt = combined.slice(0, 16);
+  const iv = combined.slice(16, 28);
+  const ciphertext = combined.slice(28);
+
+  const passwordKey = await crypto.subtle.importKey(
+    'raw',
+    encoder.encode(password),
+    'PBKDF2',
+    false,
+    ['deriveBits']
+  );
+
+  const keyMaterial = await crypto.subtle.deriveBits(
+    {
+      name: 'PBKDF2',
+      salt: salt,
+      iterations: 100000,
+      hash: 'SHA-256',
+    },
+    passwordKey,
+    256
+  );
+
+  const key = await crypto.subtle.importKey('raw', keyMaterial, 'AES-GCM', false, ['decrypt']);
+  const plaintext = await crypto.subtle.decrypt(
+    { name: 'AES-GCM', iv },
+    key,
+    ciphertext
+  );
+
+  return decoder.decode(plaintext);
+}
