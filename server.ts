@@ -10,14 +10,14 @@ import { getCorsConfig } from './src/config/corsConfig.js';
 import { apiLimiter, createAgentKeyRateLimiter } from './src/server/middleware/rateLimiter.js';
 import { errorHandler } from './src/server/middleware/errorHandler.js';
 import { httpsRedirect } from './src/server/middleware/httpsRedirect.js';
-import { purgeExpiredTokens } from './src/server/db.js';
+import { purgeExpiredTokens } from './src/server/database/index.js';
 import { scheduleTokenCleanup } from './src/server/utils/tokenExpiry.js';
 import { generateId, generateString } from './src/server/utils/crypto.js';
-import db from './src/server/db.js';
+import db from './src/server/database/index.js';
 import { createAuditLogger } from './src/server/utils/auditLogger.js';
 
 import authRoutes         from './src/server/routes/auth.js';
-import bookmarkRoutes     from './src/server/routes/bookmarks.js';
+import bookmarkRoutes     from './src/server/routes/bookmarks/index.js';
 import folderRoutes       from './src/server/routes/folders.js';
 import agentKeyRoutes     from './src/server/routes/agentKeys.js';
 import settingsRoutes     from './src/server/routes/settings.js';

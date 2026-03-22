@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
-import { X, Plus, Tag, Folder, Star, Archive } from "lucide-react";
-import { generateUUID } from '@/shared/lib/crypto';
+import { X, Folder, Star, Archive } from "lucide-react";
 import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
+import { useBookmarkForm } from "./useBookmarkForm";
+import { TagInput } from "./TagInput";
 
 import type { Bookmark, Folder as FolderType } from "@/services/types";
 
@@ -17,173 +17,41 @@ interface BookmarkModalProps {
   onFoldersRefresh?: () => void;
 }
 
-const LOBSTER_TAG_COLORS = [
-  {
-    bg: "bg-cyan-100 dark:bg-cyan-900/30",
-    text: "text-cyan-800 dark:text-cyan-300",
-    border: "border-cyan-200 dark:border-cyan-700/50",
-    hover: "hover:text-cyan-900 dark:hover:text-cyan-100"
-  },
-  {
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    text: "text-amber-800 dark:text-amber-300",
-    border: "border-amber-200 dark:border-amber-700/50",
-    hover: "hover:text-amber-900 dark:hover:text-amber-100"
-  },
-  {
-    bg: "bg-red-100 dark:bg-red-900/30",
-    text: "text-red-800 dark:text-red-300",
-    border: "border-red-200 dark:border-red-700/50",
-    hover: "hover:text-red-900 dark:hover:text-red-100"
-  }
-];
-
-function getTagColor(tag: string) {
-  const hash = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return LOBSTER_TAG_COLORS[hash % LOBSTER_TAG_COLORS.length];
-}
-
-export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFoldersRefresh }: BookmarkModalProps) {
+export function BookmarkModal({
+  isOpen,
+  onClose,
+  onSave,
+  bookmark,
+  folders,
+  onFoldersRefresh,
+}: BookmarkModalProps) {
   const db = useDatabaseAdapter();
   const userKeyType = sessionStorage.getItem("cc_key_type") || "unknown";
 
-  const [url, setUrl] = useState("");
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [selectedFolder, setSelectedFolder] = useState<string>("");
-  const [starred, setStarred] = useState(false);
-  const [archived, setArchived] = useState(false);
-  const [pinned, setPinned] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [jinaConversion, setJinaConversion] = useState(false);
-
-  useEffect(() => {
-    if (bookmark) {
-      setUrl(bookmark.url);
-      setTitle(bookmark.title);
-      setDescription(bookmark.description || "");
-      setTags(bookmark.tags);
-      setSelectedFolder(bookmark.folderId || "");
-      setStarred(bookmark.starred);
-      setArchived(bookmark.archived);
-      setJinaConversion(!!bookmark.jinaUrl);
-      // Detect if currently in Pinned folder
-      const isPinnedFolder = folders.find((f) => f.name === "Pinned" && f.id === bookmark.folderId);
-      setPinned(!!isPinnedFolder);
-    } else {
-      resetForm();
-    }
-  }, [bookmark, isOpen]);
-
-  const resetForm = () => {
-    setUrl("");
-    setTitle("");
-    setDescription("");
-    setTags([]);
-    setTagInput("");
-    setSelectedFolder("");
-    setStarred(false);
-    setArchived(false);
-    setPinned(false);
-    setJinaConversion(false);
-  };
-
-  const handleAddTag = () => {
-    const trimmed = tagInput.trim();
-    if (trimmed && !tags.includes(trimmed)) {
-      setTags([...tags, trimmed]);
-      setTagInput("");
-    }
-  };
-
-  const handleRemoveTag = (tagToRemove: string) => {
-    setTags(tags.filter((t) => t !== tagToRemove));
-  };
-
-  const handleUrlPaste = async (pastedText: string) => {
-    setIsLoading(true);
-    try {
-      const response = await fetch(`https://api.microlink.io/?url=${encodeURIComponent(pastedText)}`);
-      const data = await response.json();
-      if (data.data) {
-        setTitle(data.data.title || title);
-        setDescription(data.data.description || description);
-      }
-    } catch (error) {
-      console.error("Failed to fetch metadata:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleSave = async () => {
-    if (!url.trim()) return;
-    if (!db) return;
-
-    const now = new Date().toISOString();
-    let finalFolderId = selectedFolder || undefined;
-
-    // Pin logic: if pinned, ensure "Pinned" pod exists
-    if (pinned) {
-      let pinnedFolder = folders.find((f) => f.name === "Pinned");
-      if (!pinnedFolder) {
-        const newFolder: FolderType = {
-          id: generateUUID(),
-          name: "Pinned",
-          color: "#ef4444",
-          createdAt: now,
-        };
-        await db.saveFolder(newFolder);
-        onFoldersRefresh?.();
-        finalFolderId = newFolder.id;
-      } else {
-        finalFolderId = pinnedFolder.id;
-      }
-    }
-
-    let finalJinaUrl = undefined;
-    if (jinaConversion && url.trim()) {
-      try {
-        new URL(url.trim());
-        finalJinaUrl = `https://r.jina.ai/${url.trim()}`;
-      } catch {
-        console.error("Invalid URL format for r.jina");
-      }
-    } else if (!jinaConversion && bookmark?.jinaUrl) {
-      finalJinaUrl = null;
-    }
-
-    const bookmarkData: Bookmark = bookmark ? {
-      ...bookmark,
-      url: url.trim(),
-      title: title.trim() || "Untitled",
-      description: description.trim() || undefined,
-      tags,
-      folderId: finalFolderId,
-      starred,
-      archived,
-      jinaUrl: finalJinaUrl !== undefined ? finalJinaUrl : bookmark?.jinaUrl,
-      updatedAt: now,
-    } : {
-      id: generateUUID(),
-      url: url.trim(),
-      title: title.trim() || "Untitled",
-      description: description.trim() || undefined,
-      tags,
-      folderId: finalFolderId,
-      starred,
-      archived,
-      jinaUrl: finalJinaUrl,
-      createdAt: now,
-      updatedAt: now,
-    };
-
-    onSave(bookmarkData);
-    resetForm();
-    onClose();
-  };
+  const {
+    formState: {
+      url, setUrl,
+      title, setTitle,
+      description, setDescription,
+      tags, setTags,
+      selectedFolder, setSelectedFolder,
+      starred, setStarred,
+      archived, setArchived,
+      pinned, setPinned,
+      isLoading,
+      jinaConversion, setJinaConversion
+    },
+    handleUrlPaste,
+    handleSave,
+  } = useBookmarkForm({
+    bookmark,
+    folders,
+    isOpen,
+    onSave,
+    onClose,
+    db,
+    onFoldersRefresh,
+  });
 
   if (!isOpen) return null;
 
@@ -282,42 +150,7 @@ export function BookmarkModal({ isOpen, onClose, onSave, bookmark, folders, onFo
           </div>
 
           {/* Tags */}
-          <div>
-            <Label className="text-slate-700 dark:text-white">Tags</Label>
-            <div className="flex gap-2 mt-1">
-              <div className="relative flex-1">
-                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  type="text"
-                  placeholder="Add tags..."
-                  value={tagInput}
-                  onChange={(e) => setTagInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") { e.preventDefault(); handleAddTag(); }
-                  }}
-                  className="pl-10 dark:bg-slate-800 dark:border-slate-600 dark:text-white"
-                />
-              </div>
-              <Button type="button" variant="outline" onClick={handleAddTag} className="px-3 dark:border-slate-600">
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            {tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {tags.map((tag) => {
-                  const color = getTagColor(tag);
-                  return (
-                    <span key={tag} className={`inline-flex items-center gap-1 px-2 py-1 ${color.bg} ${color.text} rounded-full text-sm border ${color.border}`}>
-                      {tag}
-                      <button type="button" onClick={() => handleRemoveTag(tag)} className={color.hover}>
-                        <X className="w-3 h-3" />
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <TagInput tags={tags} setTags={setTags} />
 
           {/* r.jina.ai Conversion (Human-only) */}
           {userKeyType === 'human' && (

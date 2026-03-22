@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import db from '../db.js';
+import db from '../database/index.js';
 import { createAuditLogger } from '../utils/auditLogger.js';
 import { calculateExpiry } from '../utils/tokenExpiry.js';
 import { generateString } from '../utils/crypto.js';

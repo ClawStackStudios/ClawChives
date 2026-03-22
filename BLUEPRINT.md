@@ -34,86 +34,38 @@ ClawChives/
 ├── 📄 package.json                  # NPM dependencies & scripts
 ├── 📄 vite.config.ts                # Vite bundler config
 ├── 📄 tsconfig.json                 # TypeScript strict rules
-├── 📄 tsconfig.node.json            # Node-specific TS config
-├── 📄 tailwind.config.js            # Design token system
-├── 📄 postcss.config.js             # CSS processor pipeline
-├── 📄 components.json               # shadcn/ui component registry
 ├── 📄 .env.example                  # Environment variable reference
 │
 ├── 🐳 Dockerfile                    # Frontend container (Vite dev/build)
 ├── 🐳 Dockerfile.api                # API server container (Express + SQLite)
-├── 🐳 docker-compose.yml            # Single-container stack (UI + API)
-│                                      Volume mount: ./data → /app/data
+├── 🐳 docker-compose.yml            # Orchestration stack (UI + API)
 │
-├── 🌐 server.ts                    # TypeScript entrypoint (Express REST API)
-│                                      Wiring: routes, middleware, audit initialization
+├── 🌐 server.ts                     # TypeScript entrypoint (Express REST API)
 │
 ├── src/
-│   ├── server/                      # ◀ Backend Source (Refactored v2)
-│   │   ├── db.ts                    # SQLite singleton, schema, & migrations
-│   │   ├── middleware/              # auth, rateLimiter, validate, errorHandler
-│   │   ├── routes/                  # auth, bookmarks, folders, agentKeys, settings
+│   ├── server/                      # ◀ Backend Source (Modular v3)
+│   │   ├── database/                # connection, schema, migrations
+│   │   ├── middleware/              # auth, rateLimiter, validate
+│   │   ├── routes/                  # auth, folders, agentKeys, settings
+│   │   │   └── bookmarks/           # Decomposed handlers (read, write, bulk, toggles)
 │   │   ├── utils/                   # auditLogger, crypto, parsers, tokenExpiry
-│   │   └── validation/              # Zod schemas for all endpoints
+│   │   └── validation/              # Zod schemas
 │   │
-│   ├── 📄 main.tsx                  # React mount point (wraps in DatabaseProvider)
-│   ├── 📄 App.tsx                   # Root view controller + session state manager
-│   │                                  sessionStorage: cc_authenticated, cc_view
-│   ├── 📄 index.css                 # Global styles + Tailwind CSS directives
+│   ├── features/                    # ◀ Feature-Sliced UI (Modular v3)
+│   │   ├── auth/                    # LoginForm, SetupWizard, useAuth
+│   │   ├── dashboard/               # Sidebar, BookmarkGrid, Layout
+│   │   ├── settings/                # Profile, Appearance, AgentKeys, Imports
+│   │   └── shared/                  # Common domain modules/hooks
 │   │
-│   ├── components/                  # Feature-scoped UI components
-│   │   ├── auth/
-│   │   │   ├── LoginForm.tsx        # Identity file upload + One-Field hu- token validation
-│   │   │   └── SetupWizard.tsx      # First-run: username, UUID, key generation
-│   │   │                             Exports clawchives_identity_key.json
-│   │   ├── dashboard/
-│   │   │   ├── Dashboard.tsx        # Main layout: header, sidebar, content
-│   │   │   ├── BookmarkGrid.tsx     # Responsive bookmark card grid
-│   │   │   ├── BookmarkModal.tsx    # Add/Edit bookmark form
-│   │   │   ├── Sidebar.tsx          # Folder tree + filter navigation
-│   │   │   └── DatabaseStatsModal.tsx # IndexedDB record counts + size
-│   │   ├── landing/
-│   │   │   └── LandingPage.tsx      # Unauthenticated entry page
-│   │   ├── settings/
-│   │   │   ├── SettingsPanel.tsx    # Settings tabbed layout
-│   │   │   ├── ProfileSettings.tsx  # Display name, avatar, email
-│   │   │   ├── AppearanceSettings.tsx # Theme, layout, items-per-page
-│   │   │   └── AgentKeyGeneratorModal.tsx # lb- key creation with permissions
-│   │   └── ui/                      # shadcn/ui base components
-│   │       ├── button.tsx
-│   │       ├── card.tsx
-│   │       ├── input.tsx
-│   │       ├── label.tsx
-│   │       └── select.tsx
+│   ├── shared/                      # ◀ Global UI & Utilities
+│   │   ├── ui/                      # shadcn/ui base primitives
+│   │   ├── branding/                # Lobster logos, colors, icons
+│   │   ├── theme/                   # Liquid Metal reveal logic
+│   │   └── lib/                     # api client, crypto, utils
 │   │
-│   ├── services/                    # Business logic + data access
-│   │   ├── index.ts                 # Barrel export
-│   │   ├── database/
-│   │   │   ├── adapter.ts           # ◀ IDatabaseAdapter interface (contract)
-│   │   │   ├── DatabaseProvider.tsx # ◀ React context: resolves RestAdapter
-│   │   │   └── rest/
-│   │   │       └── RestAdapter.ts   # fetch() → server.js (SQLite mode)
-│   │   ├── bookmarks/               # Bookmark CRUD operations
-│   │   ├── folders/                 # Folder management
-│   │   ├── agents/                  # Agent key operations
-│   │   ├── users/                   # User profile management
-│   │   ├── auth/                    # Auth helper functions
-│   │   ├── settings/                # Appearance + profile settings
-│   │   ├── types/                   # Shared TypeScript interfaces
-│   │   └── utils/                   # Constants, errors, DB helpers
-│   │
-│   ├── hooks/
-│   │   └── useAuth.ts               # Authentication state hook
-│   │
-│   ├── lib/
-│   │   ├── crypto.ts                # SHA-256 token hashing utilities
-│   │   ├── api.ts                   # API client helpers
-│   │   ├── exportImport.ts          # JSON bookmark import/export
-│   │   └── utils.ts                 # Shared utility functions
-│   │
-│   └── types/
-│       ├── index.ts                 # App-wide TypeScript types
-│       └── agent.ts                 # AgentKey type + ExpirationType enum
+│   ├── 📄 main.tsx                  # React mount point
+│   ├── 📄 App.tsx                   # Root view router
+│   └── 📄 index.css                 # Global styles
 ```
 
 ---

@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import db from '../db.js';
+import db from '../database/index.js';
 import { createAuditLogger } from '../utils/auditLogger.js';
 import { checkTokenExpiry } from '../utils/tokenExpiry.js';
 

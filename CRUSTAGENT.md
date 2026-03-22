@@ -53,7 +53,17 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 
 ---
 
-## 📊 Current State: Release 4 Sprint ✅ COMPLETE (2026-03-19)
+## 📊 Current State: Phase 5 Refactor ✅ COMPLETE (2026-03-22)
+
+### Phase 5: Backend Modularization & CrustCode©™ Compliance ✅ COMPLETE (2026-03-22)
+- [x] **Database Modularization**: Decomposed monolithic `db.ts` into `src/server/database/` (connection, schema, migrations).
+- [x] **Route Decomposition**: Refactored `bookmarks.ts` route into `src/server/routes/bookmarks/` with atomic handlers (read, write, bulk, toggles).
+- [x] **250-Line Limit Compliance**: All server-side files now strictly follow the CrustCode©™ line limit.
+- [x] **Test Modularization**: Split oversized `parsers.test.ts` into feature-specific test suites.
+- [x] **Frontend Feature Slicing**: Reorganized `src/features/` and `src/shared/` for true domain isolation.
+- [x] **Absolute Path Migration**: Eliminated relative import ambiguity using centralized absolute aliases.
+
+## 📊 Historically Locked: Release 4 Sprint ✅ COMPLETE (2026-03-19)
 
 ### Phase 4: Ephemeral Lobster Sessions + Accurate Badge Counts ✅ COMPLETE (2026-03-19)
 
