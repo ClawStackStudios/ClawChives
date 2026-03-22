@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { generateUUID } from "@/shared/lib/crypto";
 import type { Bookmark, Folder as FolderType } from "@/services/types";
 
@@ -31,6 +31,7 @@ export function useBookmarkForm({
   const [pinned, setPinned] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [jinaConversion, setJinaConversion] = useState(false);
+  const debounceTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (bookmark) {
@@ -42,13 +43,30 @@ export function useBookmarkForm({
       setStarred(bookmark.starred);
       setArchived(bookmark.archived);
       setJinaConversion(!!bookmark.jinaUrl);
-      
+
       const isPinnedFolder = folders.find((f) => f.name === "Pinned" && f.id === bookmark.folderId);
       setPinned(!!isPinnedFolder);
     } else {
       resetForm();
     }
   }, [bookmark, isOpen, folders]);
+
+  // Auto-fetch metadata when URL is entered
+  useEffect(() => {
+    if (!url.trim() || !url.startsWith("http")) return;
+
+    // Clear any pending fetch
+    if (debounceTimer.current) clearTimeout(debounceTimer.current);
+
+    // Set a new timeout for debounced fetch
+    debounceTimer.current = setTimeout(() => {
+      handleUrlPaste(url);
+    }, 800);
+
+    return () => {
+      if (debounceTimer.current) clearTimeout(debounceTimer.current);
+    };
+  }, [url]);
 
   const resetForm = () => {
     setUrl("");
