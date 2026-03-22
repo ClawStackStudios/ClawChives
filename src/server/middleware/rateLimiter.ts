@@ -1,6 +1,6 @@
 import rateLimit from 'express-rate-limit';
 import { Request, Response, NextFunction } from 'express';
-import db from '../db.js';
+import db from '../database/index.js';
 import { AuthRequest } from './auth.js';
 
 function parseWindow(windowStr: string | undefined): number | null {

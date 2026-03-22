@@ -109,30 +109,35 @@ git checkout -b feat/my-new-feature
 > These are **non-negotiable** constraints that maintain long-term maintainability.
 
 1. **Separation of Concerns** — Components display, services persist, adapters abstract storage
+   - Feature-sliced: `src/features/{domain}/` — don't cross domain streams
    - See [BLUEPRINT.md § Architectural Tenets](./BLUEPRINT.md) for details
 
 2. **Use REST Architecture** — All data operations via Express server (no direct DB access)
    - See [BLUEPRINT.md § Data Flow](./BLUEPRINT.md) for request cycle
 
-3. **No Monolith Files** — Files >150 lines signal refactoring need
+3. **250-Line Limit** — Files >250 lines signal refactoring need. Extract sub-components or utilities.
    - See [BLUEPRINT.md § Component Patterns](./BLUEPRINT.md)
 
 4. **Auth Stays Client-Side** — Never send `hu-*` keys to server (only `api-` and `lb-` tokens)
    - See [BLUEPRINT.md § Key System Architecture](./BLUEPRINT.md)
 
-5. **Feature-First Directories** — New components in named folders, not flat root
+5. **Feature-First Directories** — New components in named folders under `src/features/{domain}/`
    - See [BLUEPRINT.md § Directory Structure](./BLUEPRINT.md)
+
+6. **Modular Exports** — New export formats go in `src/shared/lib/export/formatters/` as an `ExportFormatter`
+   - See [src/CRUSTAGENT.md § Modular Export System](./src/CRUSTAGENT.md)
 
 ---
 
 ## 📬 Submitting a Pull Request
 
-1. Run `npm run lint && npm run build` to validate TypeScript & ESLint
-2. Ensure all new endpoints have corresponding Zod validation schemas
-3. Update [BLUEPRINT.md](./BLUEPRINT.md) if you added or moved files
+1. Run `npm run lint && npm run build` to validate TypeScript & ESLint (0 errors required)
+2. Ensure all new API endpoints have Zod validation schemas in `src/server/validation/`
+3. Update [BLUEPRINT.md](./BLUEPRINT.md) if you added or moved files (especially `src/` directory structure)
 4. Update [ROADMAP.md](./ROADMAP.md) if your change completes or introduces a roadmap item
-5. Write a clear PR description: **what** changed, **why**, and **how to test**
-6. Link any related GitHub Issues
+5. Update [CRUSTAGENT.md](./CRUSTAGENT.md) and [src/CRUSTAGENT.md](./src/CRUSTAGENT.md) under **Phase Tracking** if you've completed a phase item
+6. Write a clear PR description: **what** changed, **why**, and **how to test**
+7. Link any related GitHub Issues
 
 ---
 

@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db.js';
+import db from '../database/index.js';
 import { requireAuth, requireHuman, AuthRequest } from '../middleware/auth.js';
 
 const router = Router();

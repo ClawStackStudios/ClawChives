@@ -3,7 +3,7 @@
 import { saveUser } from "../users";
 import { saveProfileSettings } from "../settings";
 import { generateRandomString } from "../utils/database";
-import { generateUUID } from "../../lib/crypto";
+import { generateUUID } from '@/shared/lib/crypto';
 import type { User } from "../types";
 
 export interface SetupData {

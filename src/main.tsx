@@ -3,7 +3,7 @@ import ReactDOM from 'react-dom/client'
 import { QueryClientProvider } from '@tanstack/react-query'
 import App from './App.tsx'
 import { DatabaseProvider } from './services/database/DatabaseProvider.tsx'
-import { ThemeProvider } from './components/theme-provider.tsx'
+import { ThemeProvider } from '@/shared/theme/theme-provider'
 import { queryClient } from './services/queryClient.ts'
 import './index.css'
 

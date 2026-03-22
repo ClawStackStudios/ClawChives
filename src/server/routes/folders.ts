@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import db from '../db.js';
+import db from '../database/index.js';
 import { createAuditLogger } from '../utils/auditLogger.js';
 import { generateId } from '../utils/crypto.js';
 import { parseFolder } from '../utils/parsers.js';
