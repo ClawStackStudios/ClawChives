@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { LandingPage } from "./components/landing/LandingPage";
+import { LandingPage } from "@/features/landing/LandingPage";
 import { LoginForm } from "./components/auth/LoginForm";
 import { SetupWizard } from "./components/auth/SetupWizard";
 import { Dashboard } from "./components/dashboard/Dashboard";
