@@ -1,11 +1,15 @@
 import { useState, useCallback } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Settings, LogOut, Database } from "lucide-react";
 import { Input } from '@/shared/ui/input';
+import { Button } from '@/shared/ui/button';
 import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { FolderEditModal } from "./FolderEditModal";
 import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 import { SidebarNav, type NavTab } from "./SidebarNav";
 import { FolderList, type FolderItem } from "./FolderList";
+import { SortDropdown } from "../views/SortDropdown";
+import { ViewToggle } from "../views/ViewToggle";
+import type { SortBy } from '@/shared/lib/utils';
 
 interface SidebarProps {
   folders: FolderItem[];
@@ -24,6 +28,15 @@ interface SidebarProps {
     archived: number;
     tags: number;
   };
+  // Mobile controls
+  showGridControls?: boolean;
+  sortBy?: SortBy;
+  onSortChange?: (sort: SortBy) => void;
+  viewMode?: "grid" | "list";
+  onViewChange?: (mode: "grid" | "list") => void;
+  onGoToSettings?: () => void;
+  onLogout?: () => void;
+  onShowDatabaseStats?: () => void;
 }
 
 export function Sidebar({
@@ -38,6 +51,14 @@ export function Sidebar({
   onEditFolder,
   onDeleteFolder,
   bookmarkCounts,
+  showGridControls,
+  sortBy,
+  onSortChange,
+  viewMode,
+  onViewChange,
+  onGoToSettings,
+  onLogout,
+  onShowDatabaseStats,
 }: SidebarProps) {
   const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
@@ -115,6 +136,14 @@ export function Sidebar({
         </div>
       </div>
 
+      {/* Sort / View controls — mobile only */}
+      {showGridControls && sortBy && onSortChange && viewMode && onViewChange && (
+        <div className="md:hidden px-3 py-2 border-b border-slate-200 dark:border-slate-800 flex items-center gap-2">
+          <SortDropdown sortBy={sortBy} onChange={onSortChange} />
+          <ViewToggle viewMode={viewMode} onChange={onViewChange} />
+        </div>
+      )}
+
       {/* Nav */}
       <div className="flex-1 overflow-y-auto p-3">
         <SidebarNav
@@ -134,6 +163,45 @@ export function Sidebar({
           folderBookmarkCount={folderBookmarkCount}
         />
       </div>
+
+      {/* Action buttons — mobile only */}
+      {(onGoToSettings || onLogout || onShowDatabaseStats) && (
+        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 p-3 flex flex-col gap-1.5">
+          {onShowDatabaseStats && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onShowDatabaseStats}
+              className="justify-start text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
+            >
+              <Database className="w-4 h-4 mr-2" />
+              Database
+            </Button>
+          )}
+          {onGoToSettings && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onGoToSettings}
+              className="justify-start text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Settings
+            </Button>
+          )}
+          {onLogout && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onLogout}
+              className="justify-start text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          )}
+        </div>
+      )}
 
       {/* Folder Edit Modal */}
       <FolderEditModal

@@ -1,4 +1,3 @@
-import { Menu, X } from "lucide-react";
 import { Sidebar } from "./components/layout/Sidebar";
 import { Header } from "./components/layout/Header";
 import { DashboardHome } from "./components/views/DashboardHome";
@@ -62,14 +61,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* Mobile Menu Button + Overlay */}
-      <button
-        onClick={() => setSidebarOpen(!sidebarOpen)}
-        className="md:hidden fixed top-4 left-4 z-50 p-2 bg-white dark:bg-slate-900 rounded-lg shadow-lg text-slate-700 dark:text-slate-300"
-      >
-        {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-      </button>
-
+      {/* Mobile overlay */}
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
@@ -100,6 +92,14 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             archived: stats?.archived ?? 0,
             tags: tagsCount,
           }}
+          showGridControls={showGrid}
+          sortBy={sortBy}
+          onSortChange={handleSortChange}
+          viewMode={viewMode}
+          onViewChange={handleViewChange}
+          onGoToSettings={onGoToSettings}
+          onLogout={onLogout}
+          onShowDatabaseStats={onShowDatabaseStats}
         />
       </aside>
 
@@ -118,6 +118,8 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onViewChange={handleViewChange}
           tagFilter={tagFilter}
           onClearTagFilter={() => setTagFilter(null)}
+          sidebarOpen={sidebarOpen}
+          onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
         <div className="flex-1 overflow-auto">

@@ -1,4 +1,4 @@
-import { Settings, LogOut, Database, Plus, X } from "lucide-react";
+import { Menu, Settings, LogOut, Database, Plus, X } from "lucide-react";
 import { Button } from '@/shared/ui/button';
 import { SortDropdown } from "../views/SortDropdown";
 import { ViewToggle } from "../views/ViewToggle";
@@ -17,6 +17,8 @@ interface HeaderProps {
   onViewChange: (mode: "grid" | "list") => void;
   tagFilter: string | null;
   onClearTagFilter: () => void;
+  sidebarOpen?: boolean;
+  onToggleSidebar?: () => void;
 }
 
 export function Header({
@@ -31,21 +33,32 @@ export function Header({
   viewMode,
   onViewChange,
   tagFilter,
-  onClearTagFilter
+  onClearTagFilter,
+  sidebarOpen,
+  onToggleSidebar,
 }: HeaderProps) {
   return (
     <header className="bg-white dark:bg-slate-900 border-b-2 border-cyan-600 dark:border-red-500 px-4 md:px-6 py-3 md:py-4 flex-shrink-0">
       <div className="flex flex-col gap-3 md:gap-4">
         <div className="flex items-center justify-between gap-2">
-          <div className="md:hidden flex items-center gap-1">
-            <Button variant="ghost" size="sm" onClick={onGoToSettings} className="text-cyan-700 dark:text-cyan-400 p-1.5">
-              <Settings className="w-4 h-4" />
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onLogout} className="text-red-600 dark:text-red-400 p-1.5">
-              <LogOut className="w-4 h-4" />
+          {/* Mobile: hamburger + add button */}
+          <div className="md:hidden flex items-center gap-2">
+            {onToggleSidebar && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onToggleSidebar}
+                className="text-slate-700 dark:text-slate-300 p-1.5"
+              >
+                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              </Button>
+            )}
+            <Button onClick={onAddBookmark} className="bg-cyan-700 hover:bg-cyan-800 text-white p-2 h-auto">
+              <Plus className="w-5 h-5" />
             </Button>
           </div>
 
+          {/* Desktop: sort/view controls */}
           <div className="hidden md:flex items-center gap-2">
             {showGridControls && (
               <div className="flex items-center gap-2">
@@ -98,10 +111,6 @@ export function Header({
               Add Pinchmark
             </Button>
           </div>
-
-          <Button onClick={onAddBookmark} className="md:hidden bg-cyan-700 hover:bg-cyan-800 text-white p-2 h-auto">
-            <Plus className="w-5 h-5" />
-          </Button>
         </div>
       </div>
 
