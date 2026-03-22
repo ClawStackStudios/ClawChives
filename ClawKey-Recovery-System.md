@@ -1,1 +1,0 @@
-Implement a secure password recovery mechanism for the ClawKeys files perhaps by storing a redundant encrypted key or a recovery phrase.

@@ -29,7 +29,7 @@ data-dev/
 *.sw?
 
 # CrustAgent
-.crustagent/knowledge/ShadowClaw.Sign
+.crustagent/internal/
 .shellcheck/
 
 # AI Tools
