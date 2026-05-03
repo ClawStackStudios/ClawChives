@@ -8,6 +8,7 @@ import { requireAuth, requireHuman, AuthRequest } from '../middleware/auth.js';
 import { validateBody } from '../middleware/validate.js';
 import { authLimiter } from '../middleware/rateLimiter.js';
 import { AgentKeySchemas } from '../validation/schemas.js';
+console.log('[CrustAgent] 🦞 Hardening the lobster key management routes...');
 
 const router = Router();
 const audit = createAuditLogger(db);

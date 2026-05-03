@@ -28,6 +28,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname  = path.dirname(__filename);
 
 const PORT = parseInt(process.env.PORT ?? '4646', 10);
+const isProduction = process.env.NODE_ENV === 'production';
 
 // ─── Export for tests ────────────────────────────────────────────────────────
 const audit = createAuditLogger(db);
@@ -142,8 +143,9 @@ app.use('/api', (_req, res) => res.status(404).json({ success: false, error: 'Ro
 app.use(errorHandler);
 
 // ─── Start ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+const HOST = process.env.HOST ?? (isProduction ? '0.0.0.0' : '127.0.0.1');
+
+app.listen(PORT, HOST, () => {
   console.log(`\n🦞 ClawChives v2 API running on port ${PORT}`);
-  console.log(`   Health:      http://localhost:${PORT}/api/health`);
-  console.log(`   Issue token: POST http://localhost:${PORT}/api/auth/token\n`);
+  console.log(`   Health: http://localhost:${PORT}/api/health\n`);
 });

@@ -3,6 +3,8 @@ import { Request, Response, NextFunction } from 'express';
 import db from '../database/index.js';
 import { AuthRequest } from './auth.js';
 
+console.log('[CrustAgent] 🦞 Hardening the rate limiting armor...');
+
 function parseWindow(windowStr: string | undefined): number | null {
   if (!windowStr) return null;
   if (windowStr.endsWith('m')) return parseInt(windowStr) * 60 * 1000;
