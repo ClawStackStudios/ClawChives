@@ -57,6 +57,7 @@ app.use(helmet({
       fontSrc:       ["'self'", 'https://fonts.gstatic.com'],
       imgSrc:        ["'self'", 'data:', 'https:'],
       connectSrc:    ["'self'", 'wss:', 'ws:', 'https://r.jina.ai', 'https://api.microlink.io'],
+      frameAncestors: isProduction ? ["'self'"] : ["'self'", "*"],
       upgradeInsecureRequests: process.env.ENFORCE_HTTPS === 'true' ? [] : null,
     },
   },
@@ -64,6 +65,7 @@ app.use(helmet({
   crossOriginResourcePolicy: false,
   crossOriginOpenerPolicy:   false,
   originAgentCluster:        false,
+  frameguard: isProduction ? { action: 'sameorigin' } : false,
 }));
 
 app.use(cors(getCorsConfig()));
