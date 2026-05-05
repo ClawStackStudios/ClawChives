@@ -21,7 +21,7 @@
   <DonateText/>
   <DonateLink/>
   <Requires/>
-  <Config Name="Database Location" Target="/app/data" Default="/app/data" Mode="rw" Description="" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/array-appdata/ClawChives</Config>
+  <Config Name="Database Location" Target="/app/data" Default="/app/data" Mode="rw" Description="" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/clawchives</Config>
   <Config Name="Web GUI" Target="4545" Default="4545" Mode="tcp" Description="The Default Port for the Web GUI" Type="Port" Display="always" Required="true" Mask="false">4545</Config>
   <Config Name="DB Encryption Key" Target="DB_ENCRYPTION_KEY" Default="" Mode="" Description="Key to encrypt the database (Optional) Defaults to no encryption kif none provided" Type="Variable" Display="always" Required="false" Mask="false"/>
   <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Linux Group ID for file permissions" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
