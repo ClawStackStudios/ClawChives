@@ -4,8 +4,10 @@ import { DashboardHome } from "./components/views/DashboardHome";
 import { TagsView } from "./components/views/TagsView";
 import { BookmarkGrid } from "./components/views/BookmarkGrid";
 import { BookmarkModal } from "./components/modals/BookmarkModal";
+import { FolderEditModal } from "./components/layout/FolderEditModal";
 import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
+import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { User } from "@/App";
 import { useRef, useCallback, useEffect } from "react";
 
@@ -58,8 +60,13 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     loadFolders,
     sidebarWidth,
     setSidebarWidth,
-    isResizable
+    isResizable,
+    isFolderModalOpen,
+    setIsFolderModalOpen,
+    editingFolder,
+    setEditingFolder
   } = useDashboardState();
+  const { data: folderCounts } = useFolderCounts();
 
   const isResizing = useRef(false);
 
@@ -134,6 +141,14 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onLogout={onLogout}
           onShowDatabaseStats={onShowDatabaseStats}
           onClose={() => setSidebarOpen(false)}
+          openCreateFolder={() => {
+            setEditingFolder(null);
+            setIsFolderModalOpen(true);
+          }}
+          openEditFolder={(folder) => {
+            setEditingFolder(folder);
+            setIsFolderModalOpen(true);
+          }}
         />
       </aside>
 
@@ -211,6 +226,24 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
         bookmark={editingBookmark}
         folders={folders}
         onFoldersRefresh={loadFolders}
+      />
+
+      <FolderEditModal
+        isOpen={isFolderModalOpen}
+        onClose={() => {
+          setIsFolderModalOpen(false);
+          setEditingFolder(null);
+        }}
+        folder={editingFolder}
+        bookmarkCount={editingFolder ? (folderCounts?.[editingFolder.id] ?? 0) : 0}
+        onSave={(data) => {
+          if (editingFolder) {
+            handleEditFolder(editingFolder.id, data);
+          } else {
+            handleAddFolder(data.name, data.color);
+          }
+        }}
+        onDelete={editingFolder ? () => handleDeleteFolder(editingFolder.id) : undefined}
       />
 
       <AlertModal

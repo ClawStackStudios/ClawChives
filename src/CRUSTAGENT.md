@@ -29,11 +29,14 @@ src/
 │   ├── dashboard/
 │   │   ├── components/
 │   │   │   ├── layout/
-│   │   │   │   ├── Sidebar.tsx          # Composes SidebarNav + FolderList (supports settingsMode for Settings page)
+│   │   │   │   ├── Sidebar.tsx          # Composes SidebarNav + FolderList (delegates modal triggers to parent)
 │   │   │   │   ├── SidebarNav.tsx       # Top-level nav items + settings tabs (exports NavTab, SettingsTab types)
 │   │   │   │   └── FolderList.tsx       # Custom pod tree + counts
 │   │   │   └── modals/
 │   │   │       ├── DatabaseStatsModal.tsx  # Composes StatsCards + BookmarkTable
+│   │   │       ├── ExportModal.tsx         # Modern format-picker with theme support
+│   │   │       ├── BookmarkModal.tsx       # Main pinchmark editor
+│   │   │       ├── FolderEditModal.tsx     # Global Pod management (PinchPad styled)
 │   │   │       ├── StatsCards.tsx          # DB stats cards
 │   │   │       └── BookmarkTable.tsx       # Full searchable pinchmark table
 │   └── settings/
@@ -68,6 +71,8 @@ src/
 │           └── formatters/
 │               ├── ClawChivesJSON.ts  # Native .clawchives format
 │               ├── NetscapeHTML.ts    # Browser-compatible HTML bookmarks
+│               ├── MarkdownFormatter.ts # High-fidelity .md export
+│               ├── PDFFormatter.ts    # Branded print-ready HTML/PDF
 │               └── CSVFormatter.ts   # Spreadsheet export
 │
 ├── services/                        # ◀ Backend Adapter Layer
@@ -148,8 +153,9 @@ cc_api_token    → Bearer token for all API requests (api-*)
 cc_user_uuid    → User UUID (matches users.uuid in SQLite)
 cc_username     → Display username
 cc_key_type     → "human" | "agent" — gates r.jina.ai UI
-cc_view         → "dashboard" | "settings" — restored on refresh
-cc_theme        → "light" | "dark" | "auto" — restored on refresh
+cc_view        → "dashboard" | "settings" — restored on refresh
+cc_theme       → "light" | "dark" | "auto" — restored on refresh
+cc_sidebar_open → boolean — persists sidebar visibility across habitats
 ```
 
 **Rules:**

@@ -1,6 +1,6 @@
 # 🗺️ ClawChives — Roadmap
 
-[![Phase](https://img.shields.io/badge/Phase-6_Complete-blue?style=for-the-badge)](#)
+[![Phase](https://img.shields.io/badge/Phase-7_Complete-blue?style=for-the-badge)](#)
 [![Status](https://img.shields.io/badge/Status-Active-green?style=for-the-badge)](#)
 [![Tests](https://img.shields.io/badge/Tests-131_Passing-green?style=for-the-badge)](#)
 
@@ -28,8 +28,8 @@ gantt
     Backend Modularization           :done, p5, 2026-03-21, 1d
     Frontend Decomposition           :done, p6, 2026-03-22, 1d
     section Future
-    Docs + Documentation Sweep       :active, p7, 2026-03-22, 3d
-    Shell-Sidecar Extension          :p8, after p7, 21d
+    Docs + Documentation Sweep       :done, p7, 2026-03-22, 2026-05-04
+    Shell-Sidecar Extension          :p8, 2026-05-05, 21d
     Coral-AI Local LLM               :p9, after p7, 30d
 ```
 
@@ -103,28 +103,43 @@ gantt
 
 </details>
 
-<details>
-<summary>Phase 1 — Foundation (2026-03-01)</summary>
+</details>
+ 
+ <details>
++<summary>Phase 7 — Branded Export & UI Parity (2026-05-04)</summary>
++
++> Finalized the high-fidelity export ecosystem and unified the dashboard UI with the PinchPad design system.
++
++**Sub-Phase 7a — Sovereign Export Pipeline:**
++- [x] **High-Fidelity Formats**: JSON, Markdown, and PDF/HTML implemented.
++- [x] **Branded Design**: Added "ClawStack Studios©™" footers and Cyan-themed blockquote styling.
++- [x] **Metadata Hooks**: Automatic enrichment with stats (Total Pinchmarks, Tags, Date).
++- [x] **Export Themes**: Light/Dark mode toggles for generated HTML files.
++
++**Sub-Phase 7b — UI/UX Modernization:**
++- [x] **Global Pod Management**: Elevated `FolderEditModal` to a global centered modal.
++- [x] **Sidebar Persistence**: Sidebar open/width state synced via `localStorage`.
++- [x] **Habitat Parity**: Restored persistent Settings headers/descriptions.
++- [x] **Branding**: Changed browser favicon to the lobster emoji 🦞.
++
++</details>
++
++<details>
+ <summary>Phase 6 — Full Frontend Decomposition (2026-03-22)</summary>
 
 - [x] Vite + React + TypeScript scaffold
 - [x] TailwindCSS + shadcn/ui components
 - [x] Docker containerization with volume bind mounts
 - [x] Full documentation suite (README, ROADMAP, BLUEPRINT, CONTRIBUTING, SECURITY)
-- [x] Setup Wizard + Landing page
-
-</details>
-
 ---
 
-## 🔜 Phase 7 — Documentation Sweep *(Active)*
-
-- [/] CRUSTAGENT.md rewrite (collapsible + Phase 6 updates)
-- [/] src/CRUSTAGENT.md rewrite (current file map + Phase 6)
-- [ ] ROADMAP.md update *(this file)*
-- [ ] CRUSTSECURITY.md update
-- [ ] README.md update
-- [ ] BLUEPRINT.md update (new directory structure)
-- [ ] `.crustagent/knowledge/` update (post-Phase 6 patterns)
+## 🗓️ Phase 7 — Documentation Sweep *(COMPLETE)*
+- [x] CRUSTAGENT.md rewrite (collapsible + Phase 6/7 updates)
+- [x] src/CRUSTAGENT.md rewrite (current file map + Phase 6/7)
+- [x] ROADMAP.md update *(this file)*
+- [x] README.md update
+- [x] ARCHITECTURE.md update (global modal pattern)
+- [x] Favicon modernization (Lobster 🦞)
 
 ---
 

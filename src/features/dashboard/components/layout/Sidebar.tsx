@@ -43,6 +43,8 @@ interface SidebarProps {
   onSettingsTabChange?: (tab: SettingsTab) => void;
   onGoToDashboard?: () => void;
   onClose?: () => void;
+  openCreateFolder: () => void;
+  openEditFolder: (folder: FolderItem) => void;
 }
 
 export function Sidebar({
@@ -70,43 +72,10 @@ export function Sidebar({
   onSettingsTabChange,
   onGoToDashboard,
   onClose,
+  openCreateFolder,
+  openEditFolder,
 }: SidebarProps) {
-  const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
-  const [folderModalOpen, setFolderModalOpen] = useState(false);
-  const [isCreating, setIsCreating] = useState(false);
-
-  // ── Fetch true folder counts from backend ──
   const { data: folderCountsMap } = useFolderCounts();
-
-  const handleFolderSave = (data: { name: string; color: string }) => {
-    if (isCreating) {
-      onAddFolder(data.name);
-    } else if (editingFolder) {
-      onEditFolder(editingFolder.id, data);
-    }
-    setFolderModalOpen(false);
-    setEditingFolder(null);
-  };
-
-  const handleFolderDelete = () => {
-    if (editingFolder) {
-      onDeleteFolder(editingFolder.id);
-    }
-    setFolderModalOpen(false);
-    setEditingFolder(null);
-  };
-
-  const openCreateFolder = () => {
-    setEditingFolder(null);
-    setIsCreating(true);
-    setFolderModalOpen(true);
-  };
-
-  const openEditFolder = (folder: FolderItem) => {
-    setEditingFolder(folder);
-    setIsCreating(false);
-    setFolderModalOpen(true);
-  };
 
   const folderBookmarkCount = useCallback(
     (folderId: string) => folderCountsMap?.[folderId] ?? 0,
@@ -197,19 +166,6 @@ export function Sidebar({
           </div>
         )}
       </div>
-
-
-      {/* Folder Edit Modal — dashboard only */}
-      {!settingsMode && (
-        <FolderEditModal
-          isOpen={folderModalOpen}
-          onClose={() => { setFolderModalOpen(false); setEditingFolder(null); }}
-          folder={isCreating ? null : editingFolder}
-          bookmarkCount={editingFolder ? folderBookmarkCount(editingFolder.id) : 0}
-          onSave={handleFolderSave}
-          onDelete={editingFolder ? handleFolderDelete : undefined}
-        />
-      )}
     </div>
   );
 }

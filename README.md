@@ -24,7 +24,7 @@
 [![Docker](https://img.shields.io/badge/Docker-2CA5E0?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
 [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-yellow.svg?style=for-the-badge)](LICENSE)
-[![Phase](https://img.shields.io/badge/Phase-6_Complete-blue?style=for-the-badge)](#)
+[![Phase](https://img.shields.io/badge/Phase-7_Complete-blue?style=for-the-badge)](#)
 
 ---
 
@@ -63,6 +63,7 @@
 - 🌊 **Liquid Metal Theming** — Stunning circular-reveal transitions on every theme switch.
 - 🦞 **Reading Mode** — Transform pinchmarks to LLM-friendly markdown on-demand via `r.jina.ai`.
 - 🐚 **Locked Shell UI** — Rigid, consistent interface layout that prioritizes functional stability.
+- 📤 **High-Fidelity Exports** — Branded JSON, Markdown, and PDF/HTML exports with enriched metadata and premium formatting.
 
 ---
 

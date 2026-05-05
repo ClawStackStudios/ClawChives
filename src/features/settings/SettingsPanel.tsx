@@ -67,6 +67,8 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
           onLogout={onLogout}
           onShowDatabaseStats={onShowDatabaseStats}
           onClose={() => setSidebarOpen(false)}
+          openCreateFolder={() => {}}
+          openEditFolder={() => {}}
         />
       </aside>
 

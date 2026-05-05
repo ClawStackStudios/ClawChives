@@ -21,6 +21,8 @@ export const useDashboardState = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
+  const [isFolderModalOpen, setIsFolderModalOpen] = useState(false);
+  const [editingFolder, setEditingFolder] = useState<Folder | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
     const saved = localStorage.getItem("cc_sidebar_open");
     return saved !== null ? saved === "true" : true;
@@ -136,12 +138,13 @@ export const useDashboardState = () => {
     setTagFilter(null);
   };
 
-  const handleAddFolder = async (name: string) => {
+  const handleAddFolder = async (name: string, color: string = "#06b6d4") => {
     if (!db) return;
     try {
-      await db.saveFolder({ id: generateUUID(), name, color: "#06b6d4", createdAt: new Date().toISOString() });
+      await db.saveFolder({ id: generateUUID(), name, color, createdAt: new Date().toISOString() });
       queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       await loadFolders();
+      setIsFolderModalOpen(false);
     } catch (error) {
       console.error("Failed to add folder:", error);
       setAlertModal({ title: "Pod Failed", message: "Failed to create Pod.", variant: "error" });
@@ -156,6 +159,8 @@ export const useDashboardState = () => {
       await db.updateFolder({ ...existing, name: data.name, color: data.color });
       queryClient.invalidateQueries({ queryKey: FOLDER_COUNTS_QUERY_KEY });
       await loadFolders();
+      setIsFolderModalOpen(false);
+      setEditingFolder(null);
     } catch (error) {
       console.error("Failed to update folder:", error);
       setAlertModal({ title: "Pod Failed", message: "Failed to update Pod.", variant: "error" });
@@ -172,6 +177,8 @@ export const useDashboardState = () => {
         sessionStorage.removeItem("cc_selected_folder");
       }
       await loadFolders();
+      setIsFolderModalOpen(false);
+      setEditingFolder(null);
     } catch (error) {
       console.error("Failed to delete folder:", error);
       setAlertModal({ title: "Pod Failed", message: "Failed to delete Pod.", variant: "error" });
@@ -263,6 +270,10 @@ export const useDashboardState = () => {
     sidebarWidth,
     setSidebarWidth: handleSidebarWidthChange,
     isResizable,
-    setIsResizable: handleResizableToggle
+    setIsResizable: handleResizableToggle,
+    isFolderModalOpen,
+    setIsFolderModalOpen,
+    editingFolder,
+    setEditingFolder
   };
 };
