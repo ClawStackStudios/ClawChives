@@ -51,13 +51,13 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border-2 border-red-500/50 dark:border-red-500/70 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-red-500/30 dark:border-red-500/50">
+      <div className="bg-white dark:bg-slate-900 border-2 border-cyan-500/50 dark:border-cyan-500/70 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-cyan-500/30 dark:border-cyan-500/50">
           <div className="flex items-center gap-3">
-            <div className="bg-amber-100 dark:bg-amber-900/30 p-2 rounded-lg"><Key className="w-6 h-6 text-amber-600 dark:text-amber-400" /></div>
+            <div className="bg-cyan-100 dark:bg-cyan-900/30 p-2 rounded-lg"><Key className="w-6 h-6 text-cyan-600 dark:text-cyan-400" /></div>
             <div>
               <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Generate Lobster Key</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">Create a secure <span className="text-amber-600 dark:text-amber-400 font-medium">lb-</span> API key</p>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">Create a secure <span className="text-cyan-600 dark:text-cyan-400 font-medium">lb-</span> API key</p>
             </div>
           </div>
           <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
@@ -77,19 +77,19 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
           {renderStep()}
         </div>
 
-        <div className="px-6 py-4 border-t border-red-500/20 dark:border-red-500/30 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+        <div className="px-6 py-4 border-t border-cyan-500/20 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
           {currentStep !== "generated" ? (
             <>
-              <Button variant="outline" onClick={currentStep === "details" ? handleClose : handleBack} disabled={isGenerating} className="text-red-600 dark:text-red-400 border-red-200 dark:border-red-900/50">
+              <Button variant="outline" onClick={currentStep === "details" ? handleClose : handleBack} disabled={isGenerating} className="text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-900/50 rounded-xl font-bold">
                 {currentStep === "details" ? "Cancel" : "Back"}
               </Button>
-              <Button onClick={handleNext} disabled={!isStepValid() || isGenerating} className="min-w-[100px] bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20">
+              <Button onClick={handleNext} disabled={!isStepValid() || isGenerating} className="min-w-[120px] bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-black uppercase tracking-widest">
                 {isGenerating ? "Generating..." : currentStep === "review" ? "Generate Key" : "Next"}
               </Button>
             </>
           ) : (
             <div className="w-full flex justify-end">
-              <Button onClick={handleClose} className="bg-cyan-600 hover:bg-cyan-700 text-white px-8">Done 🦞</Button>
+              <Button onClick={handleClose} className="bg-cyan-600 hover:bg-cyan-700 text-white px-8 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-cyan-500/20">Done 🦞</Button>
             </div>
           )}
         </div>

@@ -183,6 +183,7 @@ function App() {
           <SettingsPanel
             onBack={handleBackToDashboard}
             onLogout={handleLogout}
+            onShowDatabaseStats={() => setShowDatabaseModal(true)}
           />
         )}
       </Suspense>

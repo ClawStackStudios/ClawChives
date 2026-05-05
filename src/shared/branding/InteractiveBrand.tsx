@@ -34,8 +34,8 @@ export function InteractiveBrand({
       y: isProminent ? -12 : -3, 
       scale: isProminent ? 1.15 : 1.05,
       transition: { 
-        type: 'spring', 
-        stiffness: isProminent ? 400 : 400, 
+        type: "spring" as const, 
+        stiffness: 400, 
         damping: isProminent ? 12 : 30 
       } 
     }

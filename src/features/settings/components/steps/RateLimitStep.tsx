@@ -27,10 +27,10 @@ export function RateLimitStep({ formData, onChange }: RateLimitStepProps) {
             step="10"
             value={formData.rateLimit}
             onChange={(e) => onChange({ rateLimit: parseInt(e.target.value) })}
-            className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+            className="flex-1 h-2 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-600"
           />
           <div className="w-24 text-right">
-            <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+            <span className="text-2xl font-bold text-cyan-600 dark:text-cyan-400">
               {formData.rateLimit === 0 ? "∞" : formData.rateLimit}
             </span>
           </div>
@@ -43,7 +43,7 @@ export function RateLimitStep({ formData, onChange }: RateLimitStepProps) {
               onClick={() => onChange({ rateLimit: value })}
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
                 formData.rateLimit === value
-                  ? "bg-amber-500 text-white"
+                  ? "bg-cyan-600 text-white shadow-md shadow-cyan-600/20"
                   : "bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700"
               }`}
             >

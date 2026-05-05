@@ -21,7 +21,10 @@ export const useDashboardState = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem("cc_sidebar_open");
+    return saved !== null ? saved === "true" : true;
+  });
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; variant?: "info" | "error" } | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>(() => (sessionStorage.getItem("cc_sort_by") as SortBy) || "date-desc");
   const [viewMode, setViewMode] = useState<"grid" | "list">(() => (sessionStorage.getItem("cc_view_mode") as "grid" | "list") || "grid");
@@ -60,6 +63,10 @@ export const useDashboardState = () => {
       console.error("Failed to load folders:", error);
     }
   };
+
+  useEffect(() => {
+    localStorage.setItem("cc_sidebar_open", sidebarOpen.toString());
+  }, [sidebarOpen]);
 
   useEffect(() => {
     loadFolders();

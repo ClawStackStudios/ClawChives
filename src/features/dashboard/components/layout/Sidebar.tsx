@@ -1,7 +1,7 @@
 import { useState, useCallback } from "react";
-import { Search, X, LogOut, Database } from "lucide-react";
+import { Search, X } from "lucide-react";
 import { Input } from '@/shared/ui/input';
-import { Button } from '@/shared/ui/button';
+
 import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { FolderEditModal } from "./FolderEditModal";
 import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
@@ -42,6 +42,7 @@ interface SidebarProps {
   activeSettingsTab?: SettingsTab;
   onSettingsTabChange?: (tab: SettingsTab) => void;
   onGoToDashboard?: () => void;
+  onClose?: () => void;
 }
 
 export function Sidebar({
@@ -68,6 +69,7 @@ export function Sidebar({
   activeSettingsTab,
   onSettingsTabChange,
   onGoToDashboard,
+  onClose,
 }: SidebarProps) {
   const [editingFolder, setEditingFolder] = useState<FolderItem | null>(null);
   const [folderModalOpen, setFolderModalOpen] = useState(false);
@@ -113,15 +115,23 @@ export function Sidebar({
 
   return (
     <div className="h-full flex flex-col overflow-hidden bg-white dark:bg-slate-900">
-      {/* Logo */}
-      <div className="p-4 border-b border-slate-200 dark:border-slate-800">
+      {/* Logo Area */}
+      <div className="p-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
         <InteractiveBrand 
           showIcon={true} 
+          showCopyright={true}
+          className="text-lg sm:text-xl"
           onClick={() => {
             onSelectFolder(null);
             onFilterChange("dashboard");
           }} 
         />
+        <button
+          onClick={onClose}
+          className="md:hidden p-1 text-slate-500 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Search Bar — dashboard only */}
@@ -133,7 +143,7 @@ export function Sidebar({
               placeholder="Search..."
               value={searchQuery}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 text-sm dark:bg-slate-800 dark:border-slate-600 dark:text-white"
+              className="pl-10 text-sm rounded-xl bg-slate-50 dark:bg-slate-950 border-slate-200 dark:border-slate-800 focus-visible:ring-cyan-500"
             />
             {searchQuery && (
               <button
@@ -169,6 +179,8 @@ export function Sidebar({
             onSettingsTabChange={onSettingsTabChange}
             onGoToSettings={!settingsMode ? onGoToSettings : undefined}
             onGoToDashboard={settingsMode ? onGoToDashboard : undefined}
+            onShowDatabaseStats={onShowDatabaseStats}
+            onLogout={onLogout}
           />
         </div>
 
@@ -186,33 +198,6 @@ export function Sidebar({
         )}
       </div>
 
-      {/* Action buttons — mobile only, dashboard only */}
-      {!settingsMode && (onGoToSettings || onLogout || onShowDatabaseStats) && (
-        <div className="md:hidden border-t border-slate-200 dark:border-slate-800 p-3 flex flex-col gap-1.5">
-          {onShowDatabaseStats && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onShowDatabaseStats}
-              className="justify-start text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-            >
-              <Database className="w-4 h-4 mr-2" />
-              Database
-            </Button>
-          )}
-          {onLogout && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onLogout}
-              className="justify-start text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          )}
-        </div>
-      )}
 
       {/* Folder Edit Modal — dashboard only */}
       {!settingsMode && (

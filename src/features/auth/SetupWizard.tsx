@@ -8,8 +8,7 @@ import {
   Download,
   Loader2,
   Copy,
-  Zap,
-  Key
+  Zap
 } from 'lucide-react';
 import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 import { generateHumanKey, generateUUID, hashToken, downloadIdentityFile } from '@/shared/lib/crypto';
@@ -89,7 +88,7 @@ export function SetupWizard({ onComplete, onCancel }: SetupWizardProps) {
       const keyHash = await hashToken(lobster.huKey);
       const apiUrl = getApiBaseUrl();
 
-      // 1. Register
+      // Generate the register payload
       const registerResponse = await fetch(`${apiUrl}/api/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },

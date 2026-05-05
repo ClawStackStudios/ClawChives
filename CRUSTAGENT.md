@@ -43,8 +43,8 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 
 | Color | Hex | Semantic Use |
 |---|---|---|
-| **Cyan** | `#0891b2` | Sovereignty, Pinchmarks, Primary Actions |
-| **Amber** | `#d97706` | AI/Lobster Energy, Keys, Alerts |
+| **Cyan** | `#0891b2` | Sovereignty, Pinchmarks, Keys, Primary Actions |
+| **Amber** | `#d97706` | AI/Lobster Energy, Alerts |
 | **Red** | `#ef4444` | Branding, Security barriers, Delete actions |
 | **Liquid Metal** | — | Circular View Transition animations on Theme switch |
 

@@ -1,9 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { User, Mail, Save, Upload, X, Download } from "lucide-react";
+import { User, Mail, Save, Upload, X, Download, Loader2 } from "lucide-react";
 import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
 
 export function ProfileSettings() {
@@ -80,18 +76,18 @@ export function ProfileSettings() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
-        <CardHeader>
-          <CardTitle className="text-cyan-600 dark:text-cyan-400">Profile Settings</CardTitle>
-          <CardDescription>
-            Manage your account information and preferences
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      {/* Profile Settings Block */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-cyan-500/30 dark:border-cyan-500/50 shadow-sm transition-colors">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="text-lg font-semibold leading-none tracking-tight text-cyan-600 dark:text-cyan-400 mb-1.5">Profile Settings</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Manage your lobster identity and preferences</p>
+        </div>
+        
+        <div className="p-6 space-y-6">
           {/* Avatar Section */}
-          <div className="flex items-start gap-6">
-            <div className="relative">
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden border-4 border-red-500 shadow-lg">
+          <div className="flex flex-col md:flex-row items-start gap-6">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center overflow-hidden border-4 border-cyan-600 shadow-lg flex-shrink-0 transition-transform group-hover:scale-105">
                 {avatar ? (
                   <img src={avatar} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -101,28 +97,28 @@ export function ProfileSettings() {
               {avatar && (
                 <button
                   onClick={handleRemoveAvatar}
-                  className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors"
+                  className="absolute -top-1 -right-1 w-7 h-7 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-all shadow-md active:scale-90"
                 >
-                  <X className="w-3 h-3" />
+                  <X className="w-3.5 h-3.5" />
                 </button>
               )}
             </div>
-            <div className="flex-1 space-y-3">
+            
+            <div className="flex-1 w-full space-y-4">
               <div>
-                <Label htmlFor="avatar-upload">Avatar Image</Label>
-                <div className="flex gap-2 mt-1">
-                  <Input
-                    id="avatar-upload"
+                <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Avatar Image</label>
+                <div className="flex gap-2 mt-1.5">
+                  <input
                     type="file"
                     accept="image/*"
                     onChange={handleAvatarUpload}
-                    className="flex-1"
+                    className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
                   />
-                  <Button variant="outline" size="icon">
+                  <div className="flex items-center justify-center rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-slate-500 dark:text-slate-400">
                     <Upload className="w-4 h-4" />
-                  </Button>
+                  </div>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 font-medium italic">
                   Recommended: Square image, at least 200x200px
                 </p>
               </div>
@@ -130,98 +126,90 @@ export function ProfileSettings() {
           </div>
 
           {/* Profile Fields */}
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Username</label>
+              <input
                 type="text"
                 value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="mt-1"
+                readOnly
+                className="mt-1.5 flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800/50 px-3 py-2 text-sm text-slate-500 dark:text-slate-400 cursor-not-allowed font-medium"
               />
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                Your unique identifier (cannot be changed after setup)
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5 italic font-medium">
+                Your unique handle in the reef (cannot be changed after setup)
               </p>
             </div>
 
             <div>
-              <Label htmlFor="displayName">Display Name</Label>
-              <Input
-                id="displayName"
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Display Name</label>
+              <input
                 type="text"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
-                className="mt-1"
                 placeholder="How others see you"
+                className="mt-1.5 flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 px-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
               />
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="email">Email (Optional)</Label>
-              <div className="relative mt-1">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="pl-10"
-                  placeholder="your@email.com"
-                />
-              </div>
+          <div>
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Email Address (Optional)</label>
+            <div className="relative mt-1.5">
+              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="lobster@clawchives.io"
+                className="flex h-10 w-full rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 pl-10 pr-3 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-cyan-500 focus:border-transparent transition-all"
+              />
             </div>
           </div>
 
-          {/* Save Button */}
-          <div className="flex items-center justify-between pt-4 border-t border-slate-200 dark:border-slate-800">
-            {saveMessage && (
-              <span className={`text-sm ${saveMessage.includes("success") ? "text-green-600" : "text-red-600"}`}>
-                {saveMessage}
-              </span>
-            )}
-            <Button
+          {/* Action Row */}
+          <div className="flex items-center justify-between pt-6 border-t border-slate-200 dark:border-slate-800">
+            <div className="min-h-[20px]">
+              {saveMessage && (
+                <span className={`text-sm font-bold animate-in fade-in slide-in-from-left-2 ${saveMessage.includes("success") ? "text-green-600" : "text-red-600"}`}>
+                  {saveMessage}
+                </span>
+              )}
+            </div>
+            <button
               onClick={handleSaveProfile}
               disabled={isSaving}
-              className="ml-auto bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
+              className="inline-flex items-center justify-center px-6 py-2.5 bg-cyan-700 hover:bg-cyan-800 text-white text-sm font-black uppercase tracking-widest rounded-xl shadow-lg shadow-cyan-600/20 active:scale-95 transition-all disabled:bg-slate-300 disabled:cursor-not-allowed"
             >
-              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
               {isSaving ? "Saving..." : "Save Changes"}
-            </Button>
+            </button>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
-      {/* Account Info Card */}
-      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
-        <CardHeader>
-          <CardTitle className="text-cyan-600 dark:text-cyan-400">Account Information</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3 text-sm">
-            <div className="flex justify-between">
+      {/* Account Info Block */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-cyan-500/30 dark:border-cyan-500/50 shadow-sm transition-colors overflow-hidden">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-800/30">
+          <h3 className="text-lg font-semibold text-cyan-600 dark:text-cyan-400">Account Information</h3>
+        </div>
+        <div className="p-6">
+          <div className="space-y-4 text-sm font-medium">
+            <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800/50">
               <span className="text-slate-600 dark:text-slate-400">Account Type</span>
-              <span className="font-medium text-slate-900 dark:text-slate-50">Personal</span>
+              <span className="text-slate-900 dark:text-slate-100 font-bold">Personal Habitat</span>
             </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Storage</span>
-              <span className="font-medium text-slate-900 dark:text-slate-50">Local (ShellCrypted©™)</span>
+            <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800/50">
+              <span className="text-slate-600 dark:text-slate-400">Storage Engine</span>
+              <span className="text-slate-900 dark:text-slate-100 font-bold">Local (ShellCrypted©™)</span>
             </div>
-            <div className="flex justify-between">
+            <div className="flex justify-between items-center py-2 border-b border-slate-100 dark:border-slate-800/50">
               <span className="text-slate-600 dark:text-slate-400">UUID</span>
-              <span className="font-mono text-xs text-slate-900 dark:text-slate-50 opacity-70">{uuid || "N/A"}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-slate-600 dark:text-slate-400">Created</span>
-              <span className="font-medium text-slate-900 dark:text-slate-50">
-                {new Date().toLocaleDateString()}
-              </span>
+              <span className="font-mono text-xs text-slate-500 dark:text-slate-400 bg-slate-100 dark:bg-slate-800 px-2 py-1 rounded-md">{uuid || "N/A"}</span>
             </div>
             
-            <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
-              <Button
-                variant="outline"
-                className="w-full text-cyan-600 hover:text-cyan-700 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
+            <div className="pt-4">
+              <button
+                className="w-full inline-flex items-center justify-center gap-3 px-4 py-3 border-2 border-cyan-500/50 text-cyan-700 dark:text-cyan-400 font-bold rounded-xl hover:bg-cyan-50 dark:hover:bg-cyan-900/20 active:scale-[0.98] transition-all"
                 onClick={() => {
                   const identity = sessionStorage.getItem("cc_identity");
                   if (identity) {
@@ -239,13 +227,13 @@ export function ProfileSettings() {
                   }
                 }}
               >
-                <Download className="w-4 h-4 mr-2" />
+                <Download className="w-4 h-4" />
                 Download Identity Key
-              </Button>
+              </button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

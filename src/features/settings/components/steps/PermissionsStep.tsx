@@ -92,7 +92,7 @@ export function PermissionsStep({ formData, onChange }: PermissionsStepProps) {
                       },
                     })
                   }
-                  className="w-5 h-5 rounded border-slate-300 text-amber-500 focus:ring-amber-500/20"
+                  className="w-5 h-5 rounded border-slate-300 text-cyan-600 focus:ring-cyan-500/20"
                 />
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300 capitalize">
                   {flag.replace("can", "")}
