@@ -34,16 +34,16 @@ export function InteractiveBrand({
       y: isProminent ? -12 : -3, 
       scale: isProminent ? 1.15 : 1.05,
       transition: { 
-        type: "spring" as const, 
-        stiffness: 400, 
-        damping: 10 
+        type: 'spring', 
+        stiffness: isProminent ? 400 : 400, 
+        damping: isProminent ? 12 : 30 
       } 
     }
   };
 
   return (
     <div 
-      className={cn("inline-flex items-center gap-3 cursor-pointer select-none text-lg sm:text-xl", className)}
+      className={cn("inline-flex items-center gap-3 cursor-pointer select-none", className)}
       onClick={onClick}
     >
       {showIcon && (
@@ -80,7 +80,7 @@ export function InteractiveBrand({
               variants={letterVariants}
               initial="initial"
               whileHover="hover"
-              className="text-red-500 dark:text-red-400 inline-block origin-bottom font-bold"
+              className="text-red-600 dark:text-red-500 inline-block origin-bottom font-bold"
             >
               {letter}
             </motion.span>
