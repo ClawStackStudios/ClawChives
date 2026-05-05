@@ -25,7 +25,7 @@ export function CTASection({ onCreateAccount, onLogin }: CTASectionProps) {
             size="lg"
             className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-lg px-8 py-6 shadow-xl shadow-red-900/20"
           >
-            Hatch Your ClawChive
+            Hatch Habitat
             <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
           <Button 
@@ -33,7 +33,7 @@ export function CTASection({ onCreateAccount, onLogin }: CTASectionProps) {
             size="lg"
             className="bg-amber-500 hover:bg-amber-600 text-white dark:text-slate-900 font-medium text-lg px-8 py-6 shadow-xl shadow-amber-900/20"
           >
-            Login with Key
+            Claw In
           </Button>
         </div>
       </div>

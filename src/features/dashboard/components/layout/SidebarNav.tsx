@@ -1,4 +1,4 @@
-import { LayoutDashboard, Folder, Star, Tag, Archive, Settings, User, Palette, Shield, Database } from "lucide-react";
+import { LayoutDashboard, Folder, Star, Tag, Archive, Settings, User, Palette, Shield, Database, LogOut } from "lucide-react";
 
 export type NavTab = "dashboard" | "all" | "starred" | "tags" | "archived";
 export type SettingsTab = "profile" | "appearance" | "agents" | "import-export";
@@ -20,6 +20,9 @@ interface SidebarNavProps {
   onSettingsTabChange?: (tab: SettingsTab) => void;
   onGoToSettings?: () => void;
   onGoToDashboard?: () => void;
+  onShowDatabaseStats?: () => void;
+  onLogout?: () => void;
+  onClose?: () => void;
 }
 
 export function SidebarNav({
@@ -33,8 +36,12 @@ export function SidebarNav({
   onSettingsTabChange,
   onGoToSettings,
   onGoToDashboard,
+  onShowDatabaseStats,
+  onLogout,
+  onClose,
 }: SidebarNavProps) {
-  const inactiveBadge = "text-xs bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200 px-2 py-0.5 rounded-full";
+  const badgeBase = "text-xs px-2 py-0.5 rounded-full font-medium transition-all duration-200";
+  const inactiveBadge = `${badgeBase} bg-slate-200 text-slate-700 dark:bg-slate-700 dark:text-slate-200`;
 
   if (settingsMode && activeSettingsTab && onSettingsTabChange && onGoToDashboard) {
     const settingsNavItems = [
@@ -54,7 +61,7 @@ export function SidebarNav({
         id: "agents" as SettingsTab,
         label: "Lobster Keys",
         icon: Shield,
-        active: "bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800",
+        active: "bg-cyan-50 dark:bg-cyan-950 text-cyan-700 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800",
       },
       {
         id: "import-export" as SettingsTab,
@@ -83,12 +90,34 @@ export function SidebarNav({
         })}
         <div className="border-t border-slate-200 dark:border-slate-800 my-2" />
         <button
-          onClick={onGoToDashboard}
+          onClick={() => { onGoToDashboard(); onClose?.(); }}
           className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
         >
           <LayoutDashboard className="w-4 h-4" />
           Back to Dashboard
         </button>
+
+        <div className="border-t border-slate-200 dark:border-slate-800 my-2" />
+
+        {onShowDatabaseStats && (
+          <button
+            onClick={() => { onShowDatabaseStats(); onClose?.(); }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+          >
+            <Database className="w-4 h-4" />
+            Database Stats
+          </button>
+        )}
+
+        {onLogout && (
+          <button
+            onClick={() => { onLogout(); onClose?.(); }}
+            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Claw Out
+          </button>
+        )}
       </nav>
     );
   }
@@ -108,7 +137,7 @@ export function SidebarNav({
       icon: Folder,
       active: "bg-cyan-100 text-cyan-900 dark:bg-cyan-900/30 dark:text-cyan-300",
       inactive: "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
-      activeBadge: "text-xs bg-cyan-200 text-cyan-900 dark:bg-cyan-800 dark:text-cyan-100 px-2 py-0.5 rounded-full",
+      activeBadge: `${badgeBase} bg-cyan-200 text-cyan-900 dark:bg-cyan-800 dark:text-cyan-100`,
       badge: bookmarkCounts.all,
     },
     {
@@ -117,7 +146,7 @@ export function SidebarNav({
       icon: Star,
       active: "bg-amber-100 text-amber-900 dark:bg-amber-900/30 dark:text-amber-300",
       inactive: "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
-      activeBadge: "text-xs bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100 px-2 py-0.5 rounded-full",
+      activeBadge: `${badgeBase} bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100`,
       badge: bookmarkCounts.starred,
     },
     {
@@ -126,7 +155,7 @@ export function SidebarNav({
       icon: Tag,
       active: "bg-sky-700 text-white dark:bg-sky-800 dark:text-white",
       inactive: "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
-      activeBadge: "text-xs bg-sky-200 text-sky-900 dark:bg-sky-800 dark:text-sky-100 px-2 py-0.5 rounded-full",
+      activeBadge: `${badgeBase} bg-sky-200 text-sky-900 dark:bg-sky-800 dark:text-sky-100`,
       badge: bookmarkCounts.tags,
     },
     {
@@ -135,7 +164,7 @@ export function SidebarNav({
       icon: Archive,
       active: "bg-red-100 text-red-900 dark:bg-red-900/30 dark:text-red-300",
       inactive: "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
-      activeBadge: "text-xs bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100 px-2 py-0.5 rounded-full",
+      activeBadge: `${badgeBase} bg-red-200 text-red-900 dark:bg-red-800 dark:text-red-100`,
       badge: bookmarkCounts.archived,
     },
   ];
@@ -150,6 +179,7 @@ export function SidebarNav({
             onClick={() => {
               onSelectFolder(null);
               onFilterChange(id);
+              onClose?.();
             }}
             className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-sm font-medium transition-colors ${isActive ? active : inactive}`}
           >
@@ -168,13 +198,35 @@ export function SidebarNav({
       {onGoToSettings && (
         <>
           <div className="border-t border-slate-200 dark:border-slate-800 my-2" />
-          <button
-            onClick={onGoToSettings}
-            className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors"
-          >
-            <Settings className="w-4 h-4" />
-            Settings
-          </button>
+          <div className="space-y-1">
+            <button
+              onClick={onGoToSettings}
+              className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-colors"
+            >
+              <Settings className="w-4 h-4" />
+              Settings
+            </button>
+            
+            {onShowDatabaseStats && (
+              <button
+                onClick={() => { onShowDatabaseStats(); onClose?.(); }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors"
+              >
+                <Database className="w-4 h-4" />
+                Database Stats
+              </button>
+            )}
+
+            {onLogout && (
+              <button
+                onClick={() => { onLogout(); onClose?.(); }}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                Claw Out
+              </button>
+            )}
+          </div>
         </>
       )}
     </nav>

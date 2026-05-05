@@ -10,18 +10,26 @@ import type { SettingsTab } from "@/features/dashboard/components/layout/Sidebar
 interface SettingsPanelProps {
   onBack: () => void;
   onLogout: () => void;
+  onShowDatabaseStats: () => void;
 }
 
-export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
+export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: SettingsPanelProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>(() => {
     const saved = sessionStorage.getItem("cc_settings_tab");
     return (saved as SettingsTab) || "profile";
   });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState<boolean>(() => {
+    const saved = localStorage.getItem("cc_sidebar_open");
+    return saved !== null ? saved === "true" : true;
+  });
 
   useEffect(() => {
     sessionStorage.setItem("cc_settings_tab", activeTab);
   }, [activeTab]);
+
+  useEffect(() => {
+    localStorage.setItem("cc_sidebar_open", sidebarOpen.toString());
+  }, [sidebarOpen]);
 
   return (
     <div className="h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden flex">
@@ -35,9 +43,10 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
 
       {/* Sidebar — fixed, never in document flow */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 w-64 h-full flex flex-col overflow-hidden bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 h-full flex flex-col overflow-hidden bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
+        style={{ width: "256px" }}
       >
         <Sidebar
           folders={[]}
@@ -56,17 +65,22 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
           onSettingsTabChange={setActiveTab}
           onGoToDashboard={onBack}
           onLogout={onLogout}
+          onShowDatabaseStats={onShowDatabaseStats}
+          onClose={() => setSidebarOpen(false)}
+          openCreateFolder={() => {}}
+          openEditFolder={() => {}}
         />
       </aside>
 
       {/* Main content */}
-      <main className="md:ml-64 flex-1 flex flex-col min-w-0 overflow-hidden h-full">
+      <main 
+        className="flex-1 flex flex-col min-w-0 overflow-hidden h-full transition-all duration-300 ease-in-out"
+        style={{ paddingLeft: sidebarOpen ? "256px" : 0 }}
+      >
         <Header
+          title="Settings"
           user={null}
-          onGoToSettings={onBack}
-          onLogout={onLogout}
-          onShowDatabaseStats={() => {}}
-          onAddBookmark={() => {}}
+          onAddBookmark={undefined}
           showGridControls={false}
           sortBy="date-desc"
           onSortChange={() => {}}
@@ -74,11 +88,16 @@ export function SettingsPanel({ onBack, onLogout }: SettingsPanelProps) {
           onViewChange={() => {}}
           tagFilter={null}
           onClearTagFilter={() => {}}
-          sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
         <div className="flex-1 overflow-y-auto min-h-0 p-4 md:p-6">
+          <div className="mb-8">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Settings</h2>
+            <p className="text-slate-500 dark:text-slate-400 mt-1">
+              Configure your ClawChives experience and manage your Lobster identity.
+            </p>
+          </div>
           {activeTab === "profile" && <ProfileSettings />}
           {activeTab === "appearance" && <AppearanceSettings />}
           {activeTab === "agents" && <AgentPermissions />}

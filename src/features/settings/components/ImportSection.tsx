@@ -1,9 +1,5 @@
 import { useState } from "react";
-import { Button } from '@/shared/ui/button';
-import { Input } from '@/shared/ui/input';
-import { Label } from '@/shared/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { CheckCircle, Upload, FileText } from "lucide-react";
+import { CheckCircle, Upload, FileText, Loader2 } from "lucide-react";
 import { importBookmarksFromJson } from "../utils/importExportUtils";
 
 interface ImportSectionProps {
@@ -44,56 +40,60 @@ export function ImportSection({ db }: ImportSectionProps) {
   };
 
   return (
-    <Card className="border-2 border-red-500/30 dark:border-red-500/50">
-      <CardHeader>
-        <CardTitle className="text-cyan-600 dark:text-cyan-400">Import Bookmarks</CardTitle>
-        <CardDescription>
+    <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-cyan-500/30 dark:border-cyan-500/50 shadow-sm transition-colors">
+      <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+        <h3 className="text-lg font-semibold leading-none tracking-tight text-cyan-600 dark:text-cyan-400 mb-1.5">Import Bookmarks</h3>
+        <p className="text-sm text-slate-500 dark:text-slate-400">
           Import bookmarks from JSON files or other bookmark managers
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+        </p>
+      </div>
+      <div className="p-6 space-y-6">
         <div>
-          <Label htmlFor="import-file">Select File</Label>
-          <div className="flex gap-2 mt-1">
-            <Input
+          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Select File</label>
+          <div className="flex flex-col md:flex-row gap-3">
+            <input
               id="import-file"
               type="file"
               accept=".json"
               onChange={handleFileSelect}
-              className="flex-1"
+              className="flex-1 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-black file:uppercase file:bg-cyan-600 file:text-white hover:file:bg-cyan-700"
             />
-            <Button
+            <button
               onClick={handleImport}
               disabled={!importFile || isImporting}
-              className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
+              className="inline-flex items-center justify-center gap-3 px-6 py-2 bg-cyan-700 hover:bg-cyan-800 disabled:bg-slate-300 text-white text-sm font-black uppercase tracking-widest rounded-xl shadow-lg shadow-cyan-600/20 active:scale-95 transition-all"
             >
-              <Upload className="w-4 h-4 mr-2" />
+              {isImporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
               {isImporting ? "Importing..." : "Import"}
-            </Button>
+            </button>
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 italic font-medium">
             Supports JSON format exported from ClawChives
           </p>
         </div>
 
         {importResult && (
-          <div className={`p-4 rounded-lg flex items-center gap-3 ${
-            importResult.success ? "bg-green-50 text-green-800" : "bg-red-50 text-red-800"
+          <div className={`p-4 rounded-xl border-2 flex items-center gap-4 animate-in fade-in slide-in-from-top-2 ${
+            importResult.success 
+              ? "bg-green-50 dark:bg-green-900/10 border-green-500/30 text-green-800 dark:text-green-400" 
+              : "bg-red-50 dark:bg-red-900/10 border-red-500/30 text-red-800 dark:text-red-400"
           }`}>
-            {importResult.success ? (
-              <CheckCircle className="w-5 h-5 flex-shrink-0" />
-            ) : (
-              <FileText className="w-5 h-5 flex-shrink-0" />
-            )}
+            <div className={`p-2 rounded-lg ${importResult.success ? "bg-green-100 dark:bg-green-900/30" : "bg-red-100 dark:bg-red-900/30"}`}>
+              {importResult.success ? (
+                <CheckCircle className="w-5 h-5" />
+              ) : (
+                <FileText className="w-5 h-5" />
+              )}
+            </div>
             <div>
-              <p className="font-medium">{importResult.message}</p>
+              <p className="font-bold text-sm">{importResult.message}</p>
               {importResult.count !== undefined && (
-                <p className="text-sm opacity-80">{importResult.count} bookmarks imported</p>
+                <p className="text-xs font-medium opacity-80 mt-0.5">{importResult.count} bookmarks imported to the reef</p>
               )}
             </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

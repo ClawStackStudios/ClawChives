@@ -30,17 +30,17 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border-2 border-amber-500/50 dark:border-amber-500/70 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 border-2 border-cyan-500/50 dark:border-cyan-500/70 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden">
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-5 border-b border-amber-500/30 dark:border-amber-500/50">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-cyan-500/30 dark:border-cyan-500/50">
           <div className="flex items-center gap-3">
             <div className={`p-2 rounded-lg ${
               step === 'session' ? 'bg-green-100 dark:bg-green-900/30' :
-              'bg-amber-100 dark:bg-amber-900/30'
+              'bg-cyan-100 dark:bg-cyan-900/30'
             }`}>
               <Upload className={`w-6 h-6 ${
                 step === 'session' ? 'text-green-600 dark:text-green-400' :
-                'text-amber-600 dark:text-amber-400'
+                'text-cyan-600 dark:text-cyan-400'
               }`} />
             </div>
             <div>
@@ -51,7 +51,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm">
                 {step === 'idle' && (
-                  <>Bulk import via <span className="text-amber-600 dark:text-amber-400 font-medium">lb-</span> agent key</>
+                  <>Bulk import via <span className="text-cyan-600 dark:text-cyan-400 font-medium">lb-</span> agent key</>
                 )}
                 {step === 'session' && <span className="text-green-600 dark:text-green-400">Rate limiting suspended</span>}
                 {step === 'done' && (sessionErrors.length === 0 ? 'No errors' : `${sessionErrors.length} error(s) found`)}
@@ -75,7 +75,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
           {step === 'idle' && (
             <>
               <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-                Lobster Import allows agents with a valid <code className="text-amber-600 dark:text-amber-400 font-mono text-xs bg-amber-50 dark:bg-amber-900/20 px-1.5 py-0.5 rounded">lb-</code> key
+                Lobster Import allows agents with a valid <code className="text-cyan-600 dark:text-cyan-400 font-mono text-xs bg-cyan-50 dark:bg-cyan-900/20 px-1.5 py-0.5 rounded">lb-</code> key
                 and <strong>write</strong> permission to bulk-import up to 1,000 bookmarks per request
                 without rate limiting.
               </p>
@@ -97,7 +97,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-amber-500/20 dark:border-amber-500/30 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
+        <div className="px-6 py-4 border-t border-cyan-500/20 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-800/50 flex justify-end gap-3">
           {step === 'idle' && (
             <>
               <Button
@@ -110,7 +110,7 @@ export function LobsterImportModal({ isOpen, onClose }: LobsterImportModalProps)
               <Button
                 onClick={handleReady}
                 disabled={isLoading}
-                className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20 disabled:opacity-50"
+                className="bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-black uppercase tracking-widest disabled:opacity-50"
               >
                 {isLoading ? 'Loading...' : (
                   <>

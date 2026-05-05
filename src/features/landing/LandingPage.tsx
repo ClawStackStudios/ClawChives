@@ -6,6 +6,7 @@ import { AuthGateway } from "./components/AuthGateway";
 import { FeaturesGrid } from "./components/FeaturesGrid";
 import { CTASection } from "./components/CTASection";
 import { LandingFooter } from "./components/LandingFooter";
+import { LandingSidebar } from "./components/LandingSidebar";
 
 interface LandingPageProps {
   onCreateAccount: () => void;
@@ -14,10 +15,22 @@ interface LandingPageProps {
 
 export function LandingPage({ onCreateAccount, onLogin }: LandingPageProps) {
   const [showKeyInfo, setShowKeyInfo] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-      <NavBar onLogin={onLogin} onCreateAccount={onCreateAccount} />
+      <NavBar 
+        onLogin={onLogin} 
+        onCreateAccount={onCreateAccount} 
+        onOpenSidebar={() => setIsSidebarOpen(true)}
+      />
+
+      <LandingSidebar
+        isOpen={isSidebarOpen}
+        onClose={() => setIsSidebarOpen(false)}
+        onLogin={onLogin}
+        onCreateAccount={onCreateAccount}
+      />
       
       <main>
         <HeroSection 

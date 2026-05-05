@@ -8,16 +8,13 @@ export function getCorsConfig() {
     return {
       origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, curl, Postman)
-        if (!origin) {
-          return callback(null, true);
-        }
+        if (!origin) return callback(null, true);
 
-        // Parse the origin URL
         try {
           const url = new URL(origin);
           const hostname = url.hostname;
 
-          // Allow localhost/127.0.0.1
+          // Always allow localhost
           if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
             return callback(null, true);
           }
@@ -29,13 +26,10 @@ export function getCorsConfig() {
             /^172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}$/.test(hostname) ||
             /^100\.(6[4-9]|[7-9]\d|1[0-1]\d|12[0-7])\.\d{1,3}\.\d{1,3}$/.test(hostname);
 
-          if (isPrivateIP) {
-            return callback(null, true);
-          }
+          if (isPrivateIP) return callback(null, true);
 
-          // Reject public IPs/domains in dev mode
-          console.warn(`⚠️ CORS: Rejected public origin in dev mode: ${origin}`);
-          callback(new Error(`CORS: Public origins not allowed in dev mode`));
+          // In Dev: Allow all origins to prevent friction during LAN testing
+          return callback(null, true);
         } catch (err) {
           callback(new Error(`CORS: Invalid origin format: ${origin}`));
         }

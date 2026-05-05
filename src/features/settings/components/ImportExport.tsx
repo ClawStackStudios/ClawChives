@@ -14,11 +14,11 @@ export function ImportExport() {
   };
 
   const handleImport = () => {
-    console.log("Importing:", importFile?.name);
+    console.log(`[Import] 🐚 Importing habitat data: ${importFile?.name}`);
   };
 
   const handleExport = (format: "html" | "json" | "csv") => {
-    console.log("Exporting as:", format);
+    console.log(`[Export] 🧪 Hatching export archive (${format})...`);
   };
 
   return (

@@ -54,6 +54,9 @@ ClawChives/
 │   ├── features/                    # ◀ Feature-Sliced UI (Modular v3)
 │   │   ├── auth/                    # LoginForm, SetupWizard, useAuth
 │   │   ├── dashboard/               # Sidebar, BookmarkGrid, Layout
+│   │   │   └── components/
+│   │   │       ├── layout/          # Sidebar, SidebarNav, FolderList
+│   │   │       └── modals/          # globalized: BookmarkModal, ExportModal, FolderEditModal
 │   │   ├── settings/                # Profile, Appearance, AgentKeys, Imports
 │   │   └── shared/                  # Common domain modules/hooks
 │   │
@@ -144,6 +147,8 @@ graph LR
 7. **Explicit State** — Navigation state and auth state are persisted in `sessionStorage` using namespaced keys (`cc_authenticated`, `cc_view`).
 8. **Sovereign Reading** — `r.jina.ai` integration allows human-only conversion of Pinchmarks to LLM-friendly markdown.
 9. **Visual UI Lock-in** — The current interface layout is final. All future primitives, modals, and views must adhere to the established spatial hierarchy. No element moves; we only expand within the Shell.
+10. **Global Modal Context** — Critical interactions (Pinchmark Edit, Pod Edit, Export) are rendered at the top-level Dashboard to ensure full-view focus and escape nested DOM limitations.
+11. **Persistent Sidebar State** — Sidebar visibility (`cc_sidebar_open`) and dimensions are persisted to `localStorage` to maintain layout continuity during habitat navigation.
 
 </details>
 

@@ -50,8 +50,8 @@ export function SessionStep({ sessionKey }: SessionStepProps) {
         {copied && <p className="text-xs text-green-600 dark:text-green-400">Copied to clipboard!</p>}
       </div>
 
-      <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 mt-4">
-        <p className="text-sm text-amber-700 dark:text-amber-300">
+      <div className="bg-cyan-50 dark:bg-cyan-900/20 border border-cyan-200 dark:border-cyan-800 rounded-lg p-3 mt-4">
+        <p className="text-sm text-cyan-700 dark:text-cyan-300">
           <strong>Give this key to your agent.</strong> It expires in 15 minutes or when you click "Done".
         </p>
       </div>
@@ -84,7 +84,7 @@ export function SessionResults({ sessionErrors }: SessionResultsProps) {
         </div>
       ) : (
         <>
-          <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300 mb-3">
+          <div className="flex items-center gap-2 text-cyan-700 dark:text-cyan-300 mb-3">
             <AlertCircle className="w-5 h-5" />
             <span className="font-medium">{sessionErrors.length} error(s) found</span>
           </div>
@@ -96,7 +96,7 @@ export function SessionResults({ sessionErrors }: SessionResultsProps) {
                     {err.url.length > 50 ? err.url.substring(0, 47) + '...' : err.url}
                   </span>
                 </p>
-                <p className="text-amber-600 dark:text-amber-400 ml-2">→ {err.reason}</p>
+                <p className="text-cyan-600 dark:text-cyan-400 ml-2">→ {err.reason}</p>
               </div>
             ))}
           </div>

@@ -1,6 +1,4 @@
-import { Shield, Clock, Trash2, XCircle, Eye, EyeOff, Copy, CheckCircle, Download, AlertTriangle, Key } from "lucide-react";
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent } from '@/shared/ui/card';
+import { Shield, Clock, Trash2, XCircle, Eye, EyeOff, Copy, CheckCircle, Download, Key } from "lucide-react";
 import { AgentKey, PERMISSION_INFO } from "@/types/agent";
 import { maskKey, formatDate, isExpired } from "./agentPermissionsUtils";
 
@@ -47,146 +45,129 @@ export function AgentKeyCard({
   };
 
   return (
-    <Card 
-      className={`border-2 border-red-500/30 dark:border-red-500/50 transition-all ${
+    <div 
+      className={`bg-white dark:bg-slate-900 rounded-xl border-2 border-cyan-500/30 dark:border-cyan-500/50 shadow-sm transition-all ${
         !agent.isActive || expired 
-          ? "opacity-60 bg-gray-50 dark:bg-slate-900/50" 
-          : "hover:shadow-md"
+          ? "opacity-60 grayscale-[0.3]" 
+          : "hover:border-cyan-500/50 hover:shadow-md"
       }`}
     >
-      <CardContent className="p-6">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-start gap-3">
-            <div className={`p-2 rounded-lg ${permissionInfo.bgColor}`}>
-              <Shield className={`w-5 h-5 ${permissionInfo.color}`} />
+      <div className="p-6">
+        {/* Card Header */}
+        <div className="flex items-start justify-between mb-6">
+          <div className="flex items-start gap-4">
+            <div className={`p-3 rounded-xl border ${permissionInfo.bgColor} ${permissionInfo.color.replace('text-', 'border-').replace('600', '500/30')}`}>
+              <Shield className={`w-6 h-6 ${permissionInfo.color}`} />
             </div>
             <div>
-              <div className="flex items-center gap-2">
-                <h4 className="font-semibold text-slate-900 dark:text-slate-50">{agent.name}</h4>
-                {!agent.isActive && (
-                  <span className="px-2 py-0.5 bg-gray-200 text-slate-600 dark:text-slate-300 text-xs rounded-full">
-                    Revoked
-                  </span>
-                )}
-                {expired && (
-                  <span className="px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full">
-                    Expired
-                  </span>
-                )}
+              <div className="flex items-center gap-3">
+                <h4 className="text-base font-bold text-slate-900 dark:text-white leading-tight">{agent.name}</h4>
+                <div className="flex gap-1.5">
+                  {!agent.isActive && (
+                    <span className="px-2 py-0.5 bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[10px] font-black uppercase tracking-tighter rounded-md border border-slate-200 dark:border-slate-700">
+                      Revoked
+                    </span>
+                  )}
+                  {expired && (
+                    <span className="px-2 py-0.5 bg-red-500/10 text-red-600 dark:text-red-400 text-[10px] font-black uppercase tracking-tighter rounded-md border border-red-500/20">
+                      Expired
+                    </span>
+                  )}
+                </div>
               </div>
               {agent.description && (
-                <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">{agent.description}</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 line-clamp-1">{agent.description}</p>
               )}
             </div>
           </div>
+          
           <div className="flex items-center gap-2">
             {agent.isActive && !expired && (
-              <Button
-                variant="outline"
-                size="sm"
+              <button
                 onClick={() => onRevoke(agent.id)}
-                className="text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:text-slate-50"
+                className="p-2 text-slate-400 hover:text-cyan-600 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 rounded-lg transition-colors"
+                title="Revoke Key"
               >
-                <XCircle className="w-4 h-4 mr-1" />
-                Revoke
-              </Button>
+                <XCircle className="w-5 h-5" />
+              </button>
             )}
-            <Button
-              variant="outline"
-              size="sm"
+            <button
               onClick={() => onDelete(agent.id)}
-              className="text-red-600 hover:text-red-700 hover:bg-red-50"
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+              title="Delete Permanently"
             >
-              <Trash2 className="w-4 h-4" />
-            </Button>
+              <Trash2 className="w-5 h-5" />
+            </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-          <div className="flex items-center gap-2 text-sm">
-            <Shield className="w-4 h-4 text-gray-500" />
-            <span className="text-slate-600 dark:text-slate-300">Permissions:</span>
-            <span className={`font-medium ${permissionInfo.color}`}>
-              {permissionInfo.label}
-            </span>
+        {/* Info Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-3 gap-x-6 mb-6">
+          <div className="flex items-center gap-2.5 text-xs font-bold">
+            <Shield className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider">Level:</span>
+            <span className={permissionInfo.color}>{permissionInfo.label} Access</span>
           </div>
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-gray-500" />
-            <span className="text-slate-600 dark:text-slate-300">Created:</span>
-            <span className="font-medium text-slate-900 dark:text-slate-50">
-              {formatDate(agent.createdAt)}
-            </span>
+          <div className="flex items-center gap-2.5 text-xs font-bold">
+            <Clock className="w-4 h-4 text-slate-400" />
+            <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider">Hatched:</span>
+            <span className="text-slate-700 dark:text-slate-300">{formatDate(agent.createdAt)}</span>
           </div>
+          
+          {agent.expirationDate && (
+            <div className="flex items-center gap-2.5 text-xs font-bold">
+              <Clock className={`w-4 h-4 ${expired ? "text-red-500" : "text-slate-400"}`} />
+              <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider">Expires:</span>
+              <span className={expired ? "text-red-600" : "text-slate-700 dark:text-slate-300"}>
+                {formatDate(agent.expirationDate)}
+              </span>
+            </div>
+          )}
+
+          {agent.rateLimit && (
+            <div className="flex items-center gap-2.5 text-xs font-bold">
+              <span className="text-slate-500 dark:text-slate-400 uppercase tracking-wider">Rate Limit:</span>
+              <span className="text-slate-700 dark:text-slate-300">{agent.rateLimit} req/min</span>
+            </div>
+          )}
         </div>
 
-        {agent.expirationDate && (
-          <div className="flex items-center gap-2 text-sm mb-4">
-            <Clock className="w-4 h-4 text-gray-500" />
-            <span className="text-slate-600 dark:text-slate-300">Expires:</span>
-            <span className={`font-medium ${expired ? "text-red-600" : "text-slate-900 dark:text-slate-50"}`}>
-              {formatDate(agent.expirationDate)}
-            </span>
-            {expired && (
-              <AlertTriangle className="w-4 h-4 text-red-500" />
-            )}
-          </div>
-        )}
-
-        {agent.rateLimit && (
-          <div className="flex items-center gap-2 text-sm mb-4">
-            <span className="text-slate-600 dark:text-slate-300">Rate Limit:</span>
-            <span className="font-medium text-slate-900 dark:text-slate-50">
-              {agent.rateLimit} req/min
-            </span>
-          </div>
-        )}
-
-        <div className="pt-4 border-t border-gray-200 dark:border-slate-800">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2 overflow-hidden">
-              <Key className="w-4 h-4 flex-shrink-0 text-slate-500 dark:text-slate-400" />
-              <code className={`text-sm font-mono truncate ${isVisible ? "text-slate-900 dark:text-slate-50" : "text-slate-500 dark:text-slate-400"}`}>
+        {/* Key Display & Actions */}
+        <div className="pt-5 border-t border-slate-100 dark:border-slate-800">
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 flex items-center gap-3 bg-slate-50 dark:bg-slate-950/40 px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+              <Key className="w-4 h-4 text-slate-400 flex-shrink-0" />
+              <code className={`text-xs font-mono font-bold truncate ${isVisible ? "text-slate-900 dark:text-slate-200" : "text-slate-400"}`}>
                 {isVisible ? safeKey : maskKey(safeKey)}
               </code>
             </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <Button
-                variant="ghost"
-                size="sm"
+            
+            <div className="flex items-center gap-1">
+              <button
                 onClick={() => onToggleVisibility(agent.id)}
-                className="h-8 w-8 p-0"
+                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                title={isVisible ? "Hide Key" : "Show Key"}
               >
-                {isVisible ? (
-                  <EyeOff className="w-4 h-4 text-gray-500" />
-                ) : (
-                  <Eye className="w-4 h-4 text-gray-500" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
+                {isVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
+              <button
                 onClick={() => onCopy(safeKey, agent.id)}
-                className="h-8 w-8 p-0"
+                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                title="Copy Key"
               >
-                {copiedKey === agent.id ? (
-                  <CheckCircle className="w-4 h-4 text-green-500" />
-                ) : (
-                  <Copy className="w-4 h-4 text-gray-500" />
-                )}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
+                {copiedKey === agent.id ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+              </button>
+              <button
                 onClick={handleDownload}
-                className="h-8 w-8 p-0"
-                title="Download Key"
+                className="p-2 text-slate-400 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                title="Download Key Config"
               >
-                <Download className="w-4 h-4 text-gray-500 hover:text-cyan-600" />
-              </Button>
+                <Download className="w-4 h-4" />
+              </button>
             </div>
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

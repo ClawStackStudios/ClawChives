@@ -1,67 +1,84 @@
 import { useState } from "react";
-import { Button } from '@/shared/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
-import { Upload } from "lucide-react";
+import { Upload, Archive, Package } from "lucide-react";
 import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
 import { ConfirmModal, AlertModal } from '@/shared/ui/LobsterModal';
 import { LobsterImportModal } from "./LobsterImportModal";
 import { ImportSection } from "./ImportSection";
-import { ExportSection } from "./ExportSection";
+import { ExportModal } from "@/features/dashboard/components/modals/ExportModal";
 
 export function ImportExportSettings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPurgedAlert, setShowPurgedAlert] = useState(false);
   const [lobsterImportOpen, setLobsterImportOpen] = useState(false);
+  const [exportModalOpen, setExportModalOpen] = useState(false);
 
   const db = useDatabaseAdapter();
 
   return (
     <div className="space-y-6">
       {/* Lobster Import Section */}
-      <Card className="border-2 border-amber-500/30 dark:border-amber-500/50">
-        <CardHeader>
-          <CardTitle className="text-amber-600 dark:text-amber-400">Lobster Import</CardTitle>
-          <CardDescription>
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-cyan-500/30 dark:border-cyan-500/50 shadow-sm transition-colors">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="text-lg font-semibold leading-none tracking-tight text-cyan-600 dark:text-cyan-400 mb-1.5">Lobster Import</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">
             Bulk import bookmarks via agent key — no rate limits for <span className="font-mono text-xs">lb-</span> Lobster keys
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Button
+          </p>
+        </div>
+        <div className="p-6">
+          <button
             onClick={() => setLobsterImportOpen(true)}
-            className="bg-amber-500 hover:bg-amber-600 text-white shadow-lg shadow-amber-500/20"
+            className="inline-flex items-center justify-center gap-3 px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white text-sm font-black uppercase tracking-widest rounded-xl shadow-lg shadow-cyan-500/20 active:scale-95 transition-all"
           >
-            <Upload className="w-4 h-4 mr-2" />
+            <Upload className="w-4 h-4" />
             Open Lobster Import
-          </Button>
-        </CardContent>
-      </Card>
+          </button>
+        </div>
+      </div>
 
       {/* Import Section */}
       <ImportSection db={db} />
 
       {/* Export Section */}
-      <ExportSection db={db} />
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm transition-colors overflow-hidden">
+        <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-cyan-500/5 to-transparent">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-cyan-100 dark:bg-cyan-900/30 rounded-2xl border border-cyan-200 dark:border-cyan-800/50">
+              <Archive className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1 uppercase tracking-tight">Export Your Habitat</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+                Package your collection of Pinchmarks into a hardened archive. Support for MD, Styled HTML, and JSON with automated asset handling.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => setExportModalOpen(true)}
+            className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-cyan-600 hover:bg-cyan-700 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-cyan-600/30 transition-all active:scale-95"
+          >
+            <Package className="w-5 h-5" />
+            Hatch Exports
+          </button>
+        </div>
+      </div>
 
       {/* Danger Zone */}
-      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
-        <CardHeader>
-          <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
-          <CardDescription>
-            Irreversible actions that affect your data
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(true)}
-              className="text-red-600 border-red-300 dark:border-red-900/50 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              Delete All Pinchmarks
-            </Button>
-        </CardContent>
-      </Card>
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-red-500/30 dark:border-red-500/50 shadow-sm transition-colors">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="text-lg font-semibold leading-none tracking-tight text-red-600 dark:text-red-400 mb-1.5">Danger Zone</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Irreversible actions that affect your data</p>
+        </div>
+        <div className="p-6">
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="px-6 py-2.5 border-2 border-red-500/50 text-red-600 dark:text-red-400 font-bold rounded-xl hover:bg-red-50 dark:hover:bg-red-900/20 active:scale-95 transition-all"
+          >
+            Delete All Pinchmarks
+          </button>
+        </div>
+      </div>
 
-      {/* Delete All Confirm Modal */}
+      {/* Modals */}
       <ConfirmModal
         isOpen={showDeleteConfirm}
         onClose={() => setShowDeleteConfirm(false)}
@@ -76,7 +93,6 @@ export function ImportExportSettings() {
         variant="danger"
       />
 
-      {/* Purged Success Alert */}
       <AlertModal
         isOpen={showPurgedAlert}
         onClose={() => setShowPurgedAlert(false)}
@@ -85,10 +101,14 @@ export function ImportExportSettings() {
         variant="info"
       />
 
-      {/* Lobster Import Modal */}
       <LobsterImportModal
         isOpen={lobsterImportOpen}
         onClose={() => setLobsterImportOpen(false)}
+      />
+
+      <ExportModal
+        isOpen={exportModalOpen}
+        onClose={() => setExportModalOpen(false)}
       />
     </div>
   );

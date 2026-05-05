@@ -1,6 +1,6 @@
 # .autoclaw/ — Persona Rolling Journals
 
-This directory holds the rolling 30-day journals for each vibecheck persona.
+This directory holds the history of all journals for each autoclaw persona.
 
 - BOLT.md — Performance scuttle logs
 - PALETTE.md — UX/accessibility delight logs

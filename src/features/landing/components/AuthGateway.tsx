@@ -52,7 +52,7 @@ export function AuthGateway({ onCreateAccount }: AuthGatewayProps) {
                 onClick={onCreateAccount}
                 className="w-full mt-8 bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-900/20"
               >
-                Create Human Identity
+                Hatch Habitat
               </Button>
             </div>
           ) : (

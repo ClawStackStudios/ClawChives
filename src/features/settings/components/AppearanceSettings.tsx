@@ -66,14 +66,12 @@ export function AppearanceSettings() {
 
   return (
     <div className="space-y-6">
-      <Card className="border-2 border-red-500/30 dark:border-red-500/50">
-        <CardHeader>
-          <CardTitle className="text-cyan-600 dark:text-cyan-400">Appearance Settings</CardTitle>
-          <CardDescription>
-            Customize how ClawChives looks and feels
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-6">
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-cyan-500/30 dark:border-cyan-500/50 shadow-sm transition-colors">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-800">
+          <h3 className="text-lg font-semibold leading-none tracking-tight text-cyan-600 dark:text-cyan-400 mb-1.5">Appearance Settings</h3>
+          <p className="text-sm text-slate-500 dark:text-slate-400">Customize how ClawChives looks and feels</p>
+        </div>
+        <div className="p-6 space-y-6">
           {/* Theme Selection */}
           <div>
             <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 block">Theme</Label>
@@ -239,22 +237,22 @@ export function AppearanceSettings() {
 
           {/* Save Button */}
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800">
-            <Button
+            <button
               onClick={handleSaveSettings}
-              className="w-full bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-600/20"
+              className="w-full inline-flex items-center justify-center gap-3 px-6 py-3 bg-cyan-700 hover:bg-cyan-800 text-white font-bold rounded-xl shadow-lg shadow-cyan-600/20 active:scale-[0.99] transition-all"
             >
-              <Palette className="w-4 h-4 mr-2" />
+              <Palette className="w-4 h-4" />
               Apply Appearance Settings
-            </Button>
+            </button>
             
             {showToast && (
-              <div className="mt-4 p-3 rounded-lg bg-cyan-500 text-red-600 font-bold text-center animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="mt-4 p-3 rounded-lg bg-cyan-500 text-white font-bold text-center animate-in fade-in slide-in-from-top-2 duration-300">
                 Appearance Settings Applied Successfully! 🦞
               </div>
             )}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }

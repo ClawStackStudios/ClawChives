@@ -61,7 +61,7 @@ export function openDatabase(): Database.Database {
       throw e;
     }
   } else {
-    console.warn('[DB] ⚠️ DB_ENCRYPTION_KEY not set — database is unencrypted at rest.');
+    console.warn('[DB] WARNING: DB_ENCRYPTION_KEY is not set — database is unencrypted at rest.');
   }
 
   return db;

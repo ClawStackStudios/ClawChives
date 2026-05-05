@@ -50,7 +50,7 @@ export function HeroSection({ onCreateAccount, onToggleKeyInfo }: HeroSectionPro
               size="lg"
               className="bg-gradient-to-r from-cyan-600 to-cyan-700 hover:from-cyan-700 hover:to-cyan-800 text-lg px-8 py-6 shadow-xl shadow-cyan-200 dark:shadow-cyan-600/40"
             >
-              Hatch Your ClawChive
+              Hatch Habitat
               <ArrowRight className="ml-2 w-5 h-5" />
             </Button>
             <Button 

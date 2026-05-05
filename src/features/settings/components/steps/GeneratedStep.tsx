@@ -25,7 +25,7 @@ export function GeneratedStep({ generatedKey, isMasked, onMaskToggle, onCopy, co
         </p>
       </div>
 
-      <Card className="border-2 border-amber-300 dark:border-amber-500/50 bg-amber-50 dark:bg-amber-900/20">
+      <Card className="border-2 border-cyan-300 dark:border-cyan-500/50 bg-cyan-50 dark:bg-cyan-900/20">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <Label className="text-sm font-medium text-slate-900 dark:text-slate-50">API Key</Label>
@@ -34,10 +34,10 @@ export function GeneratedStep({ generatedKey, isMasked, onMaskToggle, onCopy, co
             </button>
           </div>
           <div className="flex items-center gap-2">
-            <code className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 font-mono text-sm break-all text-red-600 dark:text-slate-100">
+            <code className="flex-1 bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-4 py-3 font-mono text-sm break-all text-cyan-600 dark:text-slate-100">
               {isMasked ? generatedKey?.apiKey.replace(/./g, "•") : generatedKey?.apiKey}
             </code>
-            <Button onClick={onCopy} className="shrink-0" disabled={copied}>
+            <Button onClick={onCopy} className="shrink-0 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold shadow-lg shadow-cyan-600/20" disabled={copied}>
               {copied ? <><Check className="w-4 h-4 mr-2" />Copied</> : <><Copy className="w-4 h-4 mr-2" />Copy</>}
             </Button>
           </div>

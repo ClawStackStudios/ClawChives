@@ -8,7 +8,7 @@ interface StepIndicatorProps {
 
 export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
   return (
-    <div className="px-6 py-4 border-b border-red-500/20 dark:border-red-500/30">
+    <div className="px-6 py-4 border-b border-cyan-500/20 dark:border-cyan-500/30">
       <div className="flex items-center justify-between">
         {steps.map((step, index) => {
           const isActive = step.id === currentStep;
@@ -20,15 +20,15 @@ export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
                 <div
                   className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-all ${
                     isActive
-                      ? "bg-amber-500 text-white"
+                      ? "bg-cyan-600 text-white shadow-lg shadow-cyan-600/20"
                       : isCompleted
-                      ? "bg-cyan-600 text-white"
+                      ? "bg-cyan-700 text-white"
                       : "bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400"
                   }`}
                 >
                   {isCompleted ? <Check className="w-4 h-4" /> : index + 1}
                 </div>
-                <span className={`text-xs mt-1 ${isActive ? "text-amber-600 dark:text-amber-400 font-medium" : "text-slate-500 dark:text-slate-400"}`}>
+                <span className={`text-xs mt-1 ${isActive ? "text-cyan-600 dark:text-cyan-400 font-medium" : "text-slate-500 dark:text-slate-400"}`}>
                   {step.label}
                 </span>
               </div>

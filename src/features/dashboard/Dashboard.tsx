@@ -4,8 +4,10 @@ import { DashboardHome } from "./components/views/DashboardHome";
 import { TagsView } from "./components/views/TagsView";
 import { BookmarkGrid } from "./components/views/BookmarkGrid";
 import { BookmarkModal } from "./components/modals/BookmarkModal";
+import { FolderEditModal } from "./components/layout/FolderEditModal";
 import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
+import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { User } from "@/App";
 import { useRef, useCallback, useEffect } from "react";
 
@@ -58,8 +60,13 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     loadFolders,
     sidebarWidth,
     setSidebarWidth,
-    isResizable
+    isResizable,
+    isFolderModalOpen,
+    setIsFolderModalOpen,
+    editingFolder,
+    setEditingFolder
   } = useDashboardState();
+  const { data: folderCounts } = useFolderCounts();
 
   const isResizing = useRef(false);
 
@@ -97,17 +104,16 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          onClick={() => setSidebarOpen(false)}
           className="md:hidden fixed inset-0 bg-black/40 z-50 py-0"
         />
       )}
 
       {/* Sidebar - FIXED to the left viewport wall */}
       <aside
-        className={`fixed inset-y-0 left-0 z-40 h-full flex flex-col overflow-hidden bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out md:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-40 h-full flex flex-col overflow-hidden bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 transition-transform duration-300 ease-in-out ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
-        style={{ width: sidebarOpen ? `${isResizable ? sidebarWidth : 256}px` : undefined }}
+        style={{ width: `${isResizable ? sidebarWidth : 256}px` }}
       >
         <Sidebar
           folders={filteredFolders}
@@ -134,6 +140,15 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onGoToSettings={onGoToSettings}
           onLogout={onLogout}
           onShowDatabaseStats={onShowDatabaseStats}
+          onClose={() => setSidebarOpen(false)}
+          openCreateFolder={() => {
+            setEditingFolder(null);
+            setIsFolderModalOpen(true);
+          }}
+          openEditFolder={(folder) => {
+            setEditingFolder(folder);
+            setIsFolderModalOpen(true);
+          }}
         />
       </aside>
 
@@ -150,14 +165,11 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
 
       {/* Main Content Area - Shifted by padding on desktop */}
       <main 
-        className="h-full w-full flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 overflow-hidden relative"
+        className="h-full w-full flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 overflow-hidden relative transition-all duration-300 ease-in-out"
         style={{ paddingLeft: sidebarOpen ? `${isResizable ? sidebarWidth : 256}px` : 0 }}
       >
         <Header
           user={user}
-          onGoToSettings={onGoToSettings}
-          onLogout={onLogout}
-          onShowDatabaseStats={onShowDatabaseStats}
           onAddBookmark={() => { setEditingBookmark(null); setIsModalOpen(true); }}
           showGridControls={showGrid}
           sortBy={sortBy}
@@ -166,7 +178,6 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onViewChange={handleViewChange}
           tagFilter={tagFilter}
           onClearTagFilter={() => setTagFilter(null)}
-          sidebarOpen={sidebarOpen}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
@@ -215,6 +226,24 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
         bookmark={editingBookmark}
         folders={folders}
         onFoldersRefresh={loadFolders}
+      />
+
+      <FolderEditModal
+        isOpen={isFolderModalOpen}
+        onClose={() => {
+          setIsFolderModalOpen(false);
+          setEditingFolder(null);
+        }}
+        folder={editingFolder}
+        bookmarkCount={editingFolder ? (folderCounts?.[editingFolder.id] ?? 0) : 0}
+        onSave={(data) => {
+          if (editingFolder) {
+            handleEditFolder(editingFolder.id, data);
+          } else {
+            handleAddFolder(data.name, data.color);
+          }
+        }}
+        onDelete={editingFolder ? () => handleDeleteFolder(editingFolder.id) : undefined}
       />
 
       <AlertModal

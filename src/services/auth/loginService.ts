@@ -30,7 +30,7 @@ export async function authenticateWithKeyPair(
 export async function logout(): Promise<void> {
   // Clear any in-memory state
   // In a real app, this might clear JWT tokens from memory
-  console.log("User logged out");
+  console.log("[Auth] 🔒 User retreated to the deep (logged out)");
 }
 
 export async function isAuthenticated(): Promise<boolean> {

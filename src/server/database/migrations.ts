@@ -1,6 +1,7 @@
 import { Database } from 'better-sqlite3-multiple-ciphers';
 
 export function runMigrations(db: Database) {
+  console.log('[Database] Checking migrations...');
   const runColumnMigration = (sql: string, desc: string) => {
     try { db.exec(sql); console.log(`[DB Migration] ✅  ${desc}`); }
     catch (e: any) { if (!e.message.includes('duplicate column')) throw e; }
@@ -49,4 +50,6 @@ export function runMigrations(db: Database) {
     CREATE INDEX IF NOT EXISTS idx_folders_user ON folders(user_uuid);
     DROP INDEX IF EXISTS idx_bookmarks_user_folder;
   `);
+
+  console.log('[Database] Migrations complete.');
 }

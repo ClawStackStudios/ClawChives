@@ -1,15 +1,13 @@
-import { Menu, Settings, LogOut, Database, Plus, X } from "lucide-react";
+import { Menu, Plus, X } from "lucide-react";
 import { Button } from '@/shared/ui/button';
+
 import { SortDropdown } from "../views/SortDropdown";
 import { ViewToggle } from "../views/ViewToggle";
 import type { SortBy } from '@/shared/lib/utils';
 
 interface HeaderProps {
   user: { username: string } | null;
-  onGoToSettings: () => void;
-  onLogout: () => void;
-  onShowDatabaseStats: () => void;
-  onAddBookmark: () => void;
+  onAddBookmark?: () => void;
   showGridControls: boolean;
   sortBy: SortBy;
   onSortChange: (sort: SortBy) => void;
@@ -17,15 +15,12 @@ interface HeaderProps {
   onViewChange: (mode: "grid" | "list") => void;
   tagFilter: string | null;
   onClearTagFilter: () => void;
-  sidebarOpen?: boolean;
   onToggleSidebar?: () => void;
+  title?: string;
 }
 
 export function Header({
   user,
-  onGoToSettings,
-  onLogout,
-  onShowDatabaseStats,
   onAddBookmark,
   showGridControls,
   sortBy,
@@ -34,82 +29,60 @@ export function Header({
   onViewChange,
   tagFilter,
   onClearTagFilter,
-  sidebarOpen,
   onToggleSidebar,
+  title,
 }: HeaderProps) {
   return (
-    <header className="bg-white dark:bg-slate-900 border-b-2 border-cyan-600 dark:border-red-500 px-4 md:px-6 py-3 md:py-4 flex-shrink-0">
-      <div className="flex flex-col gap-3 md:gap-4">
-        <div className="flex items-center justify-between gap-2">
-          {/* Mobile: hamburger + add button */}
-          <div className="md:hidden flex items-center gap-2">
-            {onToggleSidebar && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleSidebar}
-                className="text-slate-700 dark:text-slate-300 p-1.5"
-              >
-                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-              </Button>
-            )}
-            <Button onClick={onAddBookmark} className="bg-cyan-700 hover:bg-cyan-800 text-white p-2 h-auto">
-              <Plus className="w-5 h-5" />
+    <header className="bg-white dark:bg-slate-900 border-b-2 border-cyan-600 dark:border-red-500 px-4 md:px-6 py-2 md:py-3 flex-shrink-0">
+      <div className="flex items-center justify-between gap-4">
+        {/* Left Side: Toggle & Controls */}
+        <div className="flex items-center gap-2 md:gap-4">
+          {onToggleSidebar && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleSidebar}
+              className="text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
+            >
+              <Menu className="w-5 h-5" />
             </Button>
-          </div>
+          )}
+          
+          {title && (
+            <span className="text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 ml-2">
+              {title}
+            </span>
+          )}
 
-          {/* Desktop: sort/view controls */}
-          <div className="hidden md:flex items-center gap-2">
+          {/* Desktop Controls */}
+          <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
             {showGridControls && (
-              <div className="flex items-center gap-2">
+              <>
                 <SortDropdown sortBy={sortBy} onChange={onSortChange} />
                 <ViewToggle viewMode={viewMode} onChange={onViewChange} />
-              </div>
+              </>
             )}
           </div>
         </div>
 
-        <div className="flex items-center justify-between gap-2">
-          <div className="hidden md:block">
-            {user && (
-              <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                Hello, {user.username}
-              </span>
-            )}
-          </div>
+        {/* Right Side: Greeting & Actions */}
+        <div className="flex items-center gap-3">
+          {user && (
+            <span className="hidden sm:block text-xs font-bold uppercase tracking-widest text-slate-500 dark:text-slate-400 mr-2">
+              {user.username}
+            </span>
+          )}
 
-          <div className="hidden md:flex items-center gap-2 flex-1 justify-end">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onShowDatabaseStats}
-              className="text-amber-600 dark:text-amber-400 border border-amber-500 dark:border-amber-500/60 hover:bg-amber-50 dark:hover:bg-amber-900/20"
-            >
-              <Database className="w-4 h-4 mr-2" />
-              Database
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onGoToSettings}
-              className="text-cyan-700 dark:text-cyan-400 border border-cyan-600 dark:border-cyan-500/60 hover:bg-cyan-50 dark:hover:bg-cyan-900/20"
-            >
-              <Settings className="w-4 h-4 mr-2" />
-              Settings
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={onLogout}
-              className="text-red-600 dark:text-red-400 border border-red-500 dark:border-red-500/60 hover:bg-red-50 dark:hover:bg-red-900/20"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-            <Button onClick={onAddBookmark} className="bg-cyan-700 hover:bg-cyan-800 text-white">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Pinchmark
-            </Button>
+          <div className="flex items-center gap-2">
+            {onAddBookmark && (
+              <Button 
+                onClick={onAddBookmark} 
+                className="bg-cyan-700 hover:bg-cyan-800 text-white shadow-lg shadow-cyan-500/20 active:scale-95 transition-all h-9 px-4 rounded-xl text-xs font-bold uppercase tracking-widest"
+              >
+                <Plus className="w-4 h-4 md:mr-2" />
+                <span className="hidden md:inline">Add Pinchmark</span>
+              </Button>
+            )}
           </div>
         </div>
       </div>
