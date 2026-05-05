@@ -56,9 +56,6 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
           onSearchChange={() => {}}
           onSelectFolder={() => {}}
           onFilterChange={() => {}}
-          onAddFolder={() => {}}
-          onEditFolder={() => {}}
-          onDeleteFolder={() => {}}
           bookmarkCounts={{ all: 0, starred: 0, archived: 0, tags: 0 }}
           settingsMode
           activeSettingsTab={activeTab}

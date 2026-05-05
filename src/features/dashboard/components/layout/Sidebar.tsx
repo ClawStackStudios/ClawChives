@@ -1,9 +1,8 @@
-import { useState, useCallback } from "react";
+import { useCallback } from "react";
 import { Search, X } from "lucide-react";
 import { Input } from '@/shared/ui/input';
 
 import { useFolderCounts } from "@/hooks/useFolderCounts";
-import { FolderEditModal } from "./FolderEditModal";
 import { InteractiveBrand } from '@/shared/branding/InteractiveBrand';
 import { SidebarNav, type NavTab, type SettingsTab } from "./SidebarNav";
 import { FolderList, type FolderItem } from "./FolderList";
@@ -19,9 +18,6 @@ interface SidebarProps {
   onSearchChange: (val: string) => void;
   onSelectFolder: (folderId: string | null) => void;
   onFilterChange: (filter: NavTab) => void;
-  onAddFolder: (name: string) => void;
-  onEditFolder: (id: string, data: { name: string; color: string }) => void;
-  onDeleteFolder: (id: string) => void;
   bookmarkCounts: {
     all: number;
     starred: number;
@@ -55,9 +51,6 @@ export function Sidebar({
   onSearchChange,
   onSelectFolder,
   onFilterChange,
-  onAddFolder,
-  onEditFolder,
-  onDeleteFolder,
   bookmarkCounts,
   showGridControls,
   sortBy,

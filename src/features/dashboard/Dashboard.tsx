@@ -123,9 +123,6 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onSearchChange={setSearchQuery}
           onSelectFolder={handleSelectFolder}
           onFilterChange={(tab: NavTab) => handleTabChange(tab as NavTab)}
-          onAddFolder={handleAddFolder}
-          onEditFolder={handleEditFolder}
-          onDeleteFolder={handleDeleteFolder}
           bookmarkCounts={{
             all: stats?.total ?? 0,
             starred: stats?.starred ?? 0,

@@ -220,7 +220,7 @@ export const exportBookmarks = async (
 
     const blob = new Blob([printContent], { type: "text/html" });
     const url = URL.createObjectURL(blob);
-    const printWindow = window.open(url, "_blank");
+    window.open(url, "_blank");
     
     // We return early because the native print dialog handles the "save as PDF" action.
     // The printWindow will handle its own lifecycle.

@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { Button } from '@/shared/ui/button';
 import { Label } from '@/shared/ui/label';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/shared/ui/card';
 import { Palette, Layout, Grid, List, Sun, Moon, Monitor } from "lucide-react";
 import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
 
