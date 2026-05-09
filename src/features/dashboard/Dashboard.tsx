@@ -9,7 +9,7 @@ import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
 import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { User } from "@/App";
-import { useRef, useCallback, useEffect } from "react";
+import { useRef, useCallback, useEffect, useState } from "react";
 
 interface DashboardProps {
   user: User | null;
@@ -97,6 +97,15 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     };
   }, [resize, stopResizing]);
 
+  // Track window size for mobile-responsive layout logic
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   const showGrid = activeTab !== "dashboard" && activeTab !== "tags";
 
   return (
@@ -104,7 +113,8 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="md:hidden fixed inset-0 bg-black/40 z-50 py-0"
+          className="md:hidden fixed inset-0 bg-black/40 z-30 py-0"
+          onClick={() => setSidebarOpen(false)}
         />
       )}
 
@@ -160,10 +170,14 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
         </div>
       )}
 
-      {/* Main Content Area - Shifted by padding on desktop */}
+      {/* Main Content Area - Shifted by padding on desktop only */}
       <main 
         className="h-full w-full flex flex-col min-h-0 bg-slate-50 dark:bg-slate-950 overflow-hidden relative transition-all duration-300 ease-in-out"
-        style={{ paddingLeft: sidebarOpen ? `${isResizable ? sidebarWidth : 256}px` : 0 }}
+        style={{ 
+          paddingLeft: sidebarOpen && !isMobile 
+            ? `${isResizable ? sidebarWidth : 256}px` 
+            : 0 
+        }}
       >
         <Header
           user={user}
