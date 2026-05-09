@@ -59,12 +59,12 @@ export function BookmarkModal({
   return (
     <ModalContainer 
       onClose={onClose} 
-      borderColor="border-red-500/50 dark:border-red-500/70"
+      borderColor="border-cyan-500/50 dark:border-cyan-500/70"
       maxWidth="max-w-lg"
     >
       <div className="bg-white dark:bg-slate-900">
         {/* Header - Compact */}
-        <div className="flex items-center justify-between p-4 md:p-5 border-b border-red-500/30 dark:border-red-500/50 bg-white dark:bg-slate-900">
+        <div className="flex items-center justify-between p-4 md:p-5 border-b border-cyan-500/30 dark:border-cyan-500/50 bg-white dark:bg-slate-900">
           <div>
             <h2 className="text-lg font-black text-slate-900 dark:text-slate-50 uppercase tracking-tight">
               {bookmark ? "Edit Pinchmark" : "Add Pinchmark"}
@@ -132,7 +132,7 @@ export function BookmarkModal({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={2}
-              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/50 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm md:text-base resize-none transition-all"
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 text-sm md:text-base resize-none transition-all"
             />
           </div>
 
@@ -145,7 +145,7 @@ export function BookmarkModal({
                   id="folder"
                   value={selectedFolder}
                   onChange={(e) => setSelectedFolder(e.target.value)}
-                  className="w-full h-10 px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-red-500/50 appearance-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm transition-all"
+                  className="w-full h-10 px-3 py-2 border border-slate-300 dark:border-slate-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-cyan-500/50 appearance-none bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100 text-sm transition-all"
                 >
                   <option value="">No Pod</option>
                   {folders.map((folder) => (
@@ -217,7 +217,7 @@ export function BookmarkModal({
         </div>
 
         {/* Footer - Solid */}
-        <div className="flex gap-3 p-4 md:p-6 border-t border-red-500/20 dark:border-red-500/30 bg-slate-50/50 dark:bg-slate-950/50">
+        <div className="flex gap-3 p-4 md:p-6 border-t border-cyan-500/20 dark:border-cyan-500/30 bg-slate-50/50 dark:bg-slate-950/50">
           <Button 
             variant="outline" 
             onClick={onClose} 
@@ -227,7 +227,7 @@ export function BookmarkModal({
           </Button>
           <Button 
             onClick={handleSave} 
-            className="flex-1 h-11 md:h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl shadow-lg shadow-red-600/20 font-bold uppercase tracking-widest text-xs transition-all active:scale-95"
+            className="flex-1 h-11 md:h-10 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl shadow-lg shadow-cyan-600/20 font-bold uppercase tracking-widest text-xs transition-all active:scale-95"
           >
             {bookmark ? "Save" : "Pinch It! 🦞"}
           </Button>
