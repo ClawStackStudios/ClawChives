@@ -23,6 +23,15 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
     return saved !== null ? saved === "true" : true;
   });
 
+  // Track window size for mobile-responsive layout logic
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
   useEffect(() => {
     sessionStorage.setItem("cc_settings_tab", activeTab);
   }, [activeTab]);
@@ -37,7 +46,7 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
       {sidebarOpen && (
         <div
           onClick={() => setSidebarOpen(false)}
-          className="md:hidden fixed inset-0 bg-black/40 z-50"
+          className="md:hidden fixed inset-0 bg-black/40 z-30"
         />
       )}
 
@@ -69,10 +78,9 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
         />
       </aside>
 
-      {/* Main content */}
       <main 
         className="flex-1 flex flex-col min-w-0 overflow-hidden h-full transition-all duration-300 ease-in-out"
-        style={{ paddingLeft: sidebarOpen ? "256px" : 0 }}
+        style={{ paddingLeft: sidebarOpen && !isMobile ? "256px" : 0 }}
       >
         <Header
           title="Settings"

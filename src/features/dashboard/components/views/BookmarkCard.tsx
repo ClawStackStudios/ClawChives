@@ -179,44 +179,44 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
         </span>
 
         {/* Actions */}
-        <div className="flex items-center gap-1 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 flex-shrink-0 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-cyan-600"
+            className="h-10 w-10 md:h-7 md:w-7 p-0 text-slate-400 hover:text-cyan-600 rounded-xl"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(bookmark);
             }}
             title="Edit Pinchmark"
           >
-            <Pencil className="w-3.5 h-3.5" />
+            <Pencil className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
-            className={`h-7 w-7 p-0 ${bookmark.starred ? "text-amber-500" : "text-slate-400"}`}
+            className={`h-10 w-10 md:h-7 md:w-7 p-0 rounded-xl ${bookmark.starred ? "text-amber-500" : "text-slate-400"}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleStar(bookmark);
             }}
             title={bookmark.starred ? "Unstar" : "Star"}
           >
-            <Star className={`w-3.5 h-3.5 ${bookmark.starred ? "fill-current" : ""}`} />
+            <Star className={`w-4 h-4 md:w-3.5 md:h-3.5 ${bookmark.starred ? "fill-current" : ""}`} />
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
-            className="h-7 w-7 p-0 text-slate-400 hover:text-red-600"
+            className="h-10 w-10 md:h-7 md:w-7 p-0 text-slate-400 hover:text-red-600 rounded-xl"
             onClick={(e) => {
               e.stopPropagation();
               setConfirmOpen(true);
             }}
             title="Delete"
           >
-            <Trash2 className="w-3.5 h-3.5" />
+            <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </Button>
         </div>
 
@@ -350,61 +350,61 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
           {formatRelativeTime(bookmark.createdAt)}
         </div>
 
-        <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+        <div className="flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
           {/* Edit */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-slate-400 hover:text-cyan-600"
+            className="h-10 w-10 md:h-8 md:w-8 p-0 text-slate-400 hover:text-cyan-600 rounded-xl"
             onClick={(e) => {
               e.stopPropagation();
               onEdit(bookmark);
             }}
             title="Edit Pinchmark"
           >
-            <Pencil className="w-4 h-4" />
+            <Pencil className="w-5 h-5 md:w-4 md:h-4" />
           </Button>
 
           {/* Star */}
           <Button
             variant="ghost"
             size="sm"
-            className={`h-8 w-8 p-0 ${bookmark.starred ? "text-amber-500" : "text-slate-400"}`}
+            className={`h-10 w-10 md:h-8 md:w-8 p-0 rounded-xl ${bookmark.starred ? "text-amber-500" : "text-slate-400"}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleStar(bookmark);
             }}
             title={bookmark.starred ? "Unstar" : "Star"}
           >
-            <Star className={`w-4 h-4 ${bookmark.starred ? "fill-current" : ""}`} />
+            <Star className={`w-5 h-5 md:w-4 md:h-4 ${bookmark.starred ? "fill-current" : ""}`} />
           </Button>
 
           {/* Archive */}
           <Button
             variant="ghost"
             size="sm"
-            className={`h-8 w-8 p-0 ${bookmark.archived ? "text-cyan-600" : "text-slate-400"}`}
+            className={`h-10 w-10 md:h-8 md:w-8 p-0 rounded-xl ${bookmark.archived ? "text-cyan-600" : "text-slate-400"}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleArchive(bookmark);
             }}
             title={bookmark.archived ? "Unarchive" : "Archive"}
           >
-            <Archive className={`w-4 h-4 ${bookmark.archived ? "fill-current" : ""}`} />
+            <Archive className={`w-5 h-5 md:w-4 md:h-4 ${bookmark.archived ? "fill-current" : ""}`} />
           </Button>
 
           {/* Delete */}
           <Button
             variant="ghost"
             size="sm"
-            className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
+            className="h-10 w-10 md:h-8 md:w-8 p-0 text-slate-400 hover:text-red-600 rounded-xl"
             onClick={(e) => {
               e.stopPropagation();
               setConfirmOpen(true);
             }}
             title="Delete"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
           </Button>
         </div>
       </div>

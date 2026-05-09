@@ -3,6 +3,7 @@ import { X, Trash2, Archive } from "lucide-react";
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { Label } from '@/shared/ui/label';
+import { ModalContainer } from '@/shared/ui/modals/ModalContainer';
 
 interface FolderEditModalProps {
   isOpen: boolean;
@@ -66,28 +67,35 @@ export function FolderEditModal({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border-2 border-cyan-500/50 dark:border-cyan-500/40 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
-        {/* Header */}
-        <div className="flex items-center justify-between p-5 border-b border-cyan-500/20 dark:border-cyan-500/30">
+    <ModalContainer 
+      onClose={onClose} 
+      borderColor="border-cyan-500/50 dark:border-cyan-500/40"
+      maxWidth="max-w-md"
+    >
+      <div className="flex flex-col h-full max-h-[inherit]">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between p-5 border-b border-cyan-500/20 dark:border-cyan-500/30 shrink-0">
           <div className="flex items-center gap-2">
             <Archive className="w-5 h-5 text-cyan-600 dark:text-cyan-400" />
-            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-slate-50 uppercase tracking-tight">
               {folder ? "Edit Pod" : "New Pod"}
             </h2>
           </div>
-          <button
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="p-1.5 h-9 w-9 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <X className="w-5 h-5" />
-          </button>
+          </Button>
         </div>
 
-        <div className="p-5 space-y-5">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-5 md:p-6 space-y-6 custom-scrollbar">
           {/* Name */}
-          <div>
-            <Label htmlFor="pod-name" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
+          <div className="space-y-1.5">
+            <Label htmlFor="pod-name" className="text-sm font-bold text-slate-700 dark:text-slate-200">
               Pod Name
             </Label>
             <Input
@@ -95,21 +103,21 @@ export function FolderEditModal({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g. Research, Ideas, Work..."
-              className="w-full px-3 py-2 text-sm rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-50 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-colors"
+              className="w-full h-11 md:h-10 rounded-xl dark:bg-slate-800 dark:border-slate-700 dark:text-white"
               onKeyDown={(e) => { if (e.key === "Enter") handleSave(); }}
               autoFocus
             />
           </div>
 
           {/* Color Picker */}
-          <div>
-            <Label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">Color</Label>
-            <div className="flex items-center gap-2 flex-wrap">
+          <div className="space-y-3">
+            <Label className="text-sm font-bold text-slate-700 dark:text-slate-200">Color</Label>
+            <div className="flex items-center gap-3 flex-wrap">
               {PRESET_COLORS.map((c) => (
                 <button
                   key={c}
                   onClick={() => setColor(c)}
-                  className={`w-7 h-7 rounded-full transition-all ring-offset-2 dark:ring-offset-slate-900 ${
+                  className={`w-9 h-9 md:w-8 md:h-8 rounded-full transition-all ring-offset-2 dark:ring-offset-slate-900 ${
                     color === c 
                       ? "ring-2 ring-cyan-500 scale-110 shadow-lg" 
                       : "hover:scale-110 border border-slate-200 dark:border-slate-700"
@@ -122,42 +130,47 @@ export function FolderEditModal({
                   type="color"
                   value={color}
                   onChange={(e) => setColor(e.target.value)}
-                  className="w-7 h-7 rounded-full cursor-pointer border-0 bg-transparent opacity-0 absolute inset-0 z-10"
+                  className="w-9 h-9 md:w-8 md:h-8 rounded-full cursor-pointer border-0 bg-transparent opacity-0 absolute inset-0 z-10"
                   title="Custom color"
                 />
                 <div 
-                  className={`w-7 h-7 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center transition-all ${
+                  className={`w-9 h-9 md:w-8 md:h-8 rounded-full border-2 border-dashed border-slate-300 dark:border-slate-600 flex items-center justify-center transition-all ${
                     !PRESET_COLORS.includes(color) ? "ring-2 ring-cyan-500 ring-offset-2 dark:ring-offset-slate-900 scale-110" : "hover:border-cyan-400"
                   }`}
                   style={{ backgroundColor: !PRESET_COLORS.includes(color) ? color : 'transparent' }}
                 >
-                  {!PRESET_COLORS.includes(color) ? null : <span className="text-[10px] text-slate-400">+</span>}
+                  {!PRESET_COLORS.includes(color) ? null : <span className="text-sm text-slate-400">+</span>}
                 </div>
               </div>
             </div>
           </div>
 
           {/* Pod color preview */}
-          <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-2.5 rounded-xl border border-slate-100 dark:border-slate-800/50">
-            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-            <span>Preview:</span>
-            <span className="font-medium text-slate-700 dark:text-slate-300">{name || "Pod Name"}</span>
+          <div className="flex items-center gap-3 text-sm text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-950/50 p-4 rounded-2xl border border-slate-100 dark:border-slate-800/50">
+            <div className="w-4 h-4 rounded-full flex-shrink-0 shadow-sm" style={{ backgroundColor: color }} />
+            <span className="font-bold uppercase tracking-wider text-[10px]">Preview:</span>
+            <span className="font-bold text-slate-700 dark:text-slate-100 truncate">{name || "Pod Name"}</span>
           </div>
 
           {/* Warning / Confirm delete */}
           {confirmDelete && (
-            <div className="p-3 rounded-xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 space-y-2 animate-in slide-in-from-top-2 duration-200">
-              <p className="text-sm text-red-700 dark:text-red-300 font-medium">
-                ⚠️ This Pod contains {bookmarkCount} Pinchmark{bookmarkCount !== 1 ? "s" : ""}.
-              </p>
-              <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed">
-                Deleting it will un-Pod them, but won't delete the Pinchmarks themselves.
-              </p>
+            <div className="p-4 rounded-2xl bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-500/20 space-y-3 animate-in slide-in-from-top-2 duration-200">
+              <div className="flex items-start gap-2">
+                <span className="text-lg">⚠️</span>
+                <div>
+                  <p className="text-sm text-red-700 dark:text-red-300 font-bold">
+                    This Pod contains {bookmarkCount} Pinchmark{bookmarkCount !== 1 ? "s" : ""}.
+                  </p>
+                  <p className="text-xs text-red-600 dark:text-red-400 leading-relaxed mt-1">
+                    Deleting it will un-Pod them, but won't delete the Pinchmarks themselves.
+                  </p>
+                </div>
+              </div>
               <div className="flex gap-2 pt-1">
-                <Button size="sm" variant="outline" onClick={() => setConfirmDelete(false)} className="flex-1 rounded-lg">
+                <Button variant="outline" onClick={() => setConfirmDelete(false)} className="flex-1 rounded-xl h-11 md:h-9">
                   Cancel
                 </Button>
-                <Button size="sm" onClick={handleConfirmDelete} className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-lg">
+                <Button onClick={handleConfirmDelete} className="flex-1 bg-red-600 hover:bg-red-700 text-white rounded-xl h-11 md:h-9 font-bold">
                   Delete Pod
                 </Button>
               </div>
@@ -166,16 +179,17 @@ export function FolderEditModal({
 
           {/* Pinned Pod protection notice */}
           {hasPins && (
-            <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-900/10 border border-amber-300 dark:border-amber-500/20">
-              <p className="text-sm text-amber-700 dark:text-amber-300">
-                📌 Remove all pins from your Pinchmarks first before deleting the <strong>Pinned</strong> Pod.
+            <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-900/10 border border-amber-300 dark:border-amber-500/20 flex gap-2 items-start">
+              <span className="text-lg">📌</span>
+              <p className="text-sm text-amber-700 dark:text-amber-300 font-medium">
+                Remove all pins from your Pinchmarks first before deleting the <strong>Pinned</strong> Pod.
               </p>
             </div>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="flex items-center justify-between p-5 border-t border-cyan-500/10 dark:border-cyan-500/20 bg-slate-50/50 dark:bg-slate-950/20">
+        {/* Footer - Fixed */}
+        <div className="flex items-center justify-between p-5 border-t border-cyan-500/10 dark:border-cyan-500/20 bg-slate-50/50 dark:bg-slate-950/20 shrink-0">
           <div>
             {folder && onDelete && (
               <Button
@@ -183,34 +197,35 @@ export function FolderEditModal({
                 size="sm"
                 onClick={handleDeleteClick}
                 disabled={hasPins}
-                className={`gap-1.5 h-9 rounded-lg px-3 ${
+                className={`gap-1.5 h-11 md:h-9 rounded-xl px-4 ${
                   hasPins 
                     ? "text-slate-300 dark:text-slate-600 cursor-not-allowed" 
                     : "text-red-500 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
                 }`}
               >
                 <Trash2 className="w-4 h-4" />
-                <span className="text-xs font-bold uppercase tracking-wider">Delete</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest">Delete</span>
               </Button>
             )}
           </div>
-          <div className="flex gap-2">
-            <button 
+          <div className="flex gap-3">
+            <Button 
+              variant="outline"
               onClick={onClose}
-              className="px-4 py-1.5 text-sm font-medium rounded-lg border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+              className="px-6 h-11 md:h-9 text-xs font-bold uppercase tracking-widest rounded-xl border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSave}
               disabled={!name.trim()}
-              className="px-4 py-1.5 text-sm font-medium rounded-lg bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors shadow-lg shadow-cyan-600/20"
+              className="px-6 h-11 md:h-9 text-xs font-bold uppercase tracking-widest rounded-xl bg-cyan-600 hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed text-white transition-colors shadow-lg shadow-cyan-600/20"
             >
-              {folder ? "Save Changes" : "Create Pod"}
-            </button>
+              {folder ? "Save" : "Create"}
+            </Button>
           </div>
         </div>
       </div>
-    </div>
+    </ModalContainer>
   );
 }

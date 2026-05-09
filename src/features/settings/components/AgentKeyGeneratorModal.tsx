@@ -1,4 +1,4 @@
-import { Key, AlertTriangle } from "lucide-react";
+import { Key, AlertTriangle, X } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { AgentKey } from "@/types/agent";
 import { useAgentKeyModal } from "../hooks/useAgentKeyModal";
@@ -9,6 +9,7 @@ import { ExpirationStep } from "./steps/ExpirationStep";
 import { RateLimitStep } from "./steps/RateLimitStep";
 import { ReviewStep } from "./steps/ReviewStep";
 import { GeneratedStep } from "./steps/GeneratedStep";
+import { ModalContainer } from '@/shared/ui/modals/ModalContainer';
 
 interface AgentKeyGeneratorModalProps {
   isOpen: boolean;
@@ -50,50 +51,79 @@ export function AgentKeyGeneratorModal({ isOpen, onClose, onKeyGenerated }: Agen
   };
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-slate-900 border-2 border-cyan-500/50 dark:border-cyan-500/70 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-cyan-500/30 dark:border-cyan-500/50">
+    <ModalContainer 
+      onClose={handleClose} 
+      borderColor="border-cyan-500/50 dark:border-cyan-500/70"
+      maxWidth="max-w-2xl"
+    >
+      <div className="flex flex-col h-full max-h-[inherit]">
+        {/* Header - Fixed */}
+        <div className="flex items-center justify-between px-6 py-5 border-b border-cyan-500/30 dark:border-cyan-500/50 bg-white dark:bg-slate-900 shrink-0">
           <div className="flex items-center gap-3">
-            <div className="bg-cyan-100 dark:bg-cyan-900/30 p-2 rounded-lg"><Key className="w-6 h-6 text-cyan-600 dark:text-cyan-400" /></div>
+            <div className="bg-cyan-100 dark:bg-cyan-900/30 p-2 rounded-xl">
+              <Key className="w-6 h-6 text-cyan-600 dark:text-cyan-400" />
+            </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">Generate Lobster Key</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">Create a secure <span className="text-cyan-600 dark:text-cyan-400 font-medium">lb-</span> API key</p>
+              <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50 uppercase tracking-tight">Generate Lobster Key</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-widest">Create a secure <span className="text-cyan-600 dark:text-cyan-400">lb-</span> API key</p>
             </div>
           </div>
-          <button onClick={handleClose} className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-          </button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleClose}
+            className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50 rounded-xl"
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
 
+        {/* Step Indicator - Fixed */}
         {currentStep !== "generated" && <StepIndicator steps={steps} currentStep={currentStep} />}
 
-        <div className="p-6 overflow-y-auto max-h-[60vh]">
+        {/* Content - Scrollable */}
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 custom-scrollbar">
           {generateError && (
-            <div className="mb-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl">
+            <div className="mb-4 flex items-start gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl animate-in fade-in zoom-in duration-200">
               <AlertTriangle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-              <p className="text-sm text-red-800 dark:text-red-200">{generateError}</p>
+              <p className="text-sm text-red-800 dark:text-red-200 font-medium">{generateError}</p>
             </div>
           )}
           {renderStep()}
         </div>
 
-        <div className="px-6 py-4 border-t border-cyan-500/20 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-800/50 flex items-center justify-between">
+        {/* Footer - Fixed */}
+        <div className="px-6 py-4 border-t border-cyan-500/20 dark:border-cyan-500/30 bg-slate-50 dark:bg-slate-950/50 flex items-center justify-between shrink-0">
           {currentStep !== "generated" ? (
             <>
-              <Button variant="outline" onClick={currentStep === "details" ? handleClose : handleBack} disabled={isGenerating} className="text-cyan-600 dark:text-cyan-400 border-cyan-200 dark:border-cyan-900/50 rounded-xl font-bold">
+              <Button 
+                variant="outline" 
+                onClick={currentStep === "details" ? handleClose : handleBack} 
+                disabled={isGenerating} 
+                className="h-11 md:h-10 px-6 rounded-xl font-bold uppercase tracking-widest text-xs dark:border-slate-700"
+              >
                 {currentStep === "details" ? "Cancel" : "Back"}
               </Button>
-              <Button onClick={handleNext} disabled={!isStepValid() || isGenerating} className="min-w-[120px] bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-black uppercase tracking-widest">
+              <Button 
+                onClick={handleNext} 
+                disabled={!isStepValid() || isGenerating} 
+                className="min-w-[140px] h-11 md:h-10 bg-cyan-600 hover:bg-cyan-700 text-white shadow-lg shadow-cyan-500/20 rounded-xl font-black uppercase tracking-widest text-xs transition-all active:scale-95"
+              >
                 {isGenerating ? "Generating..." : currentStep === "review" ? "Generate Key" : "Next"}
               </Button>
             </>
           ) : (
             <div className="w-full flex justify-end">
-              <Button onClick={handleClose} className="bg-cyan-600 hover:bg-cyan-700 text-white px-8 rounded-xl font-black uppercase tracking-widest shadow-lg shadow-cyan-500/20">Done 🦞</Button>
+              <Button 
+                onClick={handleClose} 
+                className="w-full md:w-auto h-12 md:h-10 bg-cyan-600 hover:bg-cyan-700 text-white px-10 rounded-xl font-black uppercase tracking-widest text-xs shadow-lg shadow-cyan-500/20 transition-all active:scale-95"
+              >
+                Done 🦞
+              </Button>
             </div>
           )}
         </div>
       </div>
-    </div>
+    </ModalContainer>
   );
 }

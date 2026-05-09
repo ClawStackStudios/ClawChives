@@ -56,45 +56,47 @@ export function ConfirmModal({
       : "text-amber-600 dark:text-amber-400";
 
   return (
-    <ModalContainer borderColor={containerBorder}>
-      {/* Header */}
-      <div className={`flex items-center justify-between p-6 border-b ${headerBorder}`}>
-        <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-lg ${iconBg}`}>
-            <AlertTriangle className={`w-5 h-5 ${iconColor}`} />
+    <ModalContainer onClose={onClose} borderColor={containerBorder} maxWidth="max-w-md">
+      <div className="flex flex-col h-full max-h-[inherit]">
+        {/* Header - Fixed */}
+        <div className={`flex items-center justify-between p-5 md:p-6 border-b ${headerBorder} bg-white dark:bg-slate-900 shrink-0`}>
+          <div className="flex items-center gap-3">
+            <div className={`p-2 rounded-xl ${iconBg}`}>
+              <AlertTriangle className={`w-5 h-5 ${iconColor}`} />
+            </div>
+            <h2 className="text-lg md:text-xl font-bold text-slate-900 dark:text-slate-50 uppercase tracking-tight">{title}</h2>
           </div>
-          <h2 className="text-xl font-bold text-slate-900 dark:text-slate-50">{title}</h2>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="h-9 w-9 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50 rounded-xl"
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="h-8 w-8 p-0 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-50"
-        >
-          <X className="w-5 h-5" />
-        </Button>
-      </div>
 
-      {/* Body */}
-      <div className="p-6">
-        <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">{message}</p>
-      </div>
+        {/* Body - Scrollable if text is long */}
+        <div className="p-5 md:p-6 flex-1 overflow-y-auto custom-scrollbar">
+          <p className="text-sm md:text-base text-slate-600 dark:text-slate-300 leading-relaxed font-medium">{message}</p>
+        </div>
 
-      {/* Footer */}
-      <div className={`flex gap-3 p-6 border-t ${footerBorder}`}>
-        <Button
-          variant="outline"
-          onClick={(e) => { e.stopPropagation(); onClose(); }}
-          className="flex-1 dark:border-slate-600 dark:text-slate-300 dark:hover:bg-slate-800"
-        >
-          {cancelLabel}
-        </Button>
-        <Button
-          onClick={(e) => { e.stopPropagation(); onConfirm(); onClose(); }}
-          className={`flex-1 ${confirmBtn}`}
-        >
-          {confirmLabel}
-        </Button>
+        {/* Footer - Fixed */}
+        <div className={`flex gap-3 p-5 md:p-6 border-t ${footerBorder} bg-slate-50/50 dark:bg-slate-950/50 shrink-0`}>
+          <Button
+            variant="outline"
+            onClick={(e) => { e.stopPropagation(); onClose(); }}
+            className="flex-1 h-12 md:h-10 rounded-xl dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800 font-bold uppercase tracking-widest text-xs"
+          >
+            {cancelLabel}
+          </Button>
+          <Button
+            onClick={(e) => { e.stopPropagation(); onConfirm(); onClose(); }}
+            className={`flex-1 h-12 md:h-10 rounded-xl font-bold uppercase tracking-widest text-xs ${confirmBtn}`}
+          >
+            {confirmLabel}
+          </Button>
+        </div>
       </div>
     </ModalContainer>
   );

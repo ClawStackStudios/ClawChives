@@ -39,6 +39,8 @@ export function getApiBaseUrl(): string {
   }
 
   // Priority 3: Local development default (separate ports)
-  // Dev server (port 5173) connects to API server (port 4646)
-  return "http://localhost:4646";
+  // Dev server (port 4545) connects to API server (port 4646)
+  // Use window.location.hostname to support LAN testing (mobile devices)
+  const hostname = typeof window !== 'undefined' ? window.location.hostname : 'localhost';
+  return `http://${hostname}:4646`;
 }
