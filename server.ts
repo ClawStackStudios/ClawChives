@@ -121,15 +121,13 @@ app.use('/api/agent-keys',        agentKeyRoutes);
 app.use('/api/settings',          settingsRoutes);
 app.use('/api/lobster-session',   lobsterSessionRoutes);
 
-// Admin Routes (Conditional)
+// ─── Admin Routes (Conditional) ──────────────────────────────────────────────
 if (process.env.ADMIN_TOKEN) {
-  import('./src/server/routes/admin.js').then(({ default: adminRoutes }) => {
-    import('./src/server/middleware/rateLimiter.js').then(({ adminApiLimiter, adminAuthLimiter }) => {
-      app.use('/api/admin/auth', adminAuthLimiter);
-      app.use('/api/admin', adminApiLimiter, adminRoutes);
-      console.log('🔑 Admin panel enabled at /api/admin');
-    });
-  });
+  const { default: adminRoutes } = await import('./src/server/routes/admin.js');
+  const { adminApiLimiter, adminAuthLimiter } = await import('./src/server/middleware/rateLimiter.js');
+  app.use('/api/admin/auth', adminAuthLimiter);
+  app.use('/api/admin', adminApiLimiter, adminRoutes);
+  console.log('   Admin: ENABLED (ADMIN_TOKEN is set)');
 }
 // Skill doc: public, no auth — registered before static files and SPA catch-all (LNN pattern)
 app.get(['/skill.md', '/SKILL.md'], (_req, res) => {

@@ -7,13 +7,13 @@
  */
 
 import { useEffect, useState } from 'react';
-import { 
-  Users, 
-  Search, 
-  Trash2, 
-  ChevronLeft, 
-  Loader2, 
-  FileText, 
+import {
+  Users,
+  Search,
+  Trash2,
+  ChevronLeft,
+  Loader2,
+  FileText,
   Key as KeyIcon,
   AlertTriangle
 } from 'lucide-react';
@@ -136,6 +136,7 @@ export function AdminUserList() {
                 <th className="px-6 py-4">Username</th>
                 <th className="px-6 py-4">UUID</th>
                 <th className="px-6 py-4 text-center">Pinchmarks</th>
+                <th className="px-6 py-4 text-center">Folders</th>
                 <th className="px-6 py-4 text-center">Keys</th>
                 <th className="px-6 py-4">Last Active</th>
                 <th className="px-6 py-4 text-right">Actions</th>
@@ -154,6 +155,12 @@ export function AdminUserList() {
                   </td>
                   <td className="px-6 py-4 text-center">
                     <div className="flex flex-col items-center">
+                      <span className="font-bold">{u.folder_count}</span>
+                      <span className="text-[10px] text-slate-600 uppercase">Folders</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-center">
+                    <div className="flex flex-col items-center">
                       <span className="font-bold">{u.active_keys}</span>
                       <span className="text-[10px] text-slate-600 uppercase">Agents</span>
                     </div>
@@ -162,7 +169,7 @@ export function AdminUserList() {
                     {u.last_login ? new Date(u.last_login).toLocaleDateString() : 'Never'}
                   </td>
                   <td className="px-6 py-4 text-right">
-                    <button 
+                    <button
                       onClick={() => setDeleteTarget(u)}
                       className="p-2 text-slate-600 hover:text-red-500 hover:bg-red-500/10 rounded-lg transition-all"
                     >

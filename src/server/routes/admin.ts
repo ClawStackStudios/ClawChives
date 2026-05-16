@@ -37,7 +37,7 @@ router.post('/auth', (req, res) => {
     res.cookie('cc_admin_session', sessionToken, {
       httpOnly: true,
       secure: process.env.ENFORCE_HTTPS === 'true',
-      sameSite: 'lax', // Must allow cross-site redirects for OAuth, but admin panel is usually direct
+      sameSite: 'strict',
       maxAge: 20 * 60 * 1000 // 20 minutes
     });
     return res.json({ success: true });
@@ -150,16 +150,18 @@ router.get('/system', requireAdmin, (_req, res) => {
   const stats = {
     totalUsers: db.prepare('SELECT COUNT(*) as count FROM users').get() as any,
     totalPinchmarks: db.prepare('SELECT COUNT(*) as count FROM bookmarks').get() as any,
+    totalFolders: db.prepare('SELECT COUNT(*) as count FROM folders').get() as any,
     dbSize: totalDbSize,
     uptime: process.uptime(),
     lastAudit: auditDb.prepare('SELECT timestamp FROM audit_logs ORDER BY timestamp DESC LIMIT 1').get() as any
   };
 
-  res.json({ 
-    success: true, 
+  res.json({
+    success: true,
     data: {
       totalUsers: stats.totalUsers.count,
       totalPinchmarks: stats.totalPinchmarks.count,
+      totalFolders: stats.totalFolders.count,
       dbSize: stats.dbSize,
       uptime: stats.uptime,
       lastAudit: stats.lastAudit?.timestamp || null

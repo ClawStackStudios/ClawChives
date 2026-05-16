@@ -8,11 +8,12 @@
 
 import React, { useEffect, useState } from 'react';
 import { useAdmin } from './AdminContext';
-import { 
-  Users, 
-  FileText, 
-  Database, 
-  Activity, 
+import {
+  Users,
+  FileText,
+  Folder,
+  Database,
+  Activity,
   Clock,
   Shield,
   LogOut,
@@ -28,6 +29,7 @@ import { Link } from 'react-router-dom';
 interface SystemStats {
   totalUsers: number;
   totalPinchmarks: number;
+  totalFolders: number;
   dbSize: number;
   uptime: number;
   lastAudit: string | null;
@@ -197,29 +199,34 @@ export function AdminDashboard() {
       </header>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <StatCard 
+        <StatCard
           icon={<Users className="w-5 h-5 text-blue-400" />}
           label="Total Users"
           value={stats?.totalUsers || 0}
         />
-        <StatCard 
+        <StatCard
           icon={<FileText className="w-5 h-5 text-emerald-400" />}
           label="Total Pinchmarks"
           value={stats?.totalPinchmarks || 0}
         />
-        <StatCard 
+        <StatCard
+          icon={<Folder className="w-5 h-5 text-purple-400" />}
+          label="Total Folders"
+          value={stats?.totalFolders || 0}
+        />
+        <StatCard
           icon={<Database className="w-5 h-5 text-amber-400" />}
           label="Database Size"
           value={formatSize(stats?.dbSize || 0)}
         />
-        <StatCard 
+        <StatCard
           icon={<Activity className="w-5 h-5 text-rose-400" />}
           label="Server Uptime"
           value={formatUptime(stats?.uptime || 0)}
           onClick={() => setShowUptimeHistory(!showUptimeHistory)}
           isActive={showUptimeHistory}
         />
-        <StatCard 
+        <StatCard
           icon={<Clock className="w-5 h-5 text-sky-400" />}
           label="Last Activity"
           value={stats?.lastAudit ? new Date(stats.lastAudit).toLocaleTimeString() : 'Never'}

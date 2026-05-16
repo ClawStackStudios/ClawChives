@@ -10,7 +10,6 @@ services:
       - ./data:/app/data
     environment:
       - NODE_ENV=production
-      - PORT=4545
       - DATA_DIR=/app/data
       - DB_ENCRYPTION_KEY=${DB_ENCRYPTION_KEY:-}
       - PUID=1000
