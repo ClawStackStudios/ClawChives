@@ -37,10 +37,6 @@ export function runMigrations(db: Database) {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_user_url ON bookmarks(user_uuid, url);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_jina_conversions_user ON jina_conversions(user_uuid);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_user_key ON settings(user_uuid, key);
-    CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
-    CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit_logs(event_type);
-    CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor);
-    CREATE INDEX IF NOT EXISTS idx_audit_outcome ON audit_logs(outcome);
     CREATE INDEX IF NOT EXISTS idx_api_tokens_key ON api_tokens(key);
     CREATE INDEX IF NOT EXISTS idx_api_tokens_expires_at ON api_tokens(expires_at);
     CREATE INDEX IF NOT EXISTS idx_agent_keys_api_key ON agent_keys(api_key);

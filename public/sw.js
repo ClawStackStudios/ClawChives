@@ -4,9 +4,9 @@
  * Caches static assets, API responses, and enables offline operation
  */
 
-const CACHE_NAME = 'claw-chives-v3.1';
-const ASSETS_CACHE = 'claw-chives-assets-v3.1';
-const API_CACHE = 'claw-chives-api-v3.1';
+const CACHE_NAME = 'claw-chives-v3.2';
+const ASSETS_CACHE = 'claw-chives-assets-v3.2';
+const API_CACHE = 'claw-chives-api-v3.2';
 
 // Assets to precache on install
 const PRECACHE_ASSETS = [

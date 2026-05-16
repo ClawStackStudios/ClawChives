@@ -17,3 +17,25 @@ export function generateString(length: number): string {
 export function generateId(): string {
   return crypto.randomUUID();
 }
+
+/**
+ * Compares two strings in constant time to prevent timing side-channel attacks.
+ * Required for securely verifying password hashes or session tokens.
+ */
+export function constantTimeCompare(a: string, b: string): boolean {
+  if (typeof a !== 'string' || typeof b !== 'string') {
+    return false;
+  }
+  const aBuffer = Buffer.from(a, 'utf8');
+  const bBuffer = Buffer.from(b, 'utf8');
+
+  // Must be same length for timingSafeEqual
+  if (aBuffer.length !== bBuffer.length) {
+    // We still do a constant-time compare against a dummy buffer
+    // to mask the early return time difference
+    crypto.timingSafeEqual(aBuffer, aBuffer);
+    return false;
+  }
+
+  return crypto.timingSafeEqual(aBuffer, bBuffer);
+}

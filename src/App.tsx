@@ -1,9 +1,16 @@
 import { useState, useEffect, lazy, Suspense } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { DatabaseStatsModal } from "@/features/dashboard/components/modals/DatabaseStatsModal";
 import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
 import { useTheme, type Theme } from "@/shared/theme/theme-provider";
 import { getApiBaseUrl } from "@/config/apiConfig";
 import { clearUserSession } from "@/services/auth/clearUserSession";
+
+import { AdminProvider, useAdmin } from "@/features/admin/AdminContext";
+import { AdminLogin } from "@/features/admin/AdminLogin";
+import { AdminDashboard } from "@/features/admin/AdminDashboard";
+import { AdminUserList } from "@/features/admin/AdminUserList";
+import { AdminAuditLog } from "@/features/admin/AdminAuditLog";
 
 const LandingPage = lazy(() => import("@/features/landing/LandingPage").then(m => ({ default: m.LandingPage })));
 const LoginForm = lazy(() => import("@/features/auth/LoginForm").then(m => ({ default: m.LoginForm })));
@@ -19,7 +26,7 @@ export interface User {
 
 type View = "landing" | "login" | "setup" | "dashboard" | "settings";
 
-function App() {
+function AppCore() {
   const [currentView, setCurrentView] = useState<View>(() => {
     const savedView = sessionStorage.getItem("cc_view") as View;
     if (savedView && ["dashboard", "settings"].includes(savedView)) {
@@ -196,4 +203,42 @@ function App() {
   );
 }
 
-export default App;
+function AdminProtectedRoute({ children }: { children: React.ReactNode }) {
+  const { isAdmin, isChecking } = useAdmin();
+  if (isChecking) {
+    return (
+      <div className="min-h-screen bg-[#0f1419] flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+  if (!isAdmin) return <Navigate to="/admin" replace />;
+  
+  return <>{children}</>;
+}
+
+export default function App() {
+  return (
+    <AdminProvider>
+      <BrowserRouter>
+        <Routes>
+          {/* SuperAdmin Routes */}
+          <Route path="/admin" element={<AdminLogin />} />
+          <Route path="/admin/" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={
+            <AdminProtectedRoute><AdminDashboard /></AdminProtectedRoute>
+          } />
+          <Route path="/admin/users" element={
+            <AdminProtectedRoute><AdminUserList /></AdminProtectedRoute>
+          } />
+          <Route path="/admin/audit" element={
+            <AdminProtectedRoute><AdminAuditLog /></AdminProtectedRoute>
+          } />
+          
+          {/* Main Application (View State Managed) */}
+          <Route path="*" element={<AppCore />} />
+        </Routes>
+      </BrowserRouter>
+    </AdminProvider>
+  );
+}

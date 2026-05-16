@@ -1,10 +1,18 @@
-import dbInstance from './connection.js';
-import { initializeSchema } from './schema.js';
+import dbInstance, { createConnection } from './connection.js';
+import { initializeSchema, initializeAuditSchema } from './schema.js';
 import { runMigrations } from './migrations.js';
+import { createAuditLogger } from '../utils/auditLogger.js';
 
 // Initialize and migrate on load
 initializeSchema(dbInstance);
 runMigrations(dbInstance);
+
+// Initialize Audit DB (Segregated)
+const auditDb = createConnection('audit.sqlite', process.env.DB_ENCRYPTION_KEY);
+initializeAuditSchema(auditDb);
+
+// Centralized Audit Logger Singleton
+const audit = createAuditLogger(auditDb);
 
 /** Purge expired tokens utility */
 export function purgeExpiredTokens(): number {
@@ -16,4 +24,4 @@ export function purgeExpiredTokens(): number {
 }
 
 export default dbInstance;
-export { dbInstance as db };
+export { dbInstance as db, auditDb, audit };

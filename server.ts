@@ -5,6 +5,8 @@ import helmet from 'helmet';
 import path from 'path';
 import { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
+import cookieParser from 'cookie-parser';
+import crypto from 'crypto';
 
 // @ts-ignore — plain JS module, no type declarations
 import { getCorsConfig } from './src/config/corsConfig.js';
@@ -14,8 +16,7 @@ import { httpsRedirect } from './src/server/middleware/httpsRedirect.js';
 import { purgeExpiredTokens } from './src/server/database/index.js';
 import { scheduleTokenCleanup } from './src/server/utils/tokenExpiry.js';
 import { generateId, generateString } from './src/server/utils/crypto.js';
-import db from './src/server/database/index.js';
-import { createAuditLogger } from './src/server/utils/auditLogger.js';
+import db, { audit, auditDb } from './src/server/database/index.js';
 
 import authRoutes         from './src/server/routes/auth.js';
 import bookmarkRoutes     from './src/server/routes/bookmarks/index.js';
@@ -31,15 +32,31 @@ const PORT = parseInt(process.env.PORT ?? '4646', 10);
 const isProduction = process.env.NODE_ENV === 'production';
 
 // ─── Export for tests ────────────────────────────────────────────────────────
-const audit = createAuditLogger(db);
-export { db, audit, generateId, generateString };
+export { db, audit, auditDb, generateId, generateString };
 export const app = express();
+
+const SESSION_ID = crypto.randomUUID();
 
 // ─── Startup tasks ───────────────────────────────────────────────────────────
 purgeExpiredTokens();
 scheduleTokenCleanup(db);
-audit.cleanup(90); // ⚡ Clean expired audit logs on startup
-setInterval(() => audit.cleanup(90), 24 * 60 * 60 * 1000); // Daily cleanup
+
+async function performCleanup() {
+  try {
+    const auditRetentionRow = db.prepare("SELECT value FROM system_settings WHERE key = 'audit_retention_days'").get() as any;
+    const uptimeRetentionRow = db.prepare("SELECT value FROM system_settings WHERE key = 'uptime_retention_days'").get() as any;
+    
+    const auditDays = auditRetentionRow ? parseInt(auditRetentionRow.value, 10) : 90;
+    const uptimeDays = uptimeRetentionRow ? parseInt(uptimeRetentionRow.value, 10) : 30;
+
+    audit.cleanup(auditDays, uptimeDays);
+  } catch (err) {
+    console.error('[Cleanup] Error:', err);
+  }
+}
+
+performCleanup(); // Run immediately on startup
+setInterval(performCleanup, 24 * 60 * 60 * 1000); // Daily cleanup
 
 // ─── Trust proxy ─────────────────────────────────────────────────────────────
 if (process.env.TRUST_PROXY === 'true') app.set('trust proxy', 1);
@@ -70,6 +87,7 @@ app.use(helmet({
 
 app.use(cors(getCorsConfig()));
 app.use(express.json());
+app.use(cookieParser());
 app.use('/api', apiLimiter);
 
 // Request logger
@@ -102,6 +120,17 @@ app.use('/api/folders',           folderRoutes);
 app.use('/api/agent-keys',        agentKeyRoutes);
 app.use('/api/settings',          settingsRoutes);
 app.use('/api/lobster-session',   lobsterSessionRoutes);
+
+// Admin Routes (Conditional)
+if (process.env.ADMIN_TOKEN) {
+  import('./src/server/routes/admin.js').then(({ default: adminRoutes }) => {
+    import('./src/server/middleware/rateLimiter.js').then(({ adminApiLimiter, adminAuthLimiter }) => {
+      app.use('/api/admin/auth', adminAuthLimiter);
+      app.use('/api/admin', adminApiLimiter, adminRoutes);
+      console.log('🔑 Admin panel enabled at /api/admin');
+    });
+  });
+}
 // Skill doc: public, no auth — registered before static files and SPA catch-all (LNN pattern)
 app.get(['/skill.md', '/SKILL.md'], (_req, res) => {
   const paths = [
@@ -147,7 +176,30 @@ app.use(errorHandler);
 // ─── Start ────────────────────────────────────────────────────────────────────
 const HOST = process.env.HOST ?? (isProduction ? '0.0.0.0' : '127.0.0.1');
 
-app.listen(PORT, HOST, () => {
+const server = app.listen(PORT, HOST, () => {
+  audit.log('SYSTEM_START', { action: 'system_start', outcome: 'success', details: { session_id: SESSION_ID } });
   console.log(`\n🦞 ClawChives v2 API running on port ${PORT}`);
   console.log(`   Health: http://localhost:${PORT}/api/health\n`);
 });
+
+// ─── Graceful Shutdown ───────────────────────────────────────────────────────
+function handleShutdown(signal: string) {
+  console.log(`\n[${signal}] Shutting down gracefully...`);
+  audit.log('SYSTEM_SHUTDOWN', { action: 'system_shutdown', outcome: 'success', details: { session_id: SESSION_ID, reason: signal } });
+  server.close(() => {
+    console.log('HTTP server closed.');
+    db.close();
+    auditDb.close();
+    console.log('Database connections closed.');
+    process.exit(0);
+  });
+
+  // Force close if taking too long
+  setTimeout(() => {
+    console.error('Could not close connections in time, forcefully shutting down');
+    process.exit(1);
+  }, 10000).unref();
+}
+
+process.on('SIGTERM', () => handleShutdown('SIGTERM'));
+process.on('SIGINT', () => handleShutdown('SIGINT'));

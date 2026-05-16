@@ -26,6 +26,12 @@ src/
 │
 ├── features/                        # ◀ Feature-Sliced Domains (Phase 5/6)
 │   ├── auth/                        # Login, SetupWizard, useAuth hook
+│   ├── admin/                       # ◀ SuperAdmin Control Plane (Phase 8)
+│   │   ├── AdminContext.tsx         # Admin state + session check
+│   │   ├── AdminLogin.tsx           # /admin gateway
+│   │   ├── AdminDashboard.tsx       # Main monitoring dashboard
+│   │   ├── AdminUserList.tsx        # Metadata user management
+│   │   └── AdminAuditLog.tsx        # Segregated audit viewer
 │   ├── dashboard/
 │   │   ├── components/
 │   │   │   ├── layout/
@@ -98,6 +104,7 @@ src/
     │   ├── folders.ts               # /api/folders/*
     │   ├── agentKeys.ts             # /api/agent-keys/*
     │   ├── settings.ts              # /api/settings/*
+    │   ├── admin.ts                 # /api/admin/* (👑 Admin Plane)
     │   ├── lobsterSession.ts        # /api/lobster-session/*
     │   └── bookmarks/               # Decomposed handlers
     │       ├── read.ts              # GET /api/bookmarks (paginated)
@@ -156,6 +163,7 @@ cc_key_type     → "human" | "agent" — gates r.jina.ai UI
 cc_view        → "dashboard" | "settings" — restored on refresh
 cc_theme       → "light" | "dark" | "auto" — restored on refresh
 cc_sidebar_open → boolean — persists sidebar visibility across habitats
+cc_admin_session → volatile cookie-only —Gates access to /admin plane (Server-side session)
 ```
 
 **Rules:**
@@ -177,6 +185,8 @@ bookmarks.user_uuid   → users.uuid
 folders.user_uuid     → users.uuid
 agent_keys.user_uuid  → users.uuid
 settings.user_uuid    → users.uuid
+
+**👑 Admin Plane Exception:** `audit.sqlite` contains anonymous system logs and user metadata (counts). It does NOT reference user_uuid for audit logging but uses `actor` identifier. isolation is enforced by segregated physical files.
 ```
 
 **Parameterized queries only.** `db.prepare(...).run(?, ?)` — no string interpolation. Ever.
@@ -214,6 +224,15 @@ AgentKeys:  getAgentKeys()  saveAgentKey()  revokeAgentKey()  deleteAgentKey()
 Settings:   getAppearanceSettings()  saveAppearanceSettings()
             getProfileSettings()     saveProfileSettings()
 Stats:      getBookmarkStats()
+
+**👑 Admin Stability Lock:**
+File: `src/features/admin/AdminContext.tsx`
+Admin sessions are **volatile** and **in-memory** on the server. There is no persistent "admin" table. Auth is strictly `ADMIN_TOKEN` comparison. If the server restarts, all admin sessions are cleared (intentional).
+
+- **Route:** `/admin/*` (managed by `react-router-dom`)
+- **API:** `/api/admin/*` (gated by `requireAdmin`)
+- **Limiter:** `adminAuthLimiter` (5 attempts / 15 min)
+- **Token:** `ADMIN_TOKEN` (64+ char entropy recommended)
 ```
 
 </details>

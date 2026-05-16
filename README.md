@@ -64,6 +64,8 @@
 - 🦞 **Reading Mode** — Transform pinchmarks to LLM-friendly markdown on-demand via `r.jina.ai`.
 - 🐚 **Locked Shell UI** — Rigid, consistent interface layout that prioritizes functional stability.
 - 📤 **High-Fidelity Exports** — Branded JSON, Markdown, and PDF/HTML exports with enriched metadata and premium formatting.
+- 👑 **SuperAdmin Dashboard** — An isolated, metadata-only command center (gated by `ADMIN_TOKEN`) to manage users, monitor system health, and audit security events.
+- 🕵️ **Segregated Auditing** — Security logs and uptime metrics are stored in a dedicated `audit.sqlite` to ensure high-performance isolation.
 
 ---
 
@@ -81,7 +83,8 @@ graph TD
 
     subgraph Server ["🖥️ server.ts (Express)"]
         API["REST API<br/>Port 4646"]
-        DB[(SQLite<br/>WAL Mode)]
+        DB[(db.sqlite<br/>WAL Mode)]
+        AUDIT[(audit.sqlite<br/>Segregated Logs)]
     end
 
     UI --> Auth
@@ -90,6 +93,7 @@ graph TD
     Provider --> REST
     REST -->|"fetch + Bearer token"| API
     API --> DB
+    API --> AUDIT
 ```
 
 ---
@@ -171,6 +175,7 @@ npm install
 | `PORT` | `4545` | Container internal port |
 | `DATA_DIR` | `/app/data` | Where SQLite database is stored (bind mount) |
 | `DB_ENCRYPTION_KEY` | `""` | AES-256 encryption key. Generate with `openssl rand -base64 32` |
+| `ADMIN_TOKEN` | `""` | Set a secure string to enable the **SuperAdmin Panel** at `/admin`. Generate with `openssl rand -base64 48`. |
 | `PUID` | `1000` | Linux user ID for file permissions |
 | `PGID` | `1000` | Linux group ID for file permissions |
 | `TRUST_PROXY` | `false` | Set to 'true' if running behind a reverse proxy |
@@ -244,10 +249,43 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 | `DELETE` | `/api/agent-keys/:id` | human-only | Permanently delete a key record |
 | `GET` | `/api/settings` | human-only | View system settings |
 | `PATCH` | `/api/settings` | human-only | Update system settings |
+| `POST` | `/api/admin/auth` | - | Admin login (Cookie-based session) |
+| `GET` | `/api/admin/users` | admin-only | List user metadata & counts |
+| `DELETE` | `/api/admin/users/:id` | admin-only | Permanent cascade purge of user |
+| `GET` | `/api/admin/audit` | admin-only | Query segregated audit logs |
+| `GET` | `/api/admin/system` | admin-only | Health, DB stats, and path check |
+| `GET` | `/api/admin/uptime` | admin-only | Historical system uptime report |
 | `GET` | `/api/health` | No | System health and stats |
 | `GET` | `/skill.md` | No | AI Agent skill documentation |
 
 </details>
+
+---
+
+## 🛡️ SuperAdmin Panel & System Settings
+
+ClawChives includes an opt-in **SuperAdmin Control Plane** mounted at `/admin`. This panel provides a "God-view" into the system topology without revealing sensitive decrypted pinchmark contents.
+
+### Features
+- **Health Monitoring:** Track total users, total pinchmarks, db size, and exact Server Uptime (with session history metrics).
+- **User Management:** Scuttle malicious or orphaned identities permanently from the server.
+- **Audit Logs:** Monitor security anomalies, unauthorized access attempts, and authentication spikes.
+- **Retention Policies:** Dynamically configure database retention directly from the UI dropdown in the header:
+  - `Audit Logs`: 30, 60, or 90 days.
+  - `Uptime History`: 30, 60, or 90 days.
+
+### How to Enable
+
+1. Generate a secure token (e.g., `openssl rand -base64 48`).
+2. Add it to your `.env` or `docker-compose.yml`:
+   ```bash
+   ADMIN_TOKEN="your_secure_token_here"
+   ```
+3. Restart ClawChives.
+4. Navigate to `/admin`. You will be prompted to log in using the `ADMIN_TOKEN`.
+
+> [!NOTE]  
+> If `ADMIN_TOKEN` is unset or removed, the `/admin` UI and API routes are completely disabled and will return 404s.
 
 ---
 
