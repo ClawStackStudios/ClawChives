@@ -111,14 +111,15 @@ router.delete('/users/:uuid', requireAdmin, (req, res) => {
 
   // Transaction for atomic deletion
   const deleteTx = db.transaction((id: string) => {
-    // 1. Manual cleanup for tables without FK cascade
-    db.prepare('DELETE FROM settings WHERE user_uuid = ?').run(id);
-    db.prepare('DELETE FROM import_sessions WHERE user_uuid = ?').run(id);
+    // 1. Manual cleanup — user_uuid added via ALTER TABLE, no FK cascade exists
     db.prepare('DELETE FROM jina_conversions WHERE user_uuid = ?').run(id);
-    
-    // 2. Cascade delete from users table
-    // (triggers: cascade_user_api_tokens, cascade_agent_api_tokens will fire)
-    // (FK: bookmarks, folders, agent_keys will cascade)
+    db.prepare('DELETE FROM import_sessions WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM settings WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM agent_keys WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM bookmarks WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM folders WHERE user_uuid = ?').run(id);
+
+    // 2. Delete user row (api_tokens cascade via FK on owner_key still applies)
     const result = db.prepare('DELETE FROM users WHERE uuid = ?').run(id);
     return result.changes;
   });
