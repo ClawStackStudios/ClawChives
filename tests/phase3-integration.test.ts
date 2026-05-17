@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
@@ -42,11 +42,7 @@ describe('Phase 3a — Mass Import & Large Library Tests', () => {
     );
   });
 
-  afterAll(() => {
-    if (fs.existsSync(DATA_DIR)) {
-      fs.rmSync(DATA_DIR, { recursive: true, force: true });
-    }
-  });
+
 
   describe('Task 3.1 — Mass Import (1000 URLs)', () => {
     it('should import 1000 URLs in 10 batches of 100', async () => {

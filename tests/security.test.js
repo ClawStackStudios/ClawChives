@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
@@ -16,11 +16,7 @@ import { app, db, generateString } from '../server.js';
 
 describe('Security Fixes: Key Generation & Agent Authorization Bypass', () => {
 
-  afterAll(() => {
-    db.close();
-    // Cleanup test data
-    fs.rmSync(process.env.DATA_DIR, { recursive: true, force: true });
-  });
+
 
   describe('Key Generation (OWASP)', () => {
     it('generates strings of correct length without modulo bias', () => {

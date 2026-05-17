@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
@@ -40,11 +40,7 @@ describe('Lobster Session Flow — HardShell', () => {
     `).run(humanBearerToken, testUserUuid, 'human', now);
   });
 
-  afterAll(() => {
-    if (fs.existsSync(DATA_DIR)) {
-      fs.rmSync(DATA_DIR, { recursive: true, force: true });
-    }
-  });
+
 
   describe('POST /api/lobster-session/start', () => {
     it('rejects unauthenticated requests (401)', async () => {
