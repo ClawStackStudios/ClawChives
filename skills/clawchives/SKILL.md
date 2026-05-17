@@ -119,10 +119,10 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 | Permission | Allows |
 |-----------|--------|
-| `canRead` | `GET /bookmarks`, `GET /bookmarks/:id`, `GET /folders`, `GET /bookmarks/stats`, etc. |
-| `canWrite` | `POST /bookmarks`, `POST /bookmarks/bulk`, `POST /folders` |
-| `canEdit` | `PUT /bookmarks/:id`, `PUT /folders/:id`, `PATCH /bookmarks/:id/star`, `PATCH /bookmarks/:id/archive` |
-| `canDelete` | `DELETE /bookmarks/:id`, `DELETE /bookmarks/`, `DELETE /folders/:id`, `DELETE /folders/` |
+| `canRead` | `GET /api/bookmarks`, `GET /api/bookmarks/:id`, `GET /api/folders`, `GET /api/bookmarks/stats`, etc. |
+| `canWrite` | `POST /api/bookmarks`, `POST /api/bookmarks/bulk`, `POST /api/folders` |
+| `canEdit` | `PUT /api/bookmarks/:id`, `PUT /api/folders/:id`, `PATCH /api/bookmarks/:id/star`, `PATCH /api/bookmarks/:id/archive` |
+| `canDelete` | `DELETE /api/bookmarks/:id`, `DELETE /api/bookmarks`, `DELETE /api/folders/:id`, `DELETE /api/folders` |
 
 ### Failure Mode: Missing Permission
 
@@ -142,13 +142,13 @@ Content-Type: application/json
 
 ## Bookmarks API
 
-### GET /bookmarks — List Bookmarks
+### GET /api/bookmarks — List Bookmarks
 
 Retrieve paginated bookmarks with optional search and filtering.
 
 **Request:**
 ```http
-GET /bookmarks?page=1&limit=50&search=lobster&folder=science&tags=crustacean&archived=false
+GET /api/bookmarks?page=1&limit=50&search=lobster&folder=science&tags=crustacean&archived=false
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -194,13 +194,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### GET /bookmarks/:id — Get Single Bookmark
+### GET /api/bookmarks/:id — Get Single Bookmark
 
 Retrieve a single bookmark by ID.
 
 **Request:**
 ```http
-GET /bookmarks/bm-uuid-1
+GET /api/bookmarks/bm-uuid-1
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -229,13 +229,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### POST /bookmarks — Create Bookmark
+### POST /api/bookmarks — Create Bookmark
 
 Create a single bookmark.
 
 **Request:**
 ```http
-POST /bookmarks
+POST /api/bookmarks
 Content-Type: application/json
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
@@ -286,13 +286,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### PUT /bookmarks/:id — Update Bookmark
+### PUT /api/bookmarks/:id — Update Bookmark
 
 Update an existing bookmark (partial or full).
 
 **Request:**
 ```http
-PUT /bookmarks/bm-uuid-1
+PUT /api/bookmarks/bm-uuid-1
 Content-Type: application/json
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
@@ -341,13 +341,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### DELETE /bookmarks/:id — Delete Single Bookmark
+### DELETE /api/bookmarks/:id — Delete Single Bookmark
 
 Delete a bookmark by ID.
 
 **Request:**
 ```http
-DELETE /bookmarks/bm-uuid-1
+DELETE /api/bookmarks/bm-uuid-1
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -362,13 +362,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### DELETE /bookmarks — Purge All Bookmarks
+### DELETE /api/bookmarks — Purge All Bookmarks
 
 **DESTRUCTIVE:** Delete all bookmarks for the authenticated user. No undo.
 
 **Request:**
 ```http
-DELETE /bookmarks
+DELETE /api/bookmarks
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -382,13 +382,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### POST /bookmarks/bulk — Bulk Import Bookmarks
+### POST /api/bookmarks/bulk — Bulk Import Bookmarks
 
 Import multiple bookmarks in a single request.
 
 **Request:**
 ```http
-POST /bookmarks/bulk
+POST /api/bookmarks/bulk
 Content-Type: application/json
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
@@ -453,13 +453,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### PATCH /bookmarks/:id/star — Toggle Star Status
+### PATCH /api/bookmarks/:id/star — Toggle Star Status
 
 Toggle the starred/favorited status of a bookmark.
 
 **Request:**
 ```http
-PATCH /bookmarks/bm-uuid-1/star
+PATCH /api/bookmarks/bm-uuid-1/star
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -480,13 +480,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### PATCH /bookmarks/:id/archive — Toggle Archive Status
+### PATCH /api/bookmarks/:id/archive — Toggle Archive Status
 
 Toggle the archived status of a bookmark.
 
 **Request:**
 ```http
-PATCH /bookmarks/bm-uuid-1/archive
+PATCH /api/bookmarks/bm-uuid-1/archive
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -507,13 +507,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### GET /bookmarks/stats — Get Bookmark Statistics
+### GET /api/bookmarks/stats — Get Bookmark Statistics
 
 Retrieve aggregated bookmark statistics.
 
 **Request:**
 ```http
-GET /bookmarks/stats
+GET /api/bookmarks/stats
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -541,13 +541,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### GET /bookmarks/tags — Get All Tags
+### GET /api/bookmarks/tags — Get All Tags
 
 Retrieve all tags in use across the user's bookmarks.
 
 **Request:**
 ```http
-GET /bookmarks/tags
+GET /api/bookmarks/tags
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -569,13 +569,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ## Folders API
 
-### GET /folders — List Folders
+### GET /api/folders — List Folders
 
 Retrieve all folders.
 
 **Request:**
 ```http
-GET /folders
+GET /api/folders
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -603,13 +603,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### POST /folders — Create Folder
+### POST /api/folders — Create Folder
 
 Create a new folder.
 
 **Request:**
 ```http
-POST /folders
+POST /api/folders
 Content-Type: application/json
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
@@ -645,13 +645,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### PUT /folders/:id — Update Folder
+### PUT /api/folders/:id — Update Folder
 
 Update a folder's name.
 
 **Request:**
 ```http
-PUT /folders/f-uuid-3
+PUT /api/folders/f-uuid-3
 Content-Type: application/json
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
@@ -688,13 +688,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### DELETE /folders/:id — Delete Folder
+### DELETE /api/folders/:id — Delete Folder
 
 Delete a folder. All bookmarks in the folder are **reassigned to "inbox"**.
 
 **Request:**
 ```http
-DELETE /folders/f-uuid-3
+DELETE /api/folders/f-uuid-3
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -709,13 +709,13 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 
 ---
 
-### DELETE /folders — Purge All Folders
+### DELETE /api/folders — Purge All Folders
 
 **DESTRUCTIVE:** Delete all folders. All bookmarks are reassigned to "inbox". No undo.
 
 **Request:**
 ```http
-DELETE /folders
+DELETE /api/folders
 Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 ```
 
@@ -730,12 +730,12 @@ Authorization: Bearer api-aBcDeFgHiJkLmNoPqRsTuVwXyZ123456
 | Code | Meaning | Common Trigger |
 |------|---------|----------------|
 | `200 OK` | Request succeeded | All GET requests, most PUT/PATCH |
-| `201 Created` | Resource created successfully | POST /bookmarks, POST /folders |
+| `201 Created` | Resource created successfully | POST /api/bookmarks, POST /api/folders |
 | `204 No Content` | Request succeeded, no body | DELETE requests |
-| `400 Bad Request` | Malformed request body or missing required fields | Invalid JSON, missing `url` in POST /bookmarks |
+| `400 Bad Request` | Malformed request body or missing required fields | Invalid JSON, missing `url` in POST /api/bookmarks |
 | `401 Unauthorized` | Missing or invalid API token | Missing `Authorization` header, expired/invalid token |
-| `403 Forbidden` | Valid token but lacks required permission | `canRead` permission missing for GET /bookmarks |
-| `404 Not Found` | Resource does not exist | GET /bookmarks/nonexistent-id |
+| `403 Forbidden` | Valid token but lacks required permission | `canRead` permission missing for GET /api/bookmarks |
+| `404 Not Found` | Resource does not exist | GET /api/bookmarks/nonexistent-id |
 | `422 Unprocessable Entity` | Valid request but cannot be processed | Duplicate URL, duplicate folder name |
 | `429 Too Many Requests` | Rate limit exceeded | >10 auth attempts/min, >500 requests/min |
 | `500 Internal Server Error` | Server error | Database failure, unexpected exception |
@@ -749,9 +749,9 @@ All endpoints are rate-limited. Current limits:
 | Endpoint Category | Limit |
 |------------------|-------|
 | Auth (`/api/auth/token`) | 10 requests per minute per IP |
-| Bookmark read (`GET /bookmarks*`) | 500 requests per minute per token |
-| Bookmark write (`POST/PUT/DELETE /bookmarks*`) | 100 requests per minute per token |
-| Folder operations (`/folders*`) | 100 requests per minute per token |
+| Bookmark read (`GET /api/bookmarks*`) | 500 requests per minute per token |
+| Bookmark write (`POST/PUT/DELETE /api/bookmarks*`) | 100 requests per minute per token |
+| Folder operations (`/api/folders*`) | 100 requests per minute per token |
 
 Exceeding limits returns `429 Too Many Requests`. The response includes a `Retry-After` header indicating seconds until the limit resets.
 
@@ -765,11 +765,11 @@ All `GET` list endpoints support:
 - `page` (number, optional, default: 1) — page number (1-indexed)
 - `limit` (number, optional, default: 50, max: 200) — items per page
 
-Example: `GET /bookmarks?page=2&limit=25` retrieves items 26-50.
+Example: `GET /api/bookmarks?page=2&limit=25` retrieves items 26-50.
 
 ### Search & Filter
 
-`GET /bookmarks` supports:
+`GET /api/bookmarks` supports:
 - `search` (string, optional) — fuzzy search in title and URL
 - `folder` (string, optional) — exact folder name match
 - `tags` (string, optional) — comma-separated tag names; returns bookmarks with ANY tag in the list
