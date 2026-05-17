@@ -12,7 +12,7 @@ node_modules
 dist
 dist-ssr
 *.local
-.env
+.env*
 data/
 data-dev/
 *.sqlite
@@ -29,7 +29,7 @@ data-dev/
 *.sw?
 
 # CrustAgent
-.crustagent/internal/
+.crustagent/
 .shellcheck/
 
 # AI Tools
