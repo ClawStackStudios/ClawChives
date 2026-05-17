@@ -29,7 +29,7 @@ data-dev/
 *.sw?
 
 # CrustAgent
-.crustagent/internal/
+.crustagent/
 .shellcheck/
 
 # AI Tools
