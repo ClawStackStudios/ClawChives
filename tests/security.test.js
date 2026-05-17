@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
 
 // Setup environment variables before importing the app
 process.env.NODE_ENV = 'test';
@@ -110,6 +111,70 @@ describe('Security Fixes: Key Generation & Agent Authorization Bypass', () => {
       expect(res.status).toBe(401);
       expect(res.body.success).toBe(false);
       expect(res.body.error).toBe("Lobster Key Revoked, Are you art of this reef?");
+    });
+  });
+
+  describe('Pre-Hashed Agent Authentication', () => {
+    let agentApiKey;
+    let agentKeyHash;
+
+    beforeAll(async () => {
+      const humanUuid = '00000000-0000-0000-0000-000000000123';
+      
+      // Clean up previous runs
+      db.prepare("DELETE FROM users WHERE uuid = ?").run(humanUuid);
+      db.prepare("DELETE FROM agent_keys WHERE user_uuid = ?").run(humanUuid);
+
+      // Create human user
+      db.prepare("INSERT OR IGNORE INTO users (uuid, username, key_hash, created_at) VALUES (?, ?, ?, ?)").run(
+        humanUuid, 'hashhuman', 'x'.repeat(64), new Date().toISOString()
+      );
+
+      // Directly insert an agent key into the database to bypass authLimiter
+      agentApiKey = 'lb-test-' + Math.random().toString(36).slice(2, 20);
+      const agentId = 'agent-' + Date.now();
+      db.prepare(`
+        INSERT INTO agent_keys (id, user_uuid, name, api_key, permissions, is_active, expiration_type, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        agentId, humanUuid, 'Hashed Agent Test',
+        agentApiKey,
+        JSON.stringify({ canRead: true, canWrite: false }),
+        1, 'never', new Date().toISOString()
+      );
+
+      agentKeyHash = crypto.createHash('sha256').update(agentApiKey).digest('hex');
+    });
+
+    it('allows active agent to authenticate using pre-hashed keyHash and receive api- token', async () => {
+      const res = await request(app)
+        .post('/api/auth/token')
+        .send({ type: 'agent', keyHash: agentKeyHash });
+
+      expect(res.status).toBe(201);
+      expect(res.body.success).toBe(true);
+      expect(res.body.data.token).toBeDefined();
+      expect(res.body.data.token.startsWith('api-')).toBe(true);
+
+      // Verify the generated session token actually works and grants agent access
+      const validateRes = await request(app)
+        .get('/api/auth/validate')
+        .set('Authorization', `Bearer ${res.body.data.token}`);
+
+      expect(validateRes.status).toBe(200);
+      expect(validateRes.body.success).toBe(true);
+      expect(validateRes.body.data.keyType).toBe('agent');
+    });
+
+    it('rejects authentication with invalid keyHash (401)', async () => {
+      const invalidHash = 'f'.repeat(64);
+      const res = await request(app)
+        .post('/api/auth/token')
+        .send({ type: 'agent', keyHash: invalidHash });
+
+      expect(res.status).toBe(401);
+      expect(res.body.success).toBe(false);
+      expect(res.body.error).toContain('Invalid or revoked agent key');
     });
   });
 

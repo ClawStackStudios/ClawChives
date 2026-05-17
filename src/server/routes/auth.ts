@@ -64,18 +64,36 @@ router.post('/token', authLimiter, validateBody(AuthSchemas.token), (req, res) =
     return res.status(201).json({ success: true, data: { token, type: 'human', createdAt: new Date().toISOString(), expiresAt, user: { uuid: (user as any).uuid, username: (user as any).username } } });
 
   } else if (type === 'agent' || (ownerKey && detectKeyType(ownerKey) === 'agent')) {
-    const agentKey = ownerKey;
-    if (!agentKey?.startsWith('lb-')) return res.status(400).json({ success: false, error: 'Invalid agent key' });
+    let agent: any = null;
+    let agentKey = ownerKey;
 
-    // 🛡️ Sentinel: Fetch by key, then verify with timingSafeEqual to ensure constant-time response profiles
-    const agent = db.prepare('SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1').get(agentKey) as any;
-    
+    if (keyHash) {
+      // 🛡️ Sentinel: Safe search for an active agent key whose SHA-256 hash matches the provided keyHash
+      const activeAgents = db.prepare('SELECT * FROM agent_keys WHERE is_active = 1').all() as any[];
+      const providedKeyHash = Buffer.from(keyHash, 'hex');
+      
+      for (const a of activeAgents) {
+        try {
+          const storedKeyHash = crypto.createHash('sha256').update(a.api_key).digest();
+          if (crypto.timingSafeEqual(storedKeyHash, providedKeyHash)) {
+            agent = a;
+            agentKey = a.api_key;
+          }
+        } catch {}
+      }
+    } else {
+      if (!agentKey?.startsWith('lb-')) return res.status(400).json({ success: false, error: 'Invalid agent key' });
+      agent = db.prepare('SELECT * FROM agent_keys WHERE api_key = ? AND is_active = 1').get(agentKey) as any;
+    }
+
     // 🛡️ Sentinel Security Patch: Timing-safe comparison with pre-hashing
     let keyMatch = false;
-    if (agent) {
+    if (agent && agentKey) {
       try {
         const storedKeyHash = crypto.createHash('sha256').update(agent.api_key).digest();
-        const providedKeyHash = crypto.createHash('sha256').update(agentKey).digest();
+        const providedKeyHash = keyHash
+          ? Buffer.from(keyHash, 'hex')
+          : crypto.createHash('sha256').update(agentKey).digest();
         keyMatch = crypto.timingSafeEqual(storedKeyHash, providedKeyHash);
       } catch {
         keyMatch = false;
