@@ -211,6 +211,10 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 | `lb-` | **Lobster/Agent Key** | 64 chars | For your AI agents and scripts. Generated in Settings. |
 | `api-` | **Session Token** | 32 chars | Short-lived REST API bearer. Auto-issued on login. |
 
+> [!TIP]
+> **Cryptographic Handshake Security**:
+> When an agent authenticates using an `lb-` key, it is recommended to use the SHA-256 pre-hashed key (`keyHash`) handshake rather than sending the raw key in plaintext. The Express backend handles this securely via `POST /api/auth/token` using constant-time validation checks.
+
 > [!CAUTION]
 > Your `hu-` key file is the **only** way to access your ClawChive. Keep it safe. If you lose it, it cannot be recovered. Back it up somewhere secure.
 
@@ -218,26 +222,32 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 
 ## 🔌 API Reference
 
-> All endpoints except `/api/health` and `/api/auth/setup` require `Authorization: Bearer <api-token>`.
+> All endpoints except `/api/health`, `/api/auth/register`, and `/api/auth/token` require `Authorization: Bearer <api-token>`.
 
 <details>
 <summary>View full API endpoint table</summary>
 
 | Method | Endpoint | Permission | Description |
 |---|---|---|---|
-| `POST` | `/api/auth/setup` | - | Initialize the reef with your first key |
-| `POST` | `/api/auth/login` | - | Exchange `hu-` or `lb-` for an `api-` token |
-| `GET` | `/api/auth/verify` | - | Verify current session token |
-| `POST` | `/api/auth/logout` | - | Revoke the current session |
+| `POST` | `/api/auth/register` | - | Initialize the admin profile with your first key |
+| `POST` | `/api/auth/token` | - | Exchange `hu-`/`lb-` (or agent `keyHash`) for an `api-` token |
+| `GET` | `/api/auth/validate` | - | Validate current session token |
 | `GET` | `/api/bookmarks` | canRead | List all pinchmarks |
+| `GET` | `/api/bookmarks/stats` | canRead | Get aggregate pinchmark statistics |
+| `GET` | `/api/bookmarks/tags` | canRead | Retrieve tag list with counts |
+| `GET` | `/api/bookmarks/:id` | canRead | Retrieve a single pinchmark by ID |
 | `POST` | `/api/bookmarks` | canWrite | Create a new pinchmark |
-| `PUT` | `/api/bookmarks/:id` | canEdit | Update pinchmark details |
-| `DELETE` | `/api/bookmarks/:id` | canDelete | Delete a pinchmark |
-| `PATCH` | `/api/bookmarks/:id/move`| canMove | Move pinchmark between folders |
+| `POST` | `/api/bookmarks/bulk` | canWrite | Bulk import multiple pinchmarks |
+| `PUT` | `/api/bookmarks/:id` | canEdit | Update pinchmark details (and move folders) |
+| `PATCH` | `/api/bookmarks/:id/star` | canEdit | Toggle starred/favorite status |
+| `PATCH` | `/api/bookmarks/:id/archive` | canEdit | Toggle archived status |
+| `DELETE` | `/api/bookmarks/:id` | canDelete | Delete a single pinchmark |
+| `DELETE` | `/api/bookmarks` | canDelete | Purge all pinchmarks |
 | `GET` | `/api/folders` | canRead | List all folders |
-| `POST` | `/api/folders` | canWrite | Create a folder |
-| `PUT` | `/api/folders/:id` | canEdit | Update folder name |
-| `DELETE` | `/api/folders/:id` | canDelete | Delete folder and contents |
+| `POST` | `/api/folders` | canWrite | Create a new folder |
+| `PUT` | `/api/folders/:id` | canEdit | Update folder details |
+| `DELETE` | `/api/folders/:id` | canDelete | Delete folder and content association |
+| `DELETE` | `/api/folders` | canDelete | Purge all folders |
 | `GET` | `/api/agent-keys` | human-only | List all active agent keys |
 | `POST` | `/api/agent-keys` | human-only | Generate a new Lobster Key |
 | `PATCH` | `/api/agent-keys/:id/revoke`| human-only | Revoke an agent key |
@@ -245,7 +255,7 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 | `GET` | `/api/settings` | human-only | View system settings |
 | `PATCH` | `/api/settings` | human-only | Update system settings |
 | `GET` | `/api/health` | No | System health and stats |
-| `GET` | `/skill.md` | No | AI Agent skill documentation |
+| `GET` | `/skill.md` | No | AI Agent skill documentation (Markdown) |
 
 </details>
 
