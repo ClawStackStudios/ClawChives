@@ -387,10 +387,10 @@ Red   (#ef4444) → Branding, delete, security barriers
 <summary>🧬 Test Files & Commands</summary>
 
 ```bash
-npm run test                    # All 131 tests
+npm run test                    # All 166 tests
 npm run test:lobster-session    # Lobster session (19 tests)
 npm run test:phase3:full        # Phase 3 suite (109 tests)
-npm run test:phase4:full        # Full suite (131 tests)
+npm run test:phase4:full        # Full suite (166 tests)
 ```
 
 **Test helpers:**
@@ -401,11 +401,12 @@ npm run test:phase4:full        # Full suite (131 tests)
 - `src/server/utils/parsers.test.ts` — 26 unit tests
 - `src/shared/lib/crypto.test.ts` — 7 unit tests
 - `tests/unit/middleware/errorHandler.test.ts` — 31 middleware tests
-- `tests/security.test.js` — 3 integration tests
+- `tests/security.test.js` — 8 integration tests
 - `tests/bulk-import.test.js` — 20 integration tests
 - `tests/lobster-session.test.ts` — 19 integration tests
-- `tests/phase3-integration.test.ts` — 6 integration tests
+- `tests/phase3-integration.test.ts` — 8 integration tests
 - `tests/build-gates.test.ts` — 10 build validation tests
+- `tests/admin-dashboard.test.ts` — 32 admin control plane tests
 
 </details>
 

@@ -12,7 +12,7 @@ Project: ClawChives©™
 [![Sovereign](https://img.shields.io/badge/Status-Sovereign-red?style=for-the-badge)](#)
 [![Phase](https://img.shields.io/badge/Phase-8_Complete-blue?style=for-the-badge)](#)
 [![SQLite](https://img.shields.io/badge/Storage-SQLite-amber?style=for-the-badge)](#)
-[![Tests](https://img.shields.io/badge/Tests-131_Passing-green?style=for-the-badge)](#)
+[![Tests](https://img.shields.io/badge/Tests-166_Passing-green?style=for-the-badge)](#)
 
 ---
 
@@ -104,6 +104,7 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 - ✅ **Relational Jina Storage** — Jina URLs decoupled into `jina_conversions` table
 - ✅ **Admin Stability Lock** — SuperAdmin dashboard gated by `ADMIN_TOKEN`, using volatile in-memory sessions and constant-time token validation.
 - ✅ **Segregated Auditing** — Security logs and system events isolated in `audit.sqlite` for tamper-resistance and performance.
+- ✅ **Epistemic Indexing & WAL** — Load-bearing columns (`user_uuid`, `owner_key`, `key`) fully indexed to eliminate the "Full Table Scan" predator under 100+ user load, optimized with Write-Ahead Logging (WAL) for parallel reads and non-blocking writes.
 
 </details>
 
@@ -230,13 +231,13 @@ Request
 ## 🧪 Test Suite
 
 <details>
-<summary>🧬 131 Tests — All Passing</summary>
+<summary>🧬 166 Tests — All Passing</summary>
 
 ```bash
 npm run test                    # All tests
 npm run test:lobster-session    # Lobster session tests (19)
 npm run test:phase3:full        # Phase 3 gates (109 total)
-npm run test:phase4:full        # FULL SUITE (131 tests)
+npm run test:phase4:full        # FULL SUITE (166 tests)
 ```
 
 **Architecture (Semantic Layers):**

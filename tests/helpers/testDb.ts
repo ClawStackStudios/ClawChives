@@ -127,6 +127,16 @@ export function createTestDatabase(): Database.Database {
       user_agent  TEXT,
       details     TEXT
     );
+
+    CREATE TABLE IF NOT EXISTS import_sessions (
+      id          TEXT PRIMARY KEY,
+      user_uuid   TEXT NOT NULL,
+      key_id      TEXT NOT NULL,
+      started_at  TEXT NOT NULL,
+      closed_at   TEXT,
+      error_count INTEGER DEFAULT 0,
+      errors_json TEXT DEFAULT '[]'
+    );
   `);
 
   // Create indexes
@@ -140,8 +150,14 @@ export function createTestDatabase(): Database.Database {
     CREATE INDEX IF NOT EXISTS idx_audit_outcome ON audit_logs(outcome);
     CREATE INDEX IF NOT EXISTS idx_api_tokens_key ON api_tokens(key);
     CREATE INDEX IF NOT EXISTS idx_api_tokens_expires_at ON api_tokens(expires_at);
+    CREATE INDEX IF NOT EXISTS idx_api_tokens_owner ON api_tokens(owner_key, owner_type);
     CREATE INDEX IF NOT EXISTS idx_agent_keys_api_key ON agent_keys(api_key);
     CREATE INDEX IF NOT EXISTS idx_agent_keys_active ON agent_keys(is_active);
+    CREATE INDEX IF NOT EXISTS idx_agent_keys_user ON agent_keys(user_uuid);
+    CREATE INDEX IF NOT EXISTS idx_bookmarks_user_folder_created ON bookmarks(user_uuid, folder_id, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_bookmarks_user_created ON bookmarks(user_uuid, created_at DESC);
+    CREATE INDEX IF NOT EXISTS idx_folders_user ON folders(user_uuid);
+    CREATE INDEX IF NOT EXISTS idx_import_sessions_user ON import_sessions(user_uuid);
   `);
 
   return db;
