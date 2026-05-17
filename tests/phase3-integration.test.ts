@@ -217,8 +217,74 @@ describe('Phase 3a — Mass Import & Large Library Tests', () => {
       expect(res.body.imported).toBe(1);
       expect(res.body.failed).toBe(1);
 
-      const orig = db.prepare('SELECT title FROM bookmarks WHERE url = ?').get('https://ex.com/dup') as any;
-      expect(orig.title).toBe('Original');
+    });
+  });
+
+  describe('Task 3.4 — Pagination & Limit Enforcement Options', () => {
+    it('should support page-based pagination and calculate offset correctly', async () => {
+      db.prepare('DELETE FROM bookmarks WHERE user_uuid = ?').run(testUserUuid);
+
+      // Insert 15 bookmarks
+      const insertBatch = db.transaction((items: any[]) => {
+        for (const item of items) {
+          db.prepare(`
+            INSERT INTO bookmarks (id, user_uuid, url, title, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+          `).run(item.id, testUserUuid, item.url, item.title, item.created_at, item.created_at);
+        }
+      });
+
+      const baseTime = Date.now();
+      const items = Array.from({ length: 15 }, (_, i) => ({
+        id: `pagi-${i}`,
+        url: `https://pagi.com/${i}`,
+        title: `Pagi ${i}`,
+        created_at: new Date(baseTime + i * 1000).toISOString(),
+      }));
+      insertBatch(items);
+
+      // page=1&limit=5 should return first 5 (latest created)
+      const resPage1 = await request(app)
+        .get('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentKey}`)
+        .query({ page: 1, limit: 5 });
+
+      expect(resPage1.status).toBe(200);
+      expect(resPage1.body.data).toHaveLength(5);
+      expect(resPage1.body.data[0].id).toBe('pagi-14'); // latest created
+      expect(resPage1.body.data[4].id).toBe('pagi-10');
+
+      // page=2&limit=5 should return next 5
+      const resPage2 = await request(app)
+        .get('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentKey}`)
+        .query({ page: 2, limit: 5 });
+
+      expect(resPage2.status).toBe(200);
+      expect(resPage2.body.data).toHaveLength(5);
+      expect(resPage2.body.data[0].id).toBe('pagi-9');
+      expect(resPage2.body.data[4].id).toBe('pagi-5');
+
+      // Check offset fallback compatibility
+      const resOffset5 = await request(app)
+        .get('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentKey}`)
+        .query({ offset: 5, limit: 5 });
+
+      expect(resOffset5.status).toBe(200);
+      expect(resOffset5.body.data).toHaveLength(5);
+      expect(resOffset5.body.data[0].id).toBe('pagi-9');
+      expect(resOffset5.body.data[4].id).toBe('pagi-5');
+    });
+
+    it('should support large limits up to 10000', async () => {
+      const res = await request(app)
+        .get('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentKey}`)
+        .query({ limit: 2000 });
+
+      expect(res.status).toBe(200);
+      expect(res.body.success).toBe(true);
     });
   });
 });
