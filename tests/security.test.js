@@ -178,4 +178,148 @@ describe('Security Fixes: Key Generation & Agent Authorization Bypass', () => {
     });
   });
 
+  describe('Agent Isolation and Permission Gating (The Tidewater Block)', () => {
+    let userAToken, userBToken;
+    let agentAOnlyReadToken, agentAWriteToken;
+    const userAUuid = 'a32439c0-6d4b-4f5d-8b8b-bb8c5c76db20';
+    const userBUuid = 'b54848d2-432d-4c3e-8c34-dcd7b9b1d9c3';
+    const bookmarkBId = 'bookmark-b-id-99999';
+
+    beforeAll(async () => {
+      // 1. Clean up potential old values
+      db.prepare("DELETE FROM users WHERE uuid IN (?, ?) OR username IN ('usera', 'userb')").run(userAUuid, userBUuid);
+      db.prepare("DELETE FROM agent_keys WHERE id IN ('agent-read-id', 'agent-write-id') OR user_uuid IN (?, ?)").run(userAUuid, userBUuid);
+      db.prepare("DELETE FROM bookmarks WHERE id = ? OR user_uuid IN (?, ?)").run(bookmarkBId, userAUuid, userBUuid);
+
+      const keyHashA = crypto.randomBytes(32).toString('hex');
+      const keyHashB = crypto.randomBytes(32).toString('hex');
+
+      // 2. Create User A & User B
+      db.prepare("INSERT INTO users (uuid, username, key_hash, created_at) VALUES (?, ?, ?, ?)").run(
+        userAUuid, 'usera', keyHashA, new Date().toISOString()
+      );
+      db.prepare("INSERT INTO users (uuid, username, key_hash, created_at) VALUES (?, ?, ?, ?)").run(
+        userBUuid, 'userb', keyHashB, new Date().toISOString()
+      );
+
+      // Create api tokens for their human sessions
+      const resHumanA = await request(app).post('/api/auth/token').send({ type: 'human', uuid: userAUuid, keyHash: keyHashA });
+      const resHumanB = await request(app).post('/api/auth/token').send({ type: 'human', uuid: userBUuid, keyHash: keyHashB });
+      userAToken = resHumanA.body.data.token;
+      userBToken = resHumanB.body.data.token;
+
+      // 3. Create Agent keys for User A
+      // Agent 1: canRead: true, canWrite: false
+      const agent1ApiKey = 'lb-ag-read-' + Math.random().toString(36).slice(2, 20);
+      db.prepare(`
+        INSERT INTO agent_keys (id, user_uuid, name, api_key, permissions, is_active, expiration_type, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run('agent-read-id', userAUuid, 'Agent Read Only', agent1ApiKey, JSON.stringify({ canRead: true }), 1, 'never', new Date().toISOString());
+
+      const resToken1 = await request(app).post('/api/auth/token').send({ type: 'agent', keyHash: crypto.createHash('sha256').update(agent1ApiKey).digest('hex') });
+      agentAOnlyReadToken = resToken1.body.data.token;
+
+      // Agent 2: canRead: true, canWrite: true, canEdit: true, canDelete: true
+      const agent2ApiKey = 'lb-ag-write-' + Math.random().toString(36).slice(2, 20);
+      db.prepare(`
+        INSERT INTO agent_keys (id, user_uuid, name, api_key, permissions, is_active, expiration_type, created_at)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      `).run('agent-write-id', userAUuid, 'Agent Full CRUD', agent2ApiKey, JSON.stringify({ canRead: true, canWrite: true, canEdit: true, canDelete: true }), 1, 'never', new Date().toISOString());
+
+      const resToken2 = await request(app).post('/api/auth/token').send({ type: 'agent', keyHash: crypto.createHash('sha256').update(agent2ApiKey).digest('hex') });
+      agentAWriteToken = resToken2.body.data.token;
+
+      // 4. Create User B's bookmark
+      db.prepare(`
+        INSERT INTO bookmarks (id, user_uuid, url, title, created_at, updated_at)
+        VALUES (?, ?, ?, ?, ?, ?)
+      `).run(bookmarkBId, userBUuid, 'https://userb-bookmark.com', 'User B Bookmark', new Date().toISOString(), new Date().toISOString());
+    });
+
+    it('denies human setting & key generation routes to agents (requireHuman protection)', async () => {
+      // settings GET
+      const resSettings = await request(app)
+        .get('/api/settings/any-key')
+        .set('Authorization', `Bearer ${agentAWriteToken}`);
+      expect(resSettings.status).toBe(403);
+      expect(resSettings.body.error).toContain('requires Human identity');
+
+      // agent keys GET
+      const resKeys = await request(app)
+        .get('/api/agent-keys')
+        .set('Authorization', `Bearer ${agentAWriteToken}`);
+      expect(resKeys.status).toBe(403);
+      expect(resKeys.body.error).toContain('requires Human identity');
+    });
+
+    it('enforces granular permission gating for bookmarks', async () => {
+      // 1. Agent A (read only) tries to write a bookmark -> should fail with 403
+      const resWrite = await request(app)
+        .post('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentAOnlyReadToken}`)
+        .send({ url: 'https://new-agent-bookmark.com', title: 'Agent Bookmark' });
+      expect(resWrite.status).toBe(403);
+      expect(resWrite.body.error).toContain('lacks the required');
+
+      // 2. Agent A (full CRUD) tries to write a bookmark -> should succeed with 201
+      const resWriteOk = await request(app)
+        .post('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentAWriteToken}`)
+        .send({ url: 'https://new-agent-bookmark.com', title: 'Agent Bookmark' });
+      expect(resWriteOk.status).toBe(201);
+      const newBmId = resWriteOk.body.data.id;
+
+      // 3. Agent A (read only) tries to edit bookmark -> should fail 403
+      const resEdit = await request(app)
+        .put(`/api/bookmarks/${newBmId}`)
+        .set('Authorization', `Bearer ${agentAOnlyReadToken}`)
+        .send({ title: 'Modified by Agent A ReadOnly' });
+      expect(resEdit.status).toBe(403);
+      expect(resEdit.body.error).toContain('lacks the required');
+
+      // 4. Agent A (full CRUD) tries to delete bookmark -> should succeed
+      const resDelete = await request(app)
+        .delete(`/api/bookmarks/${newBmId}`)
+        .set('Authorization', `Bearer ${agentAWriteToken}`);
+      expect(resDelete.status).toBe(200);
+    });
+
+    it('enforces strict Tidewater Block (cross-user data isolation)', async () => {
+      // 1. Agent A (full CRUD) tries to retrieve User B's bookmark -> should return 404
+      const resGetById = await request(app)
+        .get(`/api/bookmarks/${bookmarkBId}`)
+        .set('Authorization', `Bearer ${agentAWriteToken}`);
+      expect(resGetById.status).toBe(404);
+
+      // 2. Agent A (full CRUD) tries to list bookmarks -> should not include User B's bookmark
+      const resList = await request(app)
+        .get('/api/bookmarks')
+        .set('Authorization', `Bearer ${agentAWriteToken}`);
+      expect(resList.status).toBe(200);
+      const urls = resList.body.data.map(b => b.url);
+      expect(urls).not.toContain('https://userb-bookmark.com');
+
+      // 3. Agent A (full CRUD) tries to update User B's bookmark -> should fail with 404
+      const resUpdate = await request(app)
+        .put(`/api/bookmarks/${bookmarkBId}`)
+        .set('Authorization', `Bearer ${agentAWriteToken}`)
+        .send({ title: 'Hacked by Agent A' });
+      expect(resUpdate.status).toBe(404);
+
+      // Verify bookmark B title was NOT changed
+      const bmB = db.prepare('SELECT title FROM bookmarks WHERE id = ?').get(bookmarkBId);
+      expect(bmB.title).toBe('User B Bookmark');
+
+      // 4. Agent A (full CRUD) tries to delete User B's bookmark -> should fail with 404
+      const resDelete = await request(app)
+        .delete(`/api/bookmarks/${bookmarkBId}`)
+        .set('Authorization', `Bearer ${agentAWriteToken}`);
+      expect(resDelete.status).toBe(404);
+
+      // Verify bookmark B still exists
+      const bmBExists = db.prepare('SELECT COUNT(*) as count FROM bookmarks WHERE id = ?').get(bookmarkBId);
+      expect(bmBExists.count).toBe(1);
+    });
+  });
+
 });

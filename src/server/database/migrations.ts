@@ -33,9 +33,10 @@ export function runMigrations(db: Database) {
   // Indexes
   db.exec(`
     DROP INDEX IF EXISTS idx_bookmarks_jina_url;
+    DROP INDEX IF EXISTS idx_jina_conversions_user;
     CREATE UNIQUE INDEX IF NOT EXISTS idx_users_key_hash ON users(key_hash);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_bookmarks_user_url ON bookmarks(user_uuid, url);
-    CREATE UNIQUE INDEX IF NOT EXISTS idx_jina_conversions_user ON jina_conversions(user_uuid);
+    CREATE INDEX IF NOT EXISTS idx_jina_conversions_user ON jina_conversions(user_uuid);
     CREATE UNIQUE INDEX IF NOT EXISTS idx_settings_user_key ON settings(user_uuid, key);
     CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
     CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit_logs(event_type);
