@@ -10,7 +10,7 @@ Project: ClawChives©™
 > **Atomic Directive:** Compress knowledge. Think geometrically. Features are domains. Data is sovereign. Security is the shell.
 
 [![Sovereign](https://img.shields.io/badge/Status-Sovereign-red?style=for-the-badge)](#)
-[![Phase](https://img.shields.io/badge/Phase-7_Complete-blue?style=for-the-badge)](#)
+[![Phase](https://img.shields.io/badge/Phase-8_Complete-blue?style=for-the-badge)](#)
 [![SQLite](https://img.shields.io/badge/Storage-SQLite-amber?style=for-the-badge)](#)
 [![Tests](https://img.shields.io/badge/Tests-131_Passing-green?style=for-the-badge)](#)
 
@@ -30,8 +30,8 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 **Tech Stack:**
 - **Frontend:** React 18 + TypeScript + Vite + Tailwind CSS (shadcn/ui components)
 - **Backend:** Node 22 + Express 5 + `better-sqlite3`
-- **Storage:** SQLite3 (persistent volume bind mounts)
-- **Auth:** Asymmetric trust via prefix-based tokens (`hu-`, `lb-`, `api-`)
+- **Storage:** Dual SQLite3 (`db.sqlite` for pinchmarks, `audit.sqlite` for segregated logs)
+- **Auth:** Asymmetric trust via prefix-based tokens (`hu-`, `lb-`, `api-`) + `ADMIN_TOKEN` control plane.
 
 </details>
 
@@ -102,6 +102,8 @@ ClawChives is a **Local-First Sovereign Pinchmarking** engine built on three con
 - ✅ `requirePermission(action)` geometrically locks CRUD endpoints
 - ✅ Parameterized queries only — no string interpolation ever
 - ✅ **Relational Jina Storage** — Jina URLs decoupled into `jina_conversions` table
+- ✅ **Admin Stability Lock** — SuperAdmin dashboard gated by `ADMIN_TOKEN`, using volatile in-memory sessions and constant-time token validation.
+- ✅ **Segregated Auditing** — Security logs and system events isolated in `audit.sqlite` for tamper-resistance and performance.
 
 </details>
 
@@ -116,6 +118,7 @@ Request
   └─ requireAuth        # Validates api- token, injects req.agentPermissions
   └─ requirePermission  # Locks CRUD by canRead/Write/Edit/Move/Delete
   └─ requireHuman       # Blocks agent access to settings routes
+  └─ requireAdmin       # [Admin Plane Only] Validates volatile admin session
   └─ Route Handler
 ```
 
@@ -125,29 +128,46 @@ Request
 
 ## 📊 Phase Tracking
 
-</details>
- 
  <details>
-+<summary>✅ Phase 7 — Branded Export & UI Parity (2026-05-04) COMPLETE</summary>
-+
-+> [!NOTE]
-+> Phase 7 finalized the high-fidelity export ecosystem and unified the dashboard UI with the PinchPad design system.
-+
-+**Sub-Phase 7a — Sovereign Export Pipeline:**
-+- [x] **Format Parity**: Implemented JSON, Markdown, and PDF/HTML exports.
-+- [x] **Branded Footers**: Added "ClawStack Studios©™" footers to PDF/HTML outputs.
-+- [x] **HTML Modernization**: Theme-aware HTML exports with Light/Dark toggles.
-+- [x] **Metadata Enrichment**: Statistics (`Total Pinchmarks`, `Tags`, etc.) included in all formats.
-+
-+**Sub-Phase 7b — UI/UX Modernization:**
-+- [x] **Global Folder State**: Elevated `FolderEditModal` to Dashboard level for full-screen management.
-+- [x] **Sidebar Persistence**: `cc_sidebar_open` state synced to `localStorage`.
-+- [x] **Settings Restoration**: Persistent headers and descriptions restored to Settings habitat.
-+- [x] **Branding**: Changed browser favicon to the sovereign 🦞 emoji.
-+
-+</details>
-+
-+<details>
+ <summary>✅ Phase 8 — SuperAdmin Control Plane (2026-05-16) COMPLETE</summary>
+
+ > [!IMPORTANT]
+ > Phase 8 introduced the isolated SuperAdmin control plane, implementing high-security metadata management and segregated auditing.
+
+ **Sub-Phase 8a — Segregated Infrastructure:**
+ - [x] **Dual SQLite**: Created `audit.sqlite` with dedicated schema and retention cleanup logic.
+ - [x] **Audit Logger**: Implemented centralized auditing for security events, system lifecycle, and uptime.
+ 
+ **Sub-Phase 8b — Admin Plane & Security:**
+ - [x] **requireAdmin Middleware**: Volatile, in-memory session management with 20min sliding TTL.
+ - [x] **Gated API**: `/api/admin/*` endpoints for user management, system health, and audit querying.
+ - [x] **Security Membrane**: `adminAuthLimiter` (5 attempts/15m) and constant-time token comparison.
+
+ **Sub-Phase 8c — Frontend Integration:**
+ - [x] **Segregated Routing**: Integrated `react-router-dom` for the `/admin` URL plane.
+ - [x] **Domain Localization**: Adapted PinchPad logic (Pearls → Pinchmarks) and branding for ClawChives.
+
+ </details>
+
+ <details>
+ <summary>✅ Phase 7 — Branded Export & UI Parity (2026-05-04) COMPLETE</summary>
+
+ > [!NOTE]
+ > Phase 7 finalized the high-fidelity export ecosystem and unified the dashboard UI with the PinchPad design system.
+
+ **Sub-Phase 7a — Sovereign Export Pipeline:**
+ - [x] **Format Parity**: Implemented JSON, Markdown, and PDF/HTML exports.
+ - [x] **Branded Footers**: Added "ClawStack Studios©™" footers to PDF/HTML outputs.
+ - [x] **HTML Modernization**: Theme-aware HTML exports with Light/Dark toggles.
+ - [x] **Metadata Enrichment**: Statistics (`Total Pinchmarks`, `Tags`, etc.) included in all formats.
+
+ **Sub-Phase 7b — UI/UX Modernization:**
+ - [x] **Global Folder State**: Elevated `FolderEditModal` to Dashboard level for full-screen management.
+ - [x] **Sidebar Persistence**: `cc_sidebar_open` state synced to `localStorage`.
+ - [x] **Settings Restoration**: Persistent headers and descriptions restored to Settings habitat.
+ - [x] **Branding**: Changed browser favicon to the sovereign 🦞 emoji.
+
+ </details>
  <summary>✅ Phase 6 — Full Frontend Refactor (2026-03-22) COMPLETE</summary>
 
 > [!NOTE]

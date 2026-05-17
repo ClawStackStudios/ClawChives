@@ -35,6 +35,29 @@ export const apiLimiter = rateLimit({
   },
 });
 
+export const adminAuthLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 5, // Limit each IP to 5 requests per windowMs
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Too many authentication attempts from this IP, please try again after 15 minutes',
+  },
+  skipSuccessfulRequests: true, // Only count failed attempts against the limit
+});
+
+export const adminApiLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  max: 60, // Limit each IP to 60 admin API requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: {
+    success: false,
+    error: 'Admin rate limit exceeded, please slow down your requests',
+  },
+});
+
 export const createAgentKeyRateLimiter = () => {
   const limiterCache = new Map<string, ReturnType<typeof rateLimit>>();
   const MAX_CACHE_SIZE = 100; // ⚡ LRU: keep only last 100 agent keys to prevent unbounded memory growth

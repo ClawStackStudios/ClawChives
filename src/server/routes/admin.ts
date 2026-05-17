@@ -1,0 +1,300 @@
+/**
+ * admin.ts — ClawChives©™
+ *
+ * API Routes for the SuperAdmin Dashboard.
+ * Adapted from PinchPad SuperAdmin feature.
+ *
+ * Maintained by CrustAgent©™
+ */
+
+import { Router } from 'express';
+import { db, auditDb } from '../database/index.js';
+import { requireAdmin, isAdminSessionValid, createAdminSession, destroyAdminSession } from '../middleware/requireAdmin.js';
+import { constantTimeCompare } from '../utils/crypto.js';
+import crypto from 'crypto';
+import path from 'path';
+import { statSync, existsSync } from 'fs';
+
+const router = Router();
+
+/**
+ * POST /api/admin/auth
+ */
+router.post('/auth', (req, res) => {
+  const { token } = req.body;
+  if (!token || typeof token !== 'string') {
+    return res.status(400).json({ success: false, error: 'Token required' });
+  }
+
+  const expectedToken = process.env.ADMIN_TOKEN;
+  if (!expectedToken) {
+    return res.status(503).json({ success: false, error: 'Admin panel is not enabled' });
+  }
+
+  const expectedHash = crypto.createHash('sha256').update(expectedToken).digest('hex');
+  if (constantTimeCompare(token, expectedHash)) {
+    const sessionToken = createAdminSession();
+    res.cookie('cc_admin_session', sessionToken, {
+      httpOnly: true,
+      secure: process.env.ENFORCE_HTTPS === 'true',
+      sameSite: 'strict',
+      maxAge: 20 * 60 * 1000 // 20 minutes
+    });
+    return res.json({ success: true });
+  }
+
+  res.status(401).json({ success: false, error: 'Invalid token' });
+});
+
+/**
+ * GET /api/admin/verify
+ */
+router.get('/verify', (req, res) => {
+  const sessionToken = req.cookies?.cc_admin_session || req.headers['x-admin-session'];
+  const isValid = isAdminSessionValid(sessionToken as string | undefined);
+  res.json({ success: isValid });
+});
+
+/**
+ * POST /api/admin/logout
+ */
+router.post('/logout', (req, res) => {
+  const sessionToken = req.cookies?.cc_admin_session || req.headers['x-admin-session'];
+  if (sessionToken) {
+    destroyAdminSession(sessionToken as string);
+  }
+  res.clearCookie('cc_admin_session');
+  res.json({ success: true });
+});
+
+/**
+ * GET /api/admin/users
+ * List users with metadata only.
+ */
+router.get('/users', requireAdmin, (req, res) => {
+  const limit = Number(req.query.limit) || 50;
+  const offset = Number(req.query.offset) || 0;
+
+  const users = db.prepare(`
+    SELECT 
+      u.uuid, 
+      u.username, 
+      u.created_at,
+      (SELECT COUNT(*) FROM bookmarks WHERE user_uuid = u.uuid) as pinchmark_count,
+      (SELECT COUNT(*) FROM folders WHERE user_uuid = u.uuid) as folder_count,
+      (SELECT COUNT(*) FROM agent_keys WHERE user_uuid = u.uuid AND is_active = 1) as active_keys,
+      (SELECT MAX(created_at) FROM api_tokens WHERE owner_key = u.uuid AND owner_type = 'human') as last_login
+    FROM users u
+    ORDER BY u.created_at DESC
+    LIMIT ? OFFSET ?
+  `).all(limit, offset);
+
+  const total = db.prepare('SELECT COUNT(*) as count FROM users').get() as any;
+
+  res.json({ 
+    success: true, 
+    data: users,
+    pagination: {
+      total: total.count,
+      limit,
+      offset
+    }
+  });
+});
+
+/**
+ * DELETE /api/admin/users/:uuid
+ * Cascade delete user and all their data.
+ */
+router.delete('/users/:uuid', requireAdmin, (req, res) => {
+  const { uuid } = req.params;
+
+  // Transaction for atomic deletion
+  const deleteTx = db.transaction((id: string) => {
+    // 1. Manual cleanup — user_uuid added via ALTER TABLE, no FK cascade exists
+    db.prepare('DELETE FROM jina_conversions WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM import_sessions WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM settings WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM agent_keys WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM bookmarks WHERE user_uuid = ?').run(id);
+    db.prepare('DELETE FROM folders WHERE user_uuid = ?').run(id);
+
+    // 2. Delete user row (api_tokens cascade via FK on owner_key still applies)
+    const result = db.prepare('DELETE FROM users WHERE uuid = ?').run(id);
+    return result.changes;
+  });
+
+  try {
+    const changes = deleteTx(uuid as string);
+    if (changes === 0) {
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
+    res.json({ success: true, message: `User ${uuid} and all associated data scuttled.` });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/system
+ * System health and stats.
+ */
+router.get('/system', requireAdmin, (_req, res) => {
+  const dataDir = process.env.DATA_DIR || path.join(process.cwd(), 'data');
+  const mainDbPath = path.join(dataDir, 'db.sqlite');
+  const auditDbPath = path.join(dataDir, 'audit.sqlite');
+
+  let totalDbSize = 0;
+  if (existsSync(mainDbPath))  totalDbSize += statSync(mainDbPath).size;
+  if (existsSync(auditDbPath)) totalDbSize += statSync(auditDbPath).size;
+
+  const stats = {
+    totalUsers: db.prepare('SELECT COUNT(*) as count FROM users').get() as any,
+    totalPinchmarks: db.prepare('SELECT COUNT(*) as count FROM bookmarks').get() as any,
+    totalFolders: db.prepare('SELECT COUNT(*) as count FROM folders').get() as any,
+    dbSize: totalDbSize,
+    uptime: process.uptime(),
+    lastAudit: auditDb.prepare('SELECT timestamp FROM audit_logs ORDER BY timestamp DESC LIMIT 1').get() as any
+  };
+
+  res.json({
+    success: true,
+    data: {
+      totalUsers: stats.totalUsers.count,
+      totalPinchmarks: stats.totalPinchmarks.count,
+      totalFolders: stats.totalFolders.count,
+      dbSize: stats.dbSize,
+      uptime: stats.uptime,
+      lastAudit: stats.lastAudit?.timestamp || null
+    }
+  });
+});
+
+/**
+ * GET /api/admin/audit
+ * Query audit logs from the segregated audit database.
+ */
+router.get('/audit', requireAdmin, (req, res) => {
+  const { event_type, actor, outcome, limit = 50, offset = 0 } = req.query;
+  
+  let sql = 'SELECT * FROM audit_logs WHERE 1=1';
+  const params: any[] = [];
+
+  if (event_type) { sql += ' AND event_type = ?'; params.push(event_type); }
+  if (actor)      { sql += ' AND actor = ?';      params.push(actor); }
+  if (outcome)    { sql += ' AND outcome = ?';    params.push(outcome); }
+
+  sql += ' ORDER BY timestamp DESC LIMIT ? OFFSET ?';
+  params.push(Number(limit), Number(offset));
+
+  const logs = auditDb.prepare(sql).all(...params);
+  const total = auditDb.prepare('SELECT COUNT(*) as count FROM audit_logs').get() as any;
+
+  res.json({ 
+    success: true, 
+    data: logs,
+    pagination: {
+      total: total.count,
+      limit: Number(limit),
+      offset: Number(offset)
+    }
+  });
+});
+
+/**
+ * GET /api/admin/settings
+ * Fetch global system settings.
+ */
+router.get('/settings', requireAdmin, (_req, res) => {
+  try {
+    const rows = db.prepare('SELECT key, value FROM system_settings').all() as any[];
+    const settings = rows.reduce((acc, row) => ({ ...acc, [row.key]: row.value }), {});
+    res.json({ success: true, data: settings });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * PATCH /api/admin/settings
+ * Update global system settings.
+ */
+router.patch('/settings', requireAdmin, (req, res) => {
+  const updates = req.body;
+  if (!updates || typeof updates !== 'object') {
+    return res.status(400).json({ success: false, error: 'Invalid settings payload' });
+  }
+
+  const now = new Date().toISOString();
+  try {
+    const updateStmt = db.prepare(`
+      INSERT INTO system_settings (key, value, updated_at) 
+      VALUES (?, ?, ?) 
+      ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at = excluded.updated_at
+    `);
+    
+    db.transaction(() => {
+      for (const [key, value] of Object.entries(updates)) {
+        updateStmt.run(key, String(value), now);
+      }
+    })();
+    
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+/**
+ * GET /api/admin/uptime
+ * Compute historical uptime sessions from audit logs.
+ */
+router.get('/uptime', requireAdmin, (_req, res) => {
+  try {
+    // Fetch all SYSTEM_START and SYSTEM_SHUTDOWN events ordered chronologically
+    const events = auditDb.prepare(`
+      SELECT timestamp, event_type, details 
+      FROM audit_logs 
+      WHERE event_type IN ('SYSTEM_START', 'SYSTEM_SHUTDOWN')
+      ORDER BY timestamp ASC
+    `).all() as any[];
+
+    const sessions: Array<{ id: string, start: string, end: string | null, duration: number | null }> = [];
+    let currentSession: any = null;
+
+    for (const event of events) {
+      const details = JSON.parse(event.details || '{}');
+      const sessionId = details.session_id;
+
+      if (event.event_type === 'SYSTEM_START') {
+        // If we already have a current session that didn't shut down, close it implicitly
+        if (currentSession) {
+          sessions.unshift(currentSession);
+        }
+        currentSession = { id: sessionId, start: event.timestamp, end: null, duration: null };
+      } else if (event.event_type === 'SYSTEM_SHUTDOWN') {
+        if (currentSession && currentSession.id === sessionId) {
+          currentSession.end = event.timestamp;
+          currentSession.duration = Math.floor((new Date(currentSession.end).getTime() - new Date(currentSession.start).getTime()) / 1000);
+          sessions.unshift(currentSession);
+          currentSession = null;
+        } else {
+          // Orphaned shutdown, ignore or log
+        }
+      }
+    }
+
+    // Push the currently active session (if any)
+    if (currentSession) {
+      currentSession.duration = Math.floor((Date.now() - new Date(currentSession.start).getTime()) / 1000);
+      sessions.unshift(currentSession);
+    }
+
+    res.json({ success: true, data: sessions });
+  } catch (err: any) {
+    console.error('[Uptime] Failed to fetch uptime history:', err.message);
+    res.status(500).json({ success: false, error: 'Failed to fetch uptime history' });
+  }
+});
+
+export default router;

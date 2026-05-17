@@ -67,6 +67,31 @@ export function initializeSchema(db: Database) {
       value TEXT NOT NULL
     );
 
+    CREATE TABLE IF NOT EXISTS system_settings (
+      key        TEXT PRIMARY KEY,
+      value      TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+
+    INSERT OR IGNORE INTO system_settings (key, value, updated_at) 
+      VALUES ('audit_retention_days', '90', datetime('now'));
+    INSERT OR IGNORE INTO system_settings (key, value, updated_at) 
+      VALUES ('uptime_retention_days', '30', datetime('now'));
+
+    CREATE TABLE IF NOT EXISTS import_sessions (
+      id          TEXT PRIMARY KEY,
+      user_uuid   TEXT NOT NULL,
+      key_id      TEXT NOT NULL,
+      started_at  TEXT NOT NULL,
+      closed_at   TEXT,
+      error_count INTEGER DEFAULT 0,
+      errors_json TEXT DEFAULT '[]'
+    );
+  `);
+}
+
+export function initializeAuditSchema(db: Database) {
+  db.exec(`
     CREATE TABLE IF NOT EXISTS audit_logs (
       id          INTEGER PRIMARY KEY AUTOINCREMENT,
       timestamp   TEXT NOT NULL,
@@ -81,14 +106,9 @@ export function initializeSchema(db: Database) {
       details     TEXT
     );
 
-    CREATE TABLE IF NOT EXISTS import_sessions (
-      id          TEXT PRIMARY KEY,
-      user_uuid   TEXT NOT NULL,
-      key_id      TEXT NOT NULL,
-      started_at  TEXT NOT NULL,
-      closed_at   TEXT,
-      error_count INTEGER DEFAULT 0,
-      errors_json TEXT DEFAULT '[]'
-    );
+    CREATE INDEX IF NOT EXISTS idx_audit_timestamp ON audit_logs(timestamp);
+    CREATE INDEX IF NOT EXISTS idx_audit_event_type ON audit_logs(event_type);
+    CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_logs(actor);
+    CREATE INDEX IF NOT EXISTS idx_audit_outcome ON audit_logs(outcome);
   `);
 }

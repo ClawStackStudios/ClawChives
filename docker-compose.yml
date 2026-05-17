@@ -10,11 +10,11 @@ services:
       - ./data:/app/data
     environment:
       - NODE_ENV=production
-      - PORT=4545
       - DATA_DIR=/app/data
       - DB_ENCRYPTION_KEY=${DB_ENCRYPTION_KEY:-}
       - PUID=1000
       - PGID=1000
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-} # Set to enable SuperAdmin panel
       # For detailed configuration, see README.md → Running with Docker section
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://localhost:4545/api/health"]

@@ -1,5 +1,7 @@
 import Database from 'better-sqlite3-multiple-ciphers';
-import { v4 as uuidv4 } from 'uuid';
+import crypto from 'crypto';
+
+const uuidv4 = () => crypto.randomUUID();
 
 /**
  * Factory functions for creating test data.
@@ -86,14 +88,14 @@ export function createTestBookmark(
   overrides?: Partial<TestBookmark>
 ): TestBookmark {
   const id = overrides?.id ?? uuidv4();
-  const url = overrides?.url ?? `https://example.com/${Date.now()}`;
+  const url = overrides?.url ?? `https://example.com/${uuidv4()}`;
   const title = overrides?.title ?? 'Test Bookmark';
   const folderId = overrides?.folderId ?? null;
   const createdAt = overrides?.createdAt ?? new Date().toISOString();
 
   db.prepare(
-    'INSERT INTO bookmarks (id, user_uuid, url, title, folder_id, created_at) VALUES (?, ?, ?, ?, ?, ?)'
-  ).run(id, userUuid, url, title, folderId, createdAt);
+    'INSERT INTO bookmarks (id, user_uuid, url, title, folder_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)'
+  ).run(id, userUuid, url, title, folderId, createdAt, createdAt);
 
   return { id, userUuid, url, title, folderId, createdAt };
 }
