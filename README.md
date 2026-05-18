@@ -257,14 +257,19 @@ ClawChives uses a **prefix-based identity token system** — no passwords, no us
 | `POST` | `/api/agent-keys` | human-only | Generate a new Lobster Key |
 | `PATCH` | `/api/agent-keys/:id/revoke`| human-only | Revoke an agent key |
 | `DELETE` | `/api/agent-keys/:id` | human-only | Permanently delete a key record |
-| `GET` | `/api/settings` | human-only | View system settings |
-| `PATCH` | `/api/settings` | human-only | Update system settings |
-| `POST` | `/api/admin/auth` | - | Admin login (Cookie-based session) |
+| `GET` | `/api/settings/:key` | human-only | View settings for a specific key |
+| `PUT` | `/api/settings/:key` | human-only | Update settings for a specific key |
+| `GET` | `/admin` | - | Access gateway to the SuperAdmin Panel UI |
+| `POST` | `/api/admin/auth` | - | Admin login (Cookie-based session generation) |
+| `GET` | `/api/admin/verify` | - | Verify active volatile admin session cookie |
+| `POST` | `/api/admin/logout` | - | Revoke volatile admin session cookie |
 | `GET` | `/api/admin/users` | admin-only | List user metadata & counts |
-| `DELETE` | `/api/admin/users/:id` | admin-only | Permanent cascade purge of user |
+| `DELETE` | `/api/admin/users/:uuid` | admin-only | Permanent cascade purge of user |
 | `GET` | `/api/admin/audit` | admin-only | Query segregated audit logs |
 | `GET` | `/api/admin/system` | admin-only | Health, DB stats, and path check |
 | `GET` | `/api/admin/uptime` | admin-only | Historical system uptime report |
+| `GET` | `/api/admin/settings` | admin-only | Get global system configuration values |
+| `PATCH` | `/api/admin/settings` | admin-only | Patch global system configuration values |
 | `GET` | `/api/health` | No | System health and stats |
 | `GET` | `/skill.md` | No | AI Agent skill documentation (Markdown) |
 
@@ -347,7 +352,7 @@ ClawChives/
 
 | Document | Purpose |
 |---|---|
-| [**BLUEPRINT.md**](./BLUEPRINT.md) | Architecture, patterns, and deep-dive technical specs |
+| [**ARCHITECTURE.md**](./ARCHITECTURE.md) | Architecture, patterns, and deep-dive technical specs |
 | [**CONTRIBUTING.md**](./CONTRIBUTING.md) | Development standards and contribution workflow |
 | [**SECURITY.md**](./SECURITY.md) | Security policy and LobsterKey©™ hardening guides |
 | [**ROADMAP.md**](./ROADMAP.md) | Current and future development direction |

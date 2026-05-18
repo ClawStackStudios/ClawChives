@@ -44,7 +44,7 @@ npm install
 cp .env.example .env
 
 # 4. Review the system architecture
-# See BLUEPRINT.md for the full technical blueprint
+# See ARCHITECTURE.md for the full technical blueprint
 
 # 5. Start the frontend and backend servers together
 npm run scuttle:dev-start
@@ -110,19 +110,19 @@ git checkout -b feat/my-new-feature
 
 1. **Separation of Concerns** — Components display, services persist, adapters abstract storage
    - Feature-sliced: `src/features/{domain}/` — don't cross domain streams
-   - See [BLUEPRINT.md § Architectural Tenets](./BLUEPRINT.md) for details
+   - See [ARCHITECTURE.md § Architectural Tenets](./ARCHITECTURE.md) for details
 
 2. **Use REST Architecture** — All data operations via Express server (no direct DB access)
-   - See [BLUEPRINT.md § Data Flow](./BLUEPRINT.md) for request cycle
+   - See [ARCHITECTURE.md § Data Flow](./ARCHITECTURE.md) for request cycle
 
 3. **250-Line Limit** — Files >250 lines signal refactoring need. Extract sub-components or utilities.
-   - See [BLUEPRINT.md § Component Patterns](./BLUEPRINT.md)
+   - See [ARCHITECTURE.md § Component Patterns](./ARCHITECTURE.md)
 
 4. **Auth Stays Client-Side** — Never send `hu-*` keys to server (only `api-` and `lb-` tokens)
-   - See [BLUEPRINT.md § Key System Architecture](./BLUEPRINT.md)
+   - See [ARCHITECTURE.md § Key System Architecture](./ARCHITECTURE.md)
 
 5. **Feature-First Directories** — New components in named folders under `src/features/{domain}/`
-   - See [BLUEPRINT.md § Directory Structure](./BLUEPRINT.md)
+   - See [ARCHITECTURE.md § Directory Structure](./ARCHITECTURE.md)
 
 6. **Modular Exports** — New export formats go in `src/shared/lib/export/formatters/` as an `ExportFormatter`
    - See [src/CRUSTAGENT.md § Modular Export System](./src/CRUSTAGENT.md)
@@ -133,7 +133,7 @@ git checkout -b feat/my-new-feature
 
 1. Run `npm run lint && npm run build` to validate TypeScript & ESLint (0 errors required)
 2. Ensure all new API endpoints have Zod validation schemas in `src/server/validation/`
-3. Update [BLUEPRINT.md](./BLUEPRINT.md) if you added or moved files (especially `src/` directory structure)
+3. Update [ARCHITECTURE.md](./ARCHITECTURE.md) if you added or moved files (especially `src/` directory structure)
 4. Update [ROADMAP.md](./ROADMAP.md) if your change completes or introduces a roadmap item
 5. Update [CRUSTAGENT.md](./CRUSTAGENT.md) and [src/CRUSTAGENT.md](./src/CRUSTAGENT.md) under **Phase Tracking** if you've completed a phase item
 6. Write a clear PR description: **what** changed, **why**, and **how to test**
@@ -156,7 +156,7 @@ For **security vulnerabilities**, see [SECURITY.md](./SECURITY.md) — do **not*
 ## 📚 Related Documentation
 
 - **[README.md](./README.md)** — Project overview and setup instructions
-- **[BLUEPRINT.md](./BLUEPRINT.md)** — Architecture and implementation patterns
+- **[ARCHITECTURE.md](./ARCHITECTURE.md)** — Architecture and implementation patterns
 - **[SECURITY.md](./SECURITY.md)** — Security policy and hardening guide
 - **[CRUSTSECURITY.md](./CRUSTSECURITY.md)** — ClawStack©™ standards alignment
 - **[ROADMAP.md](./ROADMAP.md)** — Current and future development direction

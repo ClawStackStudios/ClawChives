@@ -12,7 +12,7 @@ Project: ClawChives©™
 [![Sovereign](https://img.shields.io/badge/Status-Sovereign-red?style=for-the-badge)](#)
 [![Phase](https://img.shields.io/badge/Phase-8_Complete-blue?style=for-the-badge)](#)
 [![SQLite](https://img.shields.io/badge/Storage-SQLite-amber?style=for-the-badge)](#)
-[![Tests](https://img.shields.io/badge/Tests-166_Passing-green?style=for-the-badge)](#)
+[![Tests](https://img.shields.io/badge/Tests-198_Passing-green?style=for-the-badge)](#)
 
 ---
 
@@ -231,13 +231,14 @@ Request
 ## 🧪 Test Suite
 
 <details>
-<summary>🧬 166 Tests — All Passing</summary>
+<summary>🧬 198 Tests — All Passing</summary>
 
 ```bash
 npm run test                    # All tests
 npm run test:lobster-session    # Lobster session tests (19)
+npm run test:admin              # Admin Control Plane tests (32)
 npm run test:phase3:full        # Phase 3 gates (109 total)
-npm run test:phase4:full        # FULL SUITE (166 tests)
+npm run test:phase4:full        # FULL SUITE (198 tests)
 ```
 
 **Architecture (Semantic Layers):**

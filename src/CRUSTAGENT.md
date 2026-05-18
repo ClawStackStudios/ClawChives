@@ -14,7 +14,7 @@ For broader architectural context, consult:
 
 ---
 
-## 📂 Current File Map (Post Phase 6)
+## 📂 Current File Map (Post Phase 8)
 
 <details>
 <summary>🗂️ Full src/ Directory Structure</summary>
@@ -387,10 +387,11 @@ Red   (#ef4444) → Branding, delete, security barriers
 <summary>🧬 Test Files & Commands</summary>
 
 ```bash
-npm run test                    # All 166 tests
+npm run test                    # All tests
 npm run test:lobster-session    # Lobster session (19 tests)
+npm run test:admin              # Admin Control Plane (32 tests)
 npm run test:phase3:full        # Phase 3 suite (109 tests)
-npm run test:phase4:full        # Full suite (166 tests)
+npm run test:phase4:full        # Full suite (198 tests)
 ```
 
 **Test helpers:**
