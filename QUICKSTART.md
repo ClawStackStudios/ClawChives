@@ -1,130 +1,122 @@
-# React Query Migration — Quick Start
+# 🦞 ClawChives Quickstart Handbook
+*Maintained by CrustAgent©™ — Reclaim your Link Sovereignty.*
 
-## TL;DR: What to Do Right Now
-
-### 1. Install Dependencies (Required!)
-```bash
-npm install @tanstack/react-query react-intersection-observer @tanstack/react-virtual
-npm audit
-```
-
-### 2. Build & Test
-```bash
-npm run build    # Should pass with no errors
-npm run dev      # Should start normally
-```
-
-### 3. Test in Browser
-- Navigate to Dashboard
-- Scroll to bottom → "Loading more..." should appear
-- Scroll more → next 50 bookmarks load
-- Star a bookmark → appears instantly (no flicker)
-- Search → debounced (300ms delay)
-
-### 4. Done!
-That's it. All code changes are complete.
+Welcome to **ClawChives**, the sovereign, self-hosted bookmark and AI agent knowledge repository. This handbook guides you through a zero-fuss local development setup, containerized Docker deployment, key registration, and initial admin configuration.
 
 ---
 
-## What Changed?
+## 🚀 Quick Launch
 
-### Old Way
-```tsx
-// ❌ Before: Full refetch on every action
-const [bookmarks, setBookmarks] = useState([]);
-const handleStar = async (b) => {
-  await db.updateBookmark(b);
-  await loadData();  // 500ms wait, full re-render
-};
-```
+You can run ClawChives either via a unified Docker Container or directly using Node.js locally.
 
-### New Way
-```tsx
-// ✅ After: Optimistic cache update
-const { updateBookmark, flatBookmarks } = useInfiniteBookmarks();
-const handleStar = (b) => {
-  updateBookmark(b);  // 0ms wait, cache updated instantly
-};
-```
+### Option A: The Unified Docker Stack (Recommended)
 
----
+ClawChives compiles into a single, high-performance container running the optimized React frontend and the SQLite-backed Express API server together.
 
-## Files Changed (6 total)
-
-| File | Status | Change |
-|------|--------|--------|
-| `src/services/queryClient.ts` | NEW | React Query config |
-| `src/hooks/useInfiniteBookmarks.ts` | NEW | Infinite query hook |
-| `src/main.tsx` | UPDATED | Added QueryClientProvider |
-| `src/components/dashboard/Dashboard.tsx` | UPDATED | Replaced useState with hook |
-| `src/components/dashboard/BookmarkGrid.tsx` | UPDATED | Added infinite scroll |
-| `src/components/dashboard/DashboardView.tsx` | UPDATED | Added useMemo |
-| `src/components/dashboard/Sidebar.tsx` | UPDATED | Added useCallback |
-| `src/lib/utils.ts` | UPDATED | Added useDebounce |
+1. **Copy the Environment Configuration:**
+   ```bash
+   cp .env.example .env
+   ```
+2. **Launch the Container Stack:**
+   ```bash
+   docker compose up -d --build
+   ```
+3. **Verify running state:**
+   * **Web GUI:** [http://localhost:4545](http://localhost:4545)
+   * **API Health Check:** `curl http://localhost:4545/api/health`
 
 ---
 
-## Performance Gains
+### Option B: Local Node.js Development
 
-| Metric | Before | After | Improvement |
-|--------|--------|-------|-------------|
-| Mutation latency | 500ms | 0ms | ∞ (instant) |
-| Initial load | 50KB | 5KB | 10x |
-| Render time | 60ms | 5ms | 12x |
-| DOM nodes | 690 | 50 | 14x |
+If you are developing or modifying features, you can run the frontend and API server concurrently.
 
----
-
-## Verification Checklist
-
-Quick check before deploying:
-
-- [ ] `npm run build` passes
-- [ ] `npm run dev` starts
-- [ ] Initial load shows 50 bookmarks
-- [ ] Scroll to bottom loads more
-- [ ] Star/delete/archive instant
-- [ ] Search works (300ms delay)
-- [ ] No console errors
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+2. **Copy the Environment Configuration:**
+   ```bash
+   cp .env.example .env
+   ```
+3. **Boot the Dev Servers:**
+   ```bash
+   npm run scuttle:dev-start
+   ```
+   * **Frontend Dev Server (Vite + HMR):** [http://localhost:4545](http://localhost:4545)
+   * **Backend Express Server:** [http://localhost:4646](http://localhost:4646)
 
 ---
 
-## Documentation
+## 🔑 Step 1: Initialize Your Human Key (`hu-`)
 
-- **IMPLEMENTATION_COMPLETE.md** — Full summary of all changes
-- **REACT_QUERY_INTEGRATION.md** — Comprehensive technical guide
-- **MIGRATION_NOTES.md** — Phase-by-phase breakdown
-- **QUICKSTART.md** — This file (you are here)
+ClawChives is entirely passwordless. Your identity and encryption boundaries are anchored to your high-entropy **Human Key** (`hu-`).
+
+1. Open your browser and navigate to [http://localhost:4545](http://localhost:4545).
+2. The **Setup Wizard** will launch automatically if no human users exist.
+3. Click **Generate Identity Key**. A secure `hu-` token (64-character hexadecimal key) will be generated.
+4. **Download or Copy the Key File.** Save it in a safe vault (e.g. 1Password or physical storage). 
+5. Paste your `hu-` key into the One-Field login to access your sovereign workspace.
 
 ---
 
-## Troubleshooting
+## 🤖 Step 2: Establish Agent Keys (`lb-`) for AI
 
-### "npm install fails"
-→ Make sure you're in the project directory:
-```bash
-cd /home/dietpi/Documents/workspace-lucas/projects/Agents/ClawChives
-npm install @tanstack/react-query ...
-```
+To link your external AI agents (like your local agent or Gemini) to index and query your bookmarks, generate a dedicated **Lobster Key** (`lb-`).
 
-### "Build fails with TS errors"
-→ Check if all imports are correct. Run:
+1. Log in to the Web GUI with your `hu-` key.
+2. Go to **Settings** → **Agent Keys**.
+3. Click **Create Agent Key**.
+4. Configure the agent settings:
+   * **Name:** (e.g., `gemini-agent`)
+   * **Permissions:** Select specific permissions (`canRead`, `canWrite`, `canEdit`, `canDelete`).
+   * **Rate Limit:** Set request frequency limits (e.g. `60` requests per minute) to safeguard your database.
+5. Save the generated `lb-` key. Provide this token to your AI script or agent configuration.
+
+---
+
+## 🛡️ Step 3: Enable the SuperAdmin Panel (`/admin`)
+
+The SuperAdmin panel allows infrastructure administrators to monitor server health, check system uptime logs, audit user metadata, and adjust database retention properties.
+
+1. **Open your `.env` configuration file.**
+2. Set the `ADMIN_TOKEN` variable to a high-entropy string:
+   ```env
+   ADMIN_TOKEN=your-random-64-character-superadmin-token-here
+   ```
+3. **Restart the application** (Vite Dev Server or Docker Stack).
+4. Navigate to [http://localhost:4545/admin](http://localhost:4545/admin).
+5. Input your configured `ADMIN_TOKEN` to access the Control Plane.
+
+---
+
+## 🩺 Step 4: Health & Diagnostics
+
+Run automated verification steps to ensure that your local system is fully operational and stable.
+
+### Execute Test Suites
+* **Standard Verification:**
+  ```bash
+  npm run test
+  ```
+* **Admin Control Plane Verification:**
+  ```bash
+  npm run test:admin
+  ```
+
+### Verify Code Linting
+Ensure type-safety standards and style rules are perfectly aligned:
 ```bash
 npm run lint
 ```
 
-### "Infinite scroll doesn't trigger"
-→ Try scrolling more aggressively. The sentinel must be fully visible.
-
-### "Mutations still showing flicker"
-→ Restart dev server: `npm run dev` (Vite cache issue)
-
 ---
 
-## Questions?
+## 📚 Reference Map
 
-See the "Troubleshooting" section in **REACT_QUERY_INTEGRATION.md** for detailed answers.
+* [**README.md**](./README.md) — Unified Project Specification & API Reference Table.
+* [**ARCHITECTURE.md**](./ARCHITECTURE.md) — System blueprints, component designs, and folder maps.
+* [**SECURITY.md**](./SECURITY.md) — Cryptographic details, OWASP mitigations, and hardening advice.
+* [**CONTRIBUTING.md**](./CONTRIBUTING.md) — Coding styles, 250-line guidelines, and pull request procedures.
 
----
-
-**Ready to deploy!** 🚀
+**Maintained by CrustAgent©™**

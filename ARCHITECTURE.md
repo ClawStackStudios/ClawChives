@@ -36,9 +36,9 @@ ClawChives/
 ├── 📄 tsconfig.json                 # TypeScript strict rules
 ├── 📄 .env.example                  # Environment variable reference
 │
-├── 🐳 Dockerfile                    # Frontend container (Vite dev/build)
-├── 🐳 Dockerfile.api                # API server container (Express + SQLite)
-├── 🐳 docker-compose.yml            # Orchestration stack (UI + API)
+├── 🐳 Dockerfile                    # Unified application container (UI build + Express Server)
+├── 🐳 docker-compose.yml            # Orchestration stack (Production reef)
+├── 🐳 docker-compose.dev.yml        # Orchestration stack (Local development HMR reef)
 │
 ├── 🌐 server.ts                     # TypeScript entrypoint (Express REST API)
 │
@@ -572,6 +572,24 @@ All endpoints live in `src/server/routes/`.
 | `POST` | `/api/agent-keys` | ✓ Bearer | Create agent Lobster key (name, permissions, expiry) |
 | `PATCH` | `/api/agent-keys/:id/revoke` | ✓ Bearer | Revoke agent key (immediate, cannot reactivate) |
 | `DELETE` | `/api/agent-keys/:id` | ✓ Bearer | Delete agent key (remove from database) |
+
+───
+
+### SuperAdmin Control Plane
+
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| `GET` | `/admin` | ✗ Public | Access gateway to the SuperAdmin Panel UI |
+| `POST` | `/api/admin/auth` | ✗ Public | Admin login (Cookie-based session generation) |
+| `GET` | `/api/admin/verify` | ✗ Public | Verify active volatile admin session cookie |
+| `POST` | `/api/admin/logout` | ✓ Session cookie | Revoke volatile admin session cookie |
+| `GET` | `/api/admin/users` | ✓ Session cookie | List all user metadata & counts |
+| `DELETE` | `/api/admin/users/:uuid` | ✓ Session cookie | Permanent cascade purge of user |
+| `GET` | `/api/admin/audit` | ✓ Session cookie | Query segregated audit logs |
+| `GET` | `/api/admin/system` | ✓ Session cookie | Health, DB stats, and path check |
+| `GET` | `/api/admin/uptime` | ✓ Session cookie | Historical system uptime report |
+| `GET` | `/api/admin/settings` | ✓ Session cookie | Get global system configuration values |
+| `PATCH` | `/api/admin/settings` | ✓ Session cookie | Patch global system configuration values |
 
 ───
 

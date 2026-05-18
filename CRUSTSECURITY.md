@@ -12,7 +12,7 @@
 
 | Standard | Status | Implementation | Evidence |
 |---|---|---|---|
-| **ClawKeys Protocol** | ✅ | `hu-` identity keys, constant-time comparison, `key_hash` UNIQUE index | [crypto.ts](./src/shared/lib/crypto.ts), [BLUEPRINT.md](./BLUEPRINT.md) |
+| **ClawKeys Protocol** | ✅ | `hu-` identity keys, constant-time comparison, `key_hash` UNIQUE index | [crypto.ts](./src/shared/lib/crypto.ts), [ARCHITECTURE.md](./ARCHITECTURE.md) |
 | **ShellCryption™** | ✅ | AES-256-GCM export encryption, SHA-256 client-side hashing | [crypto.ts](./src/shared/lib/crypto.ts) |
 | **Threat Modeling** | ✅ | OWASP coverage matrix, 5 attack scenarios with mitigations | [SECURITY.md](./SECURITY.md) |
 | **Database Invariants** | ✅ | Foreign keys, unique constraints, user isolation, WAL mode | [src/server/database/schema.ts](./src/server/database/schema.ts) |
@@ -142,7 +142,7 @@ If a standard cannot be met:
 
 ## 📚 Cross-References
 
-- **Full implementation details**: [BLUEPRINT.md](./BLUEPRINT.md)
+- **Full implementation details**: [ARCHITECTURE.md](./ARCHITECTURE.md)
 - **Practical hardening guide**: [SECURITY.md](./SECURITY.md)
 - **Vulnerability reporting**: [SECURITY.md § Reporting a Vulnerability](./SECURITY.md)
 - **Code standards**: [CONTRIBUTING.md](./CONTRIBUTING.md)
