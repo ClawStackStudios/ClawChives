@@ -50,7 +50,7 @@ ClawChives uses a **key-file identity system** — there are no passwords or acc
 | `api-` | REST Token | API session access | Server DB (`api_tokens` table) |
 
 > [!TIP]
-> See [BLUEPRINT.md § Key System Architecture](./BLUEPRINT.md) for full technical details on key generation, storage, and rotation.
+> See [ARCHITECTURE.md § Key System Architecture](./ARCHITECTURE.md) for full technical details on key generation, storage, and rotation.
 
 ---
 
@@ -162,9 +162,7 @@ To rotate your encryption key:
 
 > These are accepted trade-offs for the current development phase.
 
-- **Single-user only** — no multi-user support per instance currently.
 - **No HTTPS enforcement** — use a reverse proxy (Nginx + Certbot) for public deployments.
-- **Rate limiting is stored but not enforced** — `rateLimit` on agent keys is recorded but not yet checked on each request.
 - **No refresh token rotation** — `api-` tokens persist until manually revoked.
 
 ---
@@ -181,7 +179,7 @@ To rotate your encryption key:
 | **Authentication Bypass** | ✅ Mitigated | Constant-time key comparison | Token comparison uses timing-safe functions; no timing attacks |
 | **Authorization Bypass** | ✅ Mitigated | `requirePermission()` on all routes | Granular permissions enforced per action; admin routes restricted to humans |
 | **Data Leakage** | ✅ Mitigated | Session storage cleared on tab close | `sessionStorage` tokens evaporate; no persistent credential storage |
-| **Rate Limiting** | ⚠️ Partial | Recorded but not enforced | `rateLimit` field on agent keys exists; enforcement is roadmapped |
+| **Rate Limiting** | ✅ Mitigated | Globally and per-agent enforced | Global `apiLimiter` (100 req/min), custom dynamic `agentRateLimiter` with LRU cache, and `adminAuthLimiter` (5 attempts/15m) |
 
 ### Key Leakage Vectors
 
@@ -282,8 +280,8 @@ Before exposing ClawChives to the public internet:
 
 ## 🔗 Cross-References
 
-- **Full key system details**: See [BLUEPRINT.md § Key System Architecture](./BLUEPRINT.md)
-- **Data flow & architecture**: See [BLUEPRINT.md § Data Flow](./BLUEPRINT.md)
+- **Full key system details**: See [ARCHITECTURE.md § Key System Architecture](./ARCHITECTURE.md)
+- **Data flow & architecture**: See [ARCHITECTURE.md § Data Flow](./ARCHITECTURE.md)
 - **Deployment instructions**: See [README.md § Running with Docker](./README.md)
 - **Contribution security standards**: See [CONTRIBUTING.md](./CONTRIBUTING.md)
 - **ClawStack security alignment**: See [CRUSTSECURITY.md](./CRUSTSECURITY.md)

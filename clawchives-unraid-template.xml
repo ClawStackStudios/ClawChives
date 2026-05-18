@@ -23,7 +23,8 @@
   <Requires/>
   <Config Name="Database Location" Target="/app/data" Default="/app/data" Mode="rw" Description="" Type="Path" Display="always" Required="true" Mask="false">/mnt/user/appdata/clawchives</Config>
   <Config Name="Web GUI" Target="4545" Default="4545" Mode="tcp" Description="The Default Port for the Web GUI" Type="Port" Display="always" Required="true" Mask="false">4545</Config>
-  <Config Name="DB Encryption Key" Target="DB_ENCRYPTION_KEY" Default="" Mode="" Description="Key to encrypt the database (Optional) Defaults to no encryption kif none provided" Type="Variable" Display="always" Required="false" Mask="false"/>
+  <Config Name="DB Encryption Key" Target="DB_ENCRYPTION_KEY" Default="" Mode="" Description="Key to encrypt the database (Optional). Defaults to no encryption if none provided." Type="Variable" Display="always" Required="false" Mask="true"/>
+  <Config Name="SuperAdmin Access Token" Target="ADMIN_TOKEN" Default="" Mode="" Description="Security token for accessing the isolated /admin SuperAdmin panel. Requires high entropy (e.g., random 64+ character string). Leave empty to completely disable all /admin control plane UI and API routes." Type="Variable" Display="always" Required="false" Mask="true"/>
   <Config Name="PGID" Target="PGID" Default="100" Mode="" Description="Linux Group ID for file permissions" Type="Variable" Display="advanced" Required="true" Mask="false">100</Config>
   <Config Name="PUID" Target="PUID" Default="99" Mode="" Description="Linux User ID for file permissions" Type="Variable" Display="advanced" Required="true" Mask="false">99</Config>
   <Config Name="Trust Proxy" Target="TRUST_PROXY" Default="false" Mode="" Description="Set to 'true' if running behind a reverse proxy (Nginx, Traefik, etc.)" Type="Variable" Display="advanced" Required="false" Mask="false">false</Config>
