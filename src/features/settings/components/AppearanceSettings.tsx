@@ -72,14 +72,14 @@ export function AppearanceSettings() {
         <div className="p-6 space-y-6">
           {/* Theme Selection */}
           <div>
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 block">Theme</Label>
+            <Label className="text-sm font-semibold text-slate-900 dark:text-white mb-3 block">Theme</Label>
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={(e) => setTheme("light", e.clientX, e.clientY)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   theme === "light"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700"
+                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <Sun className="w-6 h-6 text-amber-500" />
@@ -89,8 +89,8 @@ export function AppearanceSettings() {
                 onClick={(e) => setTheme("dark", e.clientX, e.clientY)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   theme === "dark"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700"
+                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <Moon className="w-6 h-6 text-slate-700 dark:text-slate-300" />
@@ -100,8 +100,8 @@ export function AppearanceSettings() {
                 onClick={(e) => setTheme("auto", e.clientX, e.clientY)}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   theme === "auto"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700"
+                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <Monitor className="w-6 h-6 text-slate-700 dark:text-slate-300" />
@@ -112,14 +112,14 @@ export function AppearanceSettings() {
 
           {/* Layout Selection */}
           <div>
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 block">Bookmark Layout</Label>
+            <Label className="text-sm font-semibold text-slate-900 dark:text-white mb-3 block">Bookmark Layout</Label>
             <div className="grid grid-cols-3 gap-3">
               <button
                 onClick={() => setLayout("grid")}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   layout === "grid"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700"
+                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <Grid className="w-6 h-6 text-cyan-600" />
@@ -129,8 +129,8 @@ export function AppearanceSettings() {
                 onClick={() => setLayout("list")}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   layout === "list"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700"
+                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <List className="w-6 h-6 text-cyan-600" />
@@ -140,8 +140,8 @@ export function AppearanceSettings() {
                 onClick={() => setLayout("masonry")}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
                   layout === "masonry"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700"
+                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                 }`}
               >
                 <Layout className="w-6 h-6 text-cyan-600" />
@@ -152,7 +152,7 @@ export function AppearanceSettings() {
 
           {/* Items Per Page */}
           <div>
-            <Label className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3 block">Items Per Page</Label>
+            <Label className="text-sm font-semibold text-slate-900 dark:text-white mb-3 block">Items Per Page</Label>
             <div className="flex gap-2">
               {[12, 24, 48, 96].map((count) => (
                 <button
@@ -160,8 +160,8 @@ export function AppearanceSettings() {
                   onClick={() => setItemsPerPage(count as 12 | 24 | 48)}
                   className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
                     itemsPerPage === count
-                      ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900"
-                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300"
+                      ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
                   }`}
                 >
                   {count}
@@ -174,7 +174,7 @@ export function AppearanceSettings() {
           <div className="space-y-4 pt-4 border-t border-slate-200 dark:border-slate-800">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="font-medium">Compact Mode</Label>
+                <Label className="font-medium text-slate-900 dark:text-white">Compact Mode</Label>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Reduce spacing for more content</p>
               </div>
               <button
@@ -192,7 +192,7 @@ export function AppearanceSettings() {
             </div>
             <div className="flex items-center justify-between">
               <div>
-                <Label className="font-medium">Show Favicons</Label>
+                <Label className="font-medium text-slate-900 dark:text-white">Show Favicons</Label>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Display website icons on bookmarks</p>
               </div>
               <button
@@ -211,7 +211,7 @@ export function AppearanceSettings() {
 
             <div className="flex items-center justify-between">
               <div>
-                <Label className="font-medium">Resizable Sidebar</Label>
+                <Label className="font-medium text-slate-900 dark:text-white">Resizable Sidebar</Label>
                 <p className="text-xs text-slate-500 dark:text-slate-400">Enable draggable sidebar width (Dashboard only)</p>
               </div>
               <button
