@@ -14,6 +14,7 @@ export default defineConfig({
     port: 4545,
     host: true,
     strictPort: true,
+    allowedHosts: true,
     proxy: {
       '/api': 'http://localhost:4646'
     }
@@ -22,6 +23,7 @@ export default defineConfig({
     port: 4545,
     host: true,
     strictPort: true,
+    allowedHosts: true,
     proxy: {
       '/api': 'http://localhost:4646'
     }
