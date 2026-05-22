@@ -137,6 +137,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             all: stats?.total ?? 0,
             starred: stats?.starred ?? 0,
             archived: stats?.archived ?? 0,
+            pinned: stats?.pinned ?? 0,
             tags: tagsCount,
           }}
           showGridControls={showGrid}
@@ -221,6 +222,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
                 onDelete={deleteBookmark}
                 onToggleStar={(b) => updateBookmark({ ...b, starred: !b.starred })}
                 onToggleArchive={(b) => updateBookmark({ ...b, archived: !b.archived })}
+                onTogglePin={(b) => updateBookmark({ ...b, pinned: !b.pinned })}
                 onFetchNextPage={fetchNextPage}
                 hasNextPage={hasNextPage ?? false}
                 isFetchingNextPage={isFetchingNextPage}

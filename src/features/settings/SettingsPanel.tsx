@@ -65,7 +65,7 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
           onSearchChange={() => {}}
           onSelectFolder={() => {}}
           onFilterChange={() => {}}
-          bookmarkCounts={{ all: 0, starred: 0, archived: 0, tags: 0 }}
+          bookmarkCounts={{ all: 0, starred: 0, archived: 0, tags: 0, pinned: 0 }}
           settingsMode
           activeSettingsTab={activeTab}
           onSettingsTabChange={setActiveTab}

@@ -26,6 +26,7 @@ interface BookmarkGridProps {
   onDelete: (id: string) => void;
   onToggleStar: (bookmark: Bookmark) => void;
   onToggleArchive: (bookmark: Bookmark) => void;
+  onTogglePin: (bookmark: Bookmark) => void;
   onFetchNextPage: () => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
@@ -42,6 +43,7 @@ export function BookmarkGrid({
   onDelete,
   onToggleStar,
   onToggleArchive,
+  onTogglePin,
   onFetchNextPage,
   hasNextPage,
   isFetchingNextPage,
@@ -203,6 +205,7 @@ export function BookmarkGrid({
                     onDelete={onDelete}
                     onToggleStar={onToggleStar}
                     onToggleArchive={onToggleArchive}
+                    onTogglePin={onTogglePin}
                   />
                 ))}
               </div>

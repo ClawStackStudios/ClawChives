@@ -8,6 +8,7 @@ export function parseBookmark(row: any) {
     tags: JSON.parse(row.tags ?? '[]'),
     starred: Boolean(row.starred),
     archived: Boolean(row.archived),
+    pinned: Boolean(row.pinned),
     folderId: row.folder_id,
     jinaUrl: row.jina_conversion_url ?? row.jina_url ?? undefined,
     createdAt: row.created_at,

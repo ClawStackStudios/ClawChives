@@ -114,8 +114,6 @@ export function DashboardHome({ bookmarks, folders, stats: totalStats, allTags: 
     return [...new Set(bookmarks.flatMap((b) => b.tags))];
   }, [bookmarks, providedTags]);
 
-  const pinnedFolder = useMemo(() => folders.find((f) => f.name === "Pinned"), [folders]);
-
   const recent = useMemo(
     () =>
       [...bookmarks]
@@ -125,9 +123,8 @@ export function DashboardHome({ bookmarks, folders, stats: totalStats, allTags: 
   );
 
   const pins = useMemo(
-    () =>
-      pinnedFolder ? bookmarks.filter((b) => b.folderId === pinnedFolder.id).slice(0, 10) : [],
-    [bookmarks, pinnedFolder]
+    () => bookmarks.filter((b) => b.pinned).slice(0, 10),
+    [bookmarks]
   );
 
   const favorites = useMemo(() => bookmarks.filter((b) => b.starred).slice(0, 10), [bookmarks]);

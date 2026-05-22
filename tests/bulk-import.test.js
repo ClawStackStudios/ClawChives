@@ -308,8 +308,8 @@ describe('POST /api/bookmarks/bulk — HardShell Comprehensive Tests', () => {
     });
   });
 
-  describe('Duplicate & Race Conditions', () => {
-    it('detects duplicate within same batch — second fails', async () => {
+  describe('Duplicate & Race Conditions (Duplicates Allowed)', () => {
+    it('allows duplicates within the same batch', async () => {
       const sharedUrl = 'https://race-condition.com/' + Date.now();
       const bookmarks = [
         { url: sharedUrl, title: 'First' },
@@ -322,13 +322,11 @@ describe('POST /api/bookmarks/bulk — HardShell Comprehensive Tests', () => {
         .send({ bookmarks });
 
       expect(res.status).toBe(207);
-      expect(res.body.imported).toBe(1);
-      expect(res.body.failed).toBe(1);
-      expect(res.body.errors[0].url).toBe(sharedUrl);
-      expect(res.body.errors[0].reason).toContain('already exists');
+      expect(res.body.imported).toBe(2);
+      expect(res.body.failed).toBe(0);
     });
 
-    it('detects URL already in DB from previous import', async () => {
+    it('allows URL already in DB from previous import', async () => {
       const reuseUrl = 'https://reuse.com/' + Date.now();
 
       // First import
@@ -346,17 +344,17 @@ describe('POST /api/bookmarks/bulk — HardShell Comprehensive Tests', () => {
         .send({ bookmarks: [{ url: reuseUrl, title: 'Second' }] });
 
       expect(res2.status).toBe(207);
-      expect(res2.body.imported).toBe(0);
-      expect(res2.body.failed).toBe(1);
+      expect(res2.body.imported).toBe(1);
+      expect(res2.body.failed).toBe(0);
     });
 
-    it('correctly splits mixed valid + duplicate URLs', async () => {
+    it('correctly handles mixed valid + duplicate URLs', async () => {
       const timestamp = Date.now();
       const validUrl1 = `https://mixed-valid.com/${timestamp}-1`;
       const validUrl2 = `https://mixed-valid.com/${timestamp}-2`;
       const duplicateUrl = 'https://reuse.com/' + (Date.now() - 1000);
 
-      // Pre-import one URL so it's a duplicate
+      // Pre-import one URL
       db.prepare(
         "INSERT INTO bookmarks (id, user_uuid, url, title, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?)"
       ).run(
@@ -380,8 +378,8 @@ describe('POST /api/bookmarks/bulk — HardShell Comprehensive Tests', () => {
         .send({ bookmarks });
 
       expect(res.status).toBe(207);
-      expect(res.body.imported).toBe(2);
-      expect(res.body.failed).toBe(1);
+      expect(res.body.imported).toBe(3); // All 3 should import now
+      expect(res.body.failed).toBe(0);
       expect(res.body.imported + res.body.failed).toBe(3);
     });
   });

@@ -12,6 +12,7 @@ export interface Bookmark {
   folderId?: string;
   starred: boolean;
   archived: boolean;
+  pinned: boolean;
   color?: string;
   createdAt: string;
   updatedAt: string;

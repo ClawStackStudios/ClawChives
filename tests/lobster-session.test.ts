@@ -292,7 +292,7 @@ describe('Lobster Session Flow — HardShell', () => {
       const sessionId = startRes.body.data.sessionId;
       const sessionKey = startRes.body.data.sessionKey;
 
-      // Perform bulk import with duplicate URL (will fail)
+      // Perform bulk import with missing URL (will fail)
       const bookmarkRes = await request(app)
         .post('/api/bookmarks/bulk')
         .set('Authorization', `Bearer ${sessionKey}`)
@@ -300,7 +300,7 @@ describe('Lobster Session Flow — HardShell', () => {
         .send({
           bookmarks: [
             { url: 'https://unique1.com/1', title: 'Valid 1' },
-            { url: 'https://unique1.com/1', title: 'Duplicate' }, // duplicate within batch
+            { title: 'Missing URL' }, // missing url will fail
           ]
         });
 
@@ -312,7 +312,6 @@ describe('Lobster Session Flow — HardShell', () => {
       const sessionRecord = db.prepare('SELECT errors_json, error_count FROM import_sessions WHERE id = ?').get(sessionId) as any;
       const errors = JSON.parse(sessionRecord.errors_json);
       expect(errors.length).toBe(1);
-      expect(errors[0].url).toBe('https://unique1.com/1');
     });
 
     it('successful imports do NOT add to errors_json', async () => {

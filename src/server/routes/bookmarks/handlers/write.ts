@@ -36,6 +36,7 @@ export const updateBookmark = (req: any, res: Response) => {
     folder_id:   req.body.folderId    !== undefined ? req.body.folderId : row.folder_id,
     starred:     req.body.starred     !== undefined ? (req.body.starred ? 1 : 0) : row.starred,
     archived:    req.body.archived    !== undefined ? (req.body.archived ? 1 : 0) : row.archived,
+    pinned:      req.body.pinned      !== undefined ? (req.body.pinned ? 1 : 0) : row.pinned,
     color:       req.body.color       !== undefined ? req.body.color : row.color,
     updated_at:  new Date().toISOString(),
     id:          req.params.id,
@@ -43,7 +44,7 @@ export const updateBookmark = (req: any, res: Response) => {
   };
 
   const doUpdate = db.transaction((updatedData: any, jinaUrl: string | null | undefined) => {
-    db.prepare('UPDATE bookmarks SET url=@url, title=@title, description=@description, favicon=@favicon, tags=@tags, folder_id=@folder_id, starred=@starred, archived=@archived, color=@color, updated_at=@updated_at WHERE id=@id AND user_uuid=@user_uuid').run(updatedData);
+    db.prepare('UPDATE bookmarks SET url=@url, title=@title, description=@description, favicon=@favicon, tags=@tags, folder_id=@folder_id, starred=@starred, archived=@archived, pinned=@pinned, color=@color, updated_at=@updated_at WHERE id=@id AND user_uuid=@user_uuid').run(updatedData);
     if (jinaUrl === null) {
       db.prepare('DELETE FROM jina_conversions WHERE bookmark_id = ? AND user_uuid = ?').run(updatedData.id, updatedData.user_uuid);
     } else if (jinaUrl !== undefined) {

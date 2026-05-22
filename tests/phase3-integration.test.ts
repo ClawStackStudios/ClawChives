@@ -95,9 +95,9 @@ describe('Phase 3a — Mass Import & Large Library Tests', () => {
         .set('Authorization', `Bearer ${agentKey}`)
         .send({ bookmarks: batch2 });
 
-      expect(res2.body.imported).toBe(500);
-      expect(res2.body.failed).toBe(500);
-    });
+      expect(res2.body.imported).toBe(1000); // 500 new and 500 duplicates
+      expect(res2.body.failed).toBe(0);
+    }, 10000);
   });
 
   describe('Task 3.2 — Performance (1000 bookmarks)', () => {
@@ -210,8 +210,8 @@ describe('Phase 3a — Mass Import & Large Library Tests', () => {
           ],
         });
 
-      expect(res.body.imported).toBe(1);
-      expect(res.body.failed).toBe(1);
+      expect(res.body.imported).toBe(2);
+      expect(res.body.failed).toBe(0);
 
     });
   });

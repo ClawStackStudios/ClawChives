@@ -1,6 +1,6 @@
 import * as React from "react";
 import { useState } from "react";
-import { Star, Archive, Trash2, Pencil, ExternalLink, Clock } from "lucide-react";
+import { Star, Archive, Trash2, Pencil, ExternalLink, Clock, Pin } from "lucide-react";
 import { Button } from '@/shared/ui/button';
 import { ConfirmModal } from '@/shared/ui/LobsterModal';
 import { getCardTheme } from "../../utils/cardThemes";
@@ -14,6 +14,7 @@ interface BookmarkCardProps {
   onDelete: (id: string) => void;
   onToggleStar: (bookmark: Bookmark) => void;
   onToggleArchive: (bookmark: Bookmark) => void;
+  onTogglePin: (bookmark: Bookmark) => void;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
 }
 
@@ -66,6 +67,7 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
     onDelete,
     onToggleStar,
     onToggleArchive,
+    onTogglePin,
     onDragStart,
   } = props;
   
@@ -191,6 +193,20 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
             title="Edit Pinchmark"
           >
             <Pencil className="w-4 h-4 md:w-3.5 md:h-3.5" />
+          </Button>
+
+          {/* Pin */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-10 w-10 md:h-7 md:w-7 p-0 rounded-xl ${bookmark.pinned ? "text-fuchsia-500" : "text-slate-400"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin(bookmark);
+            }}
+            title={bookmark.pinned ? "Unpin" : "Pin"}
+          >
+            <Pin className={`w-4 h-4 md:w-3.5 md:h-3.5 ${bookmark.pinned ? "fill-current" : ""}`} />
           </Button>
 
           <Button
@@ -365,6 +381,20 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
             <Pencil className="w-5 h-5 md:w-4 md:h-4" />
           </Button>
 
+          {/* Pin */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-10 w-10 md:h-8 md:w-8 p-0 rounded-xl ${bookmark.pinned ? "text-fuchsia-500" : "text-slate-400"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin(bookmark);
+            }}
+            title={bookmark.pinned ? "Unpin" : "Pin"}
+          >
+            <Pin className={`w-5 h-5 md:w-4 md:h-4 ${bookmark.pinned ? "fill-current" : ""}`} />
+          </Button>
+
           {/* Star */}
           <Button
             variant="ghost"
@@ -429,6 +459,7 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
     prev.bookmark.updatedAt === next.bookmark.updatedAt &&
     prev.bookmark.starred === next.bookmark.starred &&
     prev.bookmark.archived === next.bookmark.archived &&
+    prev.bookmark.pinned === next.bookmark.pinned &&
     prev.layout === next.layout
   );
 });

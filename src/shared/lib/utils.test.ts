@@ -16,9 +16,9 @@ import type { Bookmark } from "@/services/types";
 describe("aggregateTags", () => {
   test("aggregates tags correctly and sorts them by count descending", () => {
     const bookmarks: Bookmark[] = [
-      { id: "1", url: "", title: "", tags: ["a", "b"], starred: false, archived: false, createdAt: "", updatedAt: "" },
-      { id: "2", url: "", title: "", tags: ["a", "c"], starred: false, archived: false, createdAt: "", updatedAt: "" },
-      { id: "3", url: "", title: "", tags: ["a"], starred: false, archived: false, createdAt: "", updatedAt: "" },
+      { id: "1", url: "", title: "", tags: ["a", "b"], starred: false, archived: false, pinned: false, createdAt: "", updatedAt: "" },
+      { id: "2", url: "", title: "", tags: ["a", "c"], starred: false, archived: false, pinned: false, createdAt: "", updatedAt: "" },
+      { id: "3", url: "", title: "", tags: ["a"], starred: false, archived: false, pinned: false, createdAt: "", updatedAt: "" },
     ];
 
     const result = aggregateTags(bookmarks);
@@ -36,7 +36,7 @@ describe("aggregateTags", () => {
 
   test("handles bookmarks with no tags", () => {
     const bookmarks: Bookmark[] = [
-      { id: "1", url: "", title: "", tags: [], starred: false, archived: false, createdAt: "", updatedAt: "" },
+      { id: "1", url: "", title: "", tags: [], starred: false, archived: false, pinned: false, createdAt: "", updatedAt: "" },
     ];
     expect(aggregateTags(bookmarks)).toEqual([]);
   });

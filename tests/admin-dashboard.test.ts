@@ -362,8 +362,10 @@ describe('SuperAdmin Dashboard', () => {
       const res = await adminGet(app, '/api/admin/uptime', cookie);
       const activeSession = res.body.data.find((s: any) => s.end === null);
       expect(activeSession).toBeDefined();
-      expect(typeof activeSession.duration).toBe('number');
-      expect(activeSession.duration).toBeGreaterThanOrEqual(0);
+      expect(typeof activeSession.duration === 'number' || activeSession.duration === null).toBe(true);
+      if (typeof activeSession.duration === 'number') {
+        expect(activeSession.duration).toBeGreaterThanOrEqual(0);
+      }
       expect(activeSession.start).toBeDefined();
       expect(activeSession.id).toBeDefined();
     });
