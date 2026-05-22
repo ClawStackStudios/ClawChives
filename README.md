@@ -9,6 +9,7 @@
  ██║     ██║     ██╔══██║██║███╗██║██║     ██╔══██║██║╚██╗ ██╔╝██╔══╝  ╚════██║
  ╚██████╗███████╗██║  ██║╚███╔███╔╝╚██████╗██║  ██║██║ ╚████╔╝ ███████╗███████║
   ╚═════╝╚══════╝╚═╝  ╚═╝ ╚══╝╚══╝  ╚═════╝╚═╝  ╚═╝╚═╝  ╚═══╝  ╚══════╝╚══════╝
+                          ~ **ClawStack Mobile Studios©™** ~ 
 ```
 
 *Your Sovereign Pinchmark Library — where Humans and AI Lobsters collaborate to scuttle the web.*
