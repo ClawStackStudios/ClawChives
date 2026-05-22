@@ -148,6 +148,19 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
           <Button
             variant="ghost"
             size="sm"
+            className={`h-8 w-8 p-0 ${isPinned ? "text-cyan-500" : "text-slate-400 hover:text-cyan-500"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin(bookmark);
+            }}
+            title={isPinned ? "Unpin" : "Pin to top"}
+          >
+            <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
             className={`h-8 w-8 p-0 ${bookmark.starred ? "text-amber-500" : "text-slate-400"}`}
             onClick={(e) => {
               e.stopPropagation();
@@ -169,19 +182,6 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
             title={bookmark.archived ? "Unarchive" : "Archive"}
           >
             <Archive className={`w-4 h-4 ${bookmark.archived ? "fill-current" : ""}`} />
-          </Button>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            className={`h-8 w-8 p-0 ${isPinned ? "text-cyan-500" : "text-slate-400 hover:text-cyan-500"}`}
-            onClick={(e) => {
-              e.stopPropagation();
-              onTogglePin(bookmark);
-            }}
-            title={isPinned ? "Unpin" : "Pin to top"}
-          >
-            <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
           </Button>
 
           <Button
