@@ -1,5 +1,5 @@
 import { useCallback } from "react";
-import { Search, X } from "lucide-react";
+import { Search, X, Settings, Database, LogOut } from "lucide-react";
 import { Input } from '@/shared/ui/input';
 
 import { useFolderCounts } from "@/hooks/useFolderCounts";
@@ -129,34 +129,81 @@ export function Sidebar({
 
       {/* Main Sidebar Layout */}
       <div className="flex-1 flex flex-col min-h-0 h-full overflow-hidden">
-        <div className="p-3 shrink-0">
-          <SidebarNav
-            filterType={filterType}
-            selectedFolder={selectedFolder}
-            onFilterChange={onFilterChange}
-            onSelectFolder={onSelectFolder}
-            bookmarkCounts={bookmarkCounts}
-            settingsMode={settingsMode}
-            activeSettingsTab={activeSettingsTab}
-            onSettingsTabChange={onSettingsTabChange}
-            onGoToSettings={!settingsMode ? onGoToSettings : undefined}
-            onGoToDashboard={settingsMode ? onGoToDashboard : undefined}
-            onShowDatabaseStats={onShowDatabaseStats}
-            onLogout={onLogout}
-          />
-        </div>
-
-        {!settingsMode && (
-          <div className="flex-1 min-h-0 flex flex-col px-3 pb-3">
-            <FolderList
-              folders={folders}
+        {settingsMode ? (
+          <div className="p-3 flex-1 overflow-y-auto">
+            <SidebarNav
+              filterType={filterType}
               selectedFolder={selectedFolder}
+              onFilterChange={onFilterChange}
               onSelectFolder={onSelectFolder}
-              openCreateFolder={openCreateFolder}
-              openEditFolder={openEditFolder}
-              folderBookmarkCount={folderBookmarkCount}
+              bookmarkCounts={bookmarkCounts}
+              settingsMode={settingsMode}
+              activeSettingsTab={activeSettingsTab}
+              onSettingsTabChange={onSettingsTabChange}
+              onGoToDashboard={onGoToDashboard}
+              onShowDatabaseStats={onShowDatabaseStats}
+              onLogout={onLogout}
+              onClose={onClose}
             />
           </div>
+        ) : (
+          <>
+            {/* Scrollable middle container (Nav + Pods) */}
+            <div className="flex-1 overflow-y-auto min-h-0 flex flex-col p-3 space-y-4">
+              <SidebarNav
+                filterType={filterType}
+                selectedFolder={selectedFolder}
+                onFilterChange={onFilterChange}
+                onSelectFolder={onSelectFolder}
+                bookmarkCounts={bookmarkCounts}
+                onClose={onClose}
+              />
+
+              <div className="flex-1 min-h-0 flex flex-col">
+                <FolderList
+                  folders={folders}
+                  selectedFolder={selectedFolder}
+                  onSelectFolder={onSelectFolder}
+                  openCreateFolder={openCreateFolder}
+                  openEditFolder={openEditFolder}
+                  folderBookmarkCount={folderBookmarkCount}
+                />
+              </div>
+            </div>
+
+            {/* Pinned Bottom Utility Bar */}
+            {onGoToSettings && (
+              <div className="p-3 border-t border-slate-200 dark:border-slate-800 shrink-0 space-y-1.5 bg-white dark:bg-slate-900">
+                <button
+                  onClick={onGoToSettings}
+                  className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-cyan-700 dark:text-cyan-400 hover:bg-cyan-50 dark:hover:bg-cyan-900/20 transition-all"
+                >
+                  <Settings className="w-5 h-5 md:w-4 md:h-4" />
+                  Settings
+                </button>
+                
+                {onShowDatabaseStats && (
+                  <button
+                    onClick={() => { onShowDatabaseStats(); onClose?.(); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
+                  >
+                    <Database className="w-5 h-5 md:w-4 md:h-4" />
+                    Database Stats
+                  </button>
+                )}
+
+                {onLogout && (
+                  <button
+                    onClick={() => { onLogout(); onClose?.(); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
+                  >
+                    <LogOut className="w-5 h-5 md:w-4 md:h-4" />
+                    Claw Out
+                  </button>
+                )}
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>
