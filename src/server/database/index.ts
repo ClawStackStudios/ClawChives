@@ -1,10 +1,9 @@
 import dbInstance, { createConnection } from './connection.js';
-import { initializeSchema, initializeAuditSchema } from './schema.js';
-import { runMigrations } from './migrations.js';
+import { initializeAuditSchema } from './schema.js';
+import { runMigrations } from './migrationRunner.js';
 import { createAuditLogger } from '../utils/auditLogger.js';
 
 // Initialize and migrate on load
-initializeSchema(dbInstance);
 runMigrations(dbInstance);
 
 // Initialize Audit DB (Segregated)
