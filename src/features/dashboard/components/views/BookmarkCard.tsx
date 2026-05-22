@@ -145,6 +145,19 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
           </>
         )}
 
+        <Button
+          variant="ghost"
+          size="sm"
+          className="absolute top-2 right-2 h-10 w-10 md:h-7 md:w-7 p-0 text-slate-400 hover:text-red-600 rounded-xl opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
+          onClick={(e) => {
+            e.stopPropagation();
+            setConfirmOpen(true);
+          }}
+          title="Delete"
+        >
+          <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
+        </Button>
+
         {/* Favicon */}
         <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {faviconUrl ? (
@@ -237,18 +250,6 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
             <Archive className={`w-4 h-4 md:w-3.5 md:h-3.5 ${bookmark.archived ? "fill-current" : ""}`} />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 w-10 md:h-7 md:w-7 p-0 text-slate-400 hover:text-red-600 rounded-xl"
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirmOpen(true);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4 md:w-3.5 md:h-3.5" />
-          </Button>
         </div>
 
         {/* Delete Confirm Modal */}
@@ -318,6 +319,20 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
           </div>
         </>
       )}
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-2 right-2 h-10 w-10 md:h-8 md:w-8 p-0 text-slate-400 hover:text-red-600 rounded-xl opacity-0 md:group-hover:opacity-100 transition-opacity z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirmOpen(true);
+        }}
+        title="Delete"
+      >
+        <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
+      </Button>
+
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {faviconUrl ? (
@@ -438,19 +453,6 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
             <Archive className={`w-5 h-5 md:w-4 md:h-4 ${bookmark.archived ? "fill-current" : ""}`} />
           </Button>
 
-          {/* Delete */}
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-10 w-10 md:h-8 md:w-8 p-0 text-slate-400 hover:text-red-600 rounded-xl"
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirmOpen(true);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="w-5 h-5 md:w-4 md:h-4" />
-          </Button>
         </div>
       </div>
 

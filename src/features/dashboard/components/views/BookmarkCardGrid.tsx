@@ -67,6 +67,19 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
         userKeyType={userKeyType}
       />
 
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-2 right-2 h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirmOpen(true);
+        }}
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
           {faviconUrl ? (
@@ -184,18 +197,6 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
             <Archive className={`w-4 h-4 ${bookmark.archived ? "fill-current" : ""}`} />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirmOpen(true);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 

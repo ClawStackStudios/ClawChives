@@ -67,6 +67,19 @@ export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
         userKeyType={userKeyType}
       />
 
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-2 right-2 h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirmOpen(true);
+        }}
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
+
       <div className="w-12 h-12 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0">
         {faviconUrl ? (
           <img
@@ -172,18 +185,6 @@ export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
           title={bookmark.archived ? "Unarchive" : "Archive"}
         >
           <Archive className={`w-4 h-4 ${bookmark.archived ? "text-cyan-600 fill-current" : ""}`} />
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
-          onClick={(e) => {
-            e.stopPropagation();
-            setConfirmOpen(true);
-          }}
-          title="Delete"
-        >
-          <Trash2 className="w-4 h-4" />
         </Button>
       </div>
 
