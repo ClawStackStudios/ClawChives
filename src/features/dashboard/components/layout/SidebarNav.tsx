@@ -90,7 +90,7 @@ export function SidebarNav({
         })}
         <div className="border-t border-slate-200 dark:border-slate-800 my-2" />
         <button
-          onClick={() => { onGoToDashboard(); onClose?.(); }}
+          onClick={() => { onGoToDashboard(); if (window.innerWidth < 768) onClose?.(); }}
           className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all"
         >
           <LayoutDashboard className="w-5 h-5 md:w-4 md:h-4" />
@@ -101,7 +101,7 @@ export function SidebarNav({
 
         {onShowDatabaseStats && (
           <button
-            onClick={() => { onShowDatabaseStats(); onClose?.(); }}
+            onClick={() => { onShowDatabaseStats(); if (window.innerWidth < 768) onClose?.(); }}
             className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
           >
             <Database className="w-5 h-5 md:w-4 md:h-4" />
@@ -111,7 +111,7 @@ export function SidebarNav({
 
         {onLogout && (
           <button
-            onClick={() => { onLogout(); onClose?.(); }}
+            onClick={() => { onLogout(); if (window.innerWidth < 768) onClose?.(); }}
             className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
           >
             <LogOut className="w-5 h-5 md:w-4 md:h-4" />
@@ -179,7 +179,8 @@ export function SidebarNav({
             onClick={() => {
               onSelectFolder(null);
               onFilterChange(id);
-              onClose?.();
+              // Only close the sidebar drawer on mobile (< md breakpoint)
+              if (window.innerWidth < 768) onClose?.();
             }}
             className={`w-full flex items-center justify-between px-3 py-3 md:py-2 rounded-xl text-sm font-bold transition-all ${isActive ? active : inactive}`}
           >

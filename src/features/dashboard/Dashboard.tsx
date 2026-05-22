@@ -9,7 +9,7 @@ import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
 import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { User } from "@/App";
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useState, useMemo } from "react";
 
 interface DashboardProps {
   user: User | null;
@@ -67,6 +67,12 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     setEditingFolder
   } = useDashboardState();
   const { data: folderCounts } = useFolderCounts();
+
+  // Derive the canonical "Pinned" folder ID from the live folders list
+  const pinnedFolderId = useMemo(
+    () => folders.find((f) => f.name === "Pinned")?.id,
+    [folders]
+  );
 
   const isResizing = useRef(false);
 
@@ -221,6 +227,19 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
                 onDelete={deleteBookmark}
                 onToggleStar={(b) => updateBookmark({ ...b, starred: !b.starred })}
                 onToggleArchive={(b) => updateBookmark({ ...b, archived: !b.archived })}
+                onTogglePin={async (b) => {
+                  // Resolve or lazily create the "Pinned" folder
+                  let targetFolderId = pinnedFolderId;
+                  if (!targetFolderId) {
+                    await handleAddFolder("Pinned", "#06b6d4");
+                    // Re-derive after creation — loadFolders triggers a refetch
+                    await loadFolders();
+                    targetFolderId = folders.find((f) => f.name === "Pinned")?.id;
+                  }
+                  const isCurrentlyPinned = targetFolderId && b.folderId === targetFolderId;
+                  updateBookmark({ ...b, folderId: isCurrentlyPinned ? undefined : targetFolderId });
+                }}
+                pinnedFolderId={pinnedFolderId}
                 onFetchNextPage={fetchNextPage}
                 hasNextPage={hasNextPage ?? false}
                 isFetchingNextPage={isFetchingNextPage}
