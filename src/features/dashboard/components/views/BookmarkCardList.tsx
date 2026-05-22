@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Star, Link as LinkIcon, Archive, Trash2, Pencil, ExternalLink, Clock } from "lucide-react";
+import { Star, Link as LinkIcon, Archive, Trash2, Pencil, ExternalLink, Clock, Pin } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { ConfirmModal } from "@/shared/ui/LobsterModal";
 import { BookmarkContextMenu } from "./BookmarkContextMenu";
@@ -8,10 +8,12 @@ import type { Bookmark } from "@/services/types";
 
 export interface BookmarkCardListProps {
   bookmark: Bookmark;
+  pinnedFolderId?: string;
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (id: string) => void;
   onToggleStar: (bookmark: Bookmark) => void;
   onToggleArchive: (bookmark: Bookmark) => void;
+  onTogglePin: (bookmark: Bookmark) => void;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   userKeyType: string;
 }
@@ -19,13 +21,17 @@ export interface BookmarkCardListProps {
 export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
   const {
     bookmark,
+    pinnedFolderId,
     onEdit,
     onDelete,
     onToggleStar,
     onToggleArchive,
+    onTogglePin,
     onDragStart,
     userKeyType,
   } = props;
+
+  const isPinned = !!pinnedFolderId && bookmark.folderId === pinnedFolderId;
 
   const faviconUrl = getFaviconUrl(bookmark.url);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -81,8 +87,9 @@ export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
           <h3 className="font-semibold text-lg text-slate-900 dark:text-slate-50 truncate group-hover:text-cyan-700 dark:group-hover:text-cyan-400 transition-colors">
             {bookmark.title || "Untitled"}
           </h3>
-          {bookmark.starred && <Star className="w-4 h-4 text-amber-500 fill-current" />}
-          {bookmark.archived && <Archive className="w-4 h-4 text-cyan-600" />}
+          {bookmark.starred && <Star className="w-4 h-4 text-amber-500 fill-current flex-shrink-0" />}
+          {bookmark.archived && <Archive className="w-4 h-4 text-cyan-600 flex-shrink-0" />}
+          {isPinned && <Pin className="w-4 h-4 text-cyan-500 fill-current flex-shrink-0" />}
         </div>
         <p className="text-sm text-slate-500 dark:text-slate-400 truncate hover:text-cyan-600 flex items-center gap-1">
           <a
@@ -157,6 +164,18 @@ export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
         <Button
           variant="ghost"
           size="sm"
+          className={`h-8 w-8 p-0 ${isPinned ? "text-cyan-500" : "text-slate-400 hover:text-cyan-500"}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onTogglePin(bookmark);
+          }}
+          title={isPinned ? "Unpin" : "Pin to top"}
+        >
+          <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
           className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
           onClick={(e) => {
             e.stopPropagation();
@@ -185,6 +204,8 @@ export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
     prev.bookmark.id === next.bookmark.id &&
     prev.bookmark.updatedAt === next.bookmark.updatedAt &&
     prev.bookmark.starred === next.bookmark.starred &&
-    prev.bookmark.archived === next.bookmark.archived
+    prev.bookmark.archived === next.bookmark.archived &&
+    prev.bookmark.folderId === next.bookmark.folderId &&
+    prev.pinnedFolderId === next.pinnedFolderId
   );
 });
