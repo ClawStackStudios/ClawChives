@@ -11,7 +11,7 @@ import type { SortBy } from '@/shared/lib/utils';
 import { generateUUID } from '@/shared/lib/crypto';
 import type { Bookmark, Folder } from "@/services/types";
 
-export type NavTab = "dashboard" | "all" | "starred" | "tags" | "archived";
+export type NavTab = "dashboard" | "all" | "starred" | "tags" | "archived" | "pinned";
 
 export const useDashboardState = () => {
   const [folders, setFolders] = useState<Folder[]>([]);
@@ -218,7 +218,8 @@ export const useDashboardState = () => {
           const matchesFilter =
             (activeTab === "all" && !bookmark.archived) ||
             (activeTab === "starred" && bookmark.starred) ||
-            (activeTab === "archived" && bookmark.archived);
+            (activeTab === "archived" && bookmark.archived) ||
+            (activeTab === "pinned" && bookmark.pinned);
           const matchesTag = tagFilter ? bookmark.tags.includes(tagFilter) : true;
 
           return matchesSearch && matchesFolder && matchesFilter && matchesTag;

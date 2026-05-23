@@ -19,11 +19,6 @@ export function insertBookmark(
   authReq: AuthRequest,
   input: Record<string, unknown> & { url: string; title: string; jinaUrl?: string | null }
 ): { bookmark: any } | { error: string; status: number } {
-  // Duplicate URL check
-  const existing = db.prepare('SELECT id, title FROM bookmarks WHERE url = ? AND user_uuid = ?').get(input.url, authReq.userUuid);
-  if (existing) {
-    return { error: `A bookmark for "${input.url}" already exists`, status: 409 };
-  }
 
   // 🛡️ jinaUrl human-only field check
   if (input.jinaUrl !== undefined && authReq.keyType !== 'human') {
@@ -42,13 +37,14 @@ export function insertBookmark(
     folder_id:   (input.folderId as string) ?? null,
     starred:     (input.starred as boolean) ? 1 : 0,
     archived:    (input.archived as boolean) ? 1 : 0,
+    pinned:      (input.pinned as boolean) ? 1 : 0,
     color:       (input.color as string) ?? null,
     created_at:  (input.createdAt as string) ?? now,
     updated_at:  now,
   };
 
   const doCreate = db.transaction((bookmarkData: any, jinaUrl: string | null) => {
-    db.prepare('INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,color,created_at,updated_at) VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@color,@created_at,@updated_at)').run(bookmarkData);
+    db.prepare('INSERT INTO bookmarks (id,user_uuid,url,title,description,favicon,tags,folder_id,starred,archived,pinned,color,created_at,updated_at) VALUES (@id,@user_uuid,@url,@title,@description,@favicon,@tags,@folder_id,@starred,@archived,@pinned,@color,@created_at,@updated_at)').run(bookmarkData);
     if (jinaUrl) {
       db.prepare('INSERT INTO jina_conversions (bookmark_id, user_uuid, url, created_at) VALUES (?, ?, ?, ?)').run(bookmarkData.id, bookmarkData.user_uuid, jinaUrl, bookmarkData.created_at);
     }

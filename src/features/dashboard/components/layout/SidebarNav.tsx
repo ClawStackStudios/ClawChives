@@ -1,6 +1,6 @@
-import { LayoutDashboard, Folder, Star, Tag, Archive, Settings, User, Palette, Shield, Database, LogOut } from "lucide-react";
+import { LayoutDashboard, Folder, Star, Tag, Archive, Settings, User, Palette, Shield, Database, LogOut, Pin } from "lucide-react";
 
-export type NavTab = "dashboard" | "all" | "starred" | "tags" | "archived";
+export type NavTab = "dashboard" | "all" | "starred" | "tags" | "archived" | "pinned";
 export type SettingsTab = "profile" | "appearance" | "agents" | "import-export";
 
 interface SidebarNavProps {
@@ -12,6 +12,7 @@ interface SidebarNavProps {
     all: number;
     starred: number;
     archived: number;
+    pinned: number;
     tags: number;
   };
   // Settings mode
@@ -148,6 +149,15 @@ export function SidebarNav({
       inactive: "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
       activeBadge: `${badgeBase} bg-amber-200 text-amber-900 dark:bg-amber-800 dark:text-amber-100`,
       badge: bookmarkCounts.starred,
+    },
+    {
+      id: "pinned" as NavTab,
+      label: "Pinned",
+      icon: Pin,
+      active: "bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-900/30 dark:text-fuchsia-300 shadow-sm",
+      inactive: "text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800",
+      activeBadge: `${badgeBase} bg-fuchsia-200 text-fuchsia-900 dark:bg-fuchsia-800 dark:text-fuchsia-100`,
+      badge: bookmarkCounts.pinned,
     },
     {
       id: "tags" as NavTab,

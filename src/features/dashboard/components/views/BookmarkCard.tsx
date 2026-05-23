@@ -211,6 +211,20 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
             <Pencil className="w-4 h-4 md:w-3.5 md:h-3.5" />
           </Button>
 
+          {/* Pin */}
+          <Button
+            variant="ghost"
+            size="sm"
+            className={`h-10 w-10 md:h-7 md:w-7 p-0 rounded-xl ${bookmark.pinned ? "text-fuchsia-500" : "text-slate-400"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin(bookmark);
+            }}
+            title={bookmark.pinned ? "Unpin" : "Pin"}
+          >
+            <Pin className={`w-4 h-4 md:w-3.5 md:h-3.5 ${bookmark.pinned ? "fill-current" : ""}`} />
+          </Button>
+
           <Button
             variant="ghost"
             size="sm"
@@ -415,14 +429,14 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
           <Button
             variant="ghost"
             size="sm"
-            className={`h-10 w-10 md:h-8 md:w-8 p-0 rounded-xl ${isPinned ? "text-cyan-500" : "text-slate-400 hover:text-cyan-500"}`}
+            className={`h-10 w-10 md:h-8 md:w-8 p-0 rounded-xl ${bookmark.pinned ? "text-fuchsia-500" : "text-slate-400"}`}
             onClick={(e) => {
               e.stopPropagation();
               onTogglePin(bookmark);
             }}
-            title={isPinned ? "Unpin" : "Pin to top"}
+            title={bookmark.pinned ? "Unpin" : "Pin"}
           >
-            <Pin className={`w-5 h-5 md:w-4 md:h-4 ${isPinned ? "fill-current" : ""}`} />
+            <Pin className={`w-5 h-5 md:w-4 md:h-4 ${bookmark.pinned ? "fill-current" : ""}`} />
           </Button>
 
           {/* Star */}
@@ -476,8 +490,7 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
     prev.bookmark.updatedAt === next.bookmark.updatedAt &&
     prev.bookmark.starred === next.bookmark.starred &&
     prev.bookmark.archived === next.bookmark.archived &&
-    prev.bookmark.folderId === next.bookmark.folderId &&
-    prev.pinnedFolderId === next.pinnedFolderId &&
+    prev.bookmark.pinned === next.bookmark.pinned &&
     prev.layout === next.layout
   );
 });

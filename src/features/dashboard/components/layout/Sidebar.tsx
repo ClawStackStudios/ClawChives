@@ -22,6 +22,7 @@ interface SidebarProps {
     all: number;
     starred: number;
     archived: number;
+    pinned: number;
     tags: number;
   };
   // Mobile controls

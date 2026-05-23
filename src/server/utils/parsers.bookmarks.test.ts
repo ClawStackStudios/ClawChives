@@ -32,6 +32,7 @@ describe('parseBookmark', () => {
       jinaUrl: 'http://jina.url',
       createdAt: '2023-01-01',
       updatedAt: '2023-01-02',
+      pinned: false,
       folder_id: undefined,
       jina_url: undefined,
       jina_conversion_url: undefined,

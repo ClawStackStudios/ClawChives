@@ -71,12 +71,13 @@ export const getStats = (req: any, res: Response) => {
     SELECT
       COUNT(*) AS total,
       SUM(CASE WHEN starred = 1 THEN 1 ELSE 0 END) AS starred,
-      SUM(CASE WHEN archived = 1 THEN 1 ELSE 0 END) AS archived
+      SUM(CASE WHEN archived = 1 THEN 1 ELSE 0 END) AS archived,
+      SUM(CASE WHEN pinned = 1 THEN 1 ELSE 0 END) AS pinned
     FROM bookmarks
     WHERE user_uuid = ?
-  `).get(authReq.userUuid) as { total: number; starred: number; archived: number };
+  `).get(authReq.userUuid) as { total: number; starred: number; archived: number; pinned: number };
 
-  res.json({ success: true, data: { total: row.total, starred: row.starred, archived: row.archived } });
+  res.json({ success: true, data: { total: row.total, starred: row.starred, archived: row.archived, pinned: row.pinned } });
 };
 
 /** GET /api/bookmarks/:id */
