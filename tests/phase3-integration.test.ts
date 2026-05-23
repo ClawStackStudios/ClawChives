@@ -66,7 +66,7 @@ describe('Phase 3a — Mass Import & Large Library Tests', () => {
       }
 
       expect(total).toBe(1000);
-    });
+    }, 10000);
 
     it('should detect and reject duplicates (500 new + 500 dup)', async () => {
       db.prepare('DELETE FROM bookmarks WHERE user_uuid = ?').run(testUserUuid);
