@@ -185,7 +185,7 @@ export function Sidebar({
                 
                 {onShowDatabaseStats && (
                   <button
-                    onClick={() => { onShowDatabaseStats(); onClose?.(); }}
+                    onClick={() => { onShowDatabaseStats(); if (window.innerWidth < 768) onClose?.(); }}
                     className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
                   >
                     <Database className="w-5 h-5 md:w-4 md:h-4" />
@@ -195,7 +195,7 @@ export function Sidebar({
 
                 {onLogout && (
                   <button
-                    onClick={() => { onLogout(); onClose?.(); }}
+                    onClick={() => { onLogout(); if (window.innerWidth < 768) onClose?.(); }}
                     className="w-full flex items-center gap-3 px-3 py-3 md:py-2 rounded-xl text-sm font-bold text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all"
                   >
                     <LogOut className="w-5 h-5 md:w-4 md:h-4" />

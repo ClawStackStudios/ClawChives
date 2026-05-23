@@ -22,6 +22,7 @@ const getColumnCount = () => {
 interface BookmarkGridProps {
   bookmarks: Bookmark[];
   layout?: "grid" | "list";
+  pinnedFolderId?: string;
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (id: string) => void;
   onToggleStar: (bookmark: Bookmark) => void;
@@ -39,6 +40,7 @@ type GridItem =
 export function BookmarkGrid({
   bookmarks,
   layout = "grid",
+  pinnedFolderId,
   onEdit,
   onDelete,
   onToggleStar,
@@ -201,6 +203,7 @@ export function BookmarkGrid({
                     key={bookmark.id}
                     bookmark={bookmark}
                     layout={layout}
+                    pinnedFolderId={pinnedFolderId}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onToggleStar={onToggleStar}

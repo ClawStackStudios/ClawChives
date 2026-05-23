@@ -1,5 +1,5 @@
 import * as React from "react";
-import { Star, Archive, Trash2, Pencil, ExternalLink, Clock } from "lucide-react";
+import { Star, Archive, Trash2, Pencil, ExternalLink, Clock, Pin } from "lucide-react";
 import { Button } from "@/shared/ui/button";
 import { ConfirmModal } from "@/shared/ui/LobsterModal";
 import { BookmarkContextMenu } from "./BookmarkContextMenu";
@@ -8,10 +8,12 @@ import type { Bookmark } from "@/services/types";
 
 export interface BookmarkCardGridProps {
   bookmark: Bookmark;
+  pinnedFolderId?: string;
   onEdit: (bookmark: Bookmark) => void;
   onDelete: (id: string) => void;
   onToggleStar: (bookmark: Bookmark) => void;
   onToggleArchive: (bookmark: Bookmark) => void;
+  onTogglePin: (bookmark: Bookmark) => void;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
   userKeyType: string;
 }
@@ -19,13 +21,17 @@ export interface BookmarkCardGridProps {
 export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
   const {
     bookmark,
+    pinnedFolderId,
     onEdit,
     onDelete,
     onToggleStar,
     onToggleArchive,
+    onTogglePin,
     onDragStart,
     userKeyType,
   } = props;
+
+  const isPinned = !!pinnedFolderId && bookmark.folderId === pinnedFolderId;
 
   const faviconUrl = getFaviconUrl(bookmark.url);
   const [confirmOpen, setConfirmOpen] = React.useState(false);
@@ -60,6 +66,19 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
         setContextMenu={setContextMenu}
         userKeyType={userKeyType}
       />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        className="absolute top-2 right-2 h-8 w-8 p-0 text-slate-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+        onClick={(e) => {
+          e.stopPropagation();
+          setConfirmOpen(true);
+        }}
+        title="Delete"
+      >
+        <Trash2 className="w-4 h-4" />
+      </Button>
 
       <div className="flex items-start gap-3 mb-3">
         <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
@@ -142,6 +161,19 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
           <Button
             variant="ghost"
             size="sm"
+            className={`h-8 w-8 p-0 ${isPinned ? "text-cyan-500" : "text-slate-400 hover:text-cyan-500"}`}
+            onClick={(e) => {
+              e.stopPropagation();
+              onTogglePin(bookmark);
+            }}
+            title={isPinned ? "Unpin" : "Pin to top"}
+          >
+            <Pin className={`w-4 h-4 ${isPinned ? "fill-current" : ""}`} />
+          </Button>
+
+          <Button
+            variant="ghost"
+            size="sm"
             className={`h-8 w-8 p-0 ${bookmark.starred ? "text-amber-500" : "text-slate-400"}`}
             onClick={(e) => {
               e.stopPropagation();
@@ -165,18 +197,6 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
             <Archive className={`w-4 h-4 ${bookmark.archived ? "fill-current" : ""}`} />
           </Button>
 
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-8 w-8 p-0 text-slate-400 hover:text-red-600"
-            onClick={(e) => {
-              e.stopPropagation();
-              setConfirmOpen(true);
-            }}
-            title="Delete"
-          >
-            <Trash2 className="w-4 h-4" />
-          </Button>
         </div>
       </div>
 
@@ -197,6 +217,8 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
     prev.bookmark.id === next.bookmark.id &&
     prev.bookmark.updatedAt === next.bookmark.updatedAt &&
     prev.bookmark.starred === next.bookmark.starred &&
-    prev.bookmark.archived === next.bookmark.archived
+    prev.bookmark.archived === next.bookmark.archived &&
+    prev.bookmark.folderId === next.bookmark.folderId &&
+    prev.pinnedFolderId === next.pinnedFolderId
   );
 });

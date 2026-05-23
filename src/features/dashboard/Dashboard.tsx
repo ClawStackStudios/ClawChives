@@ -9,7 +9,7 @@ import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
 import { useFolderCounts } from "@/hooks/useFolderCounts";
 import { User } from "@/App";
-import { useRef, useCallback, useEffect, useState } from "react";
+import { useRef, useCallback, useEffect, useState, useMemo } from "react";
 
 interface DashboardProps {
   user: User | null;
@@ -67,6 +67,12 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     setEditingFolder
   } = useDashboardState();
   const { data: folderCounts } = useFolderCounts();
+
+  // Derive the canonical "Pinned" folder ID from the live folders list
+  const pinnedFolderId = useMemo(
+    () => folders.find((f) => f.name === "Pinned")?.id,
+    [folders]
+  );
 
   const isResizing = useRef(false);
 
