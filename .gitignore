@@ -30,12 +30,9 @@ data-dev/
 
 # CrustAgent
 .crustagent/
-.shellcheck/
 
 # AI Tools
-.claude/
-.cursor/
-.cursorrules
+.agents/
 
 
 docker-compose.dev.yml
