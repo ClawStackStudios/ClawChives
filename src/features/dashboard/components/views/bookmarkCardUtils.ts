@@ -1,19 +1,3 @@
-export const tagColors = [
-  "bg-cyan-100 text-cyan-800",
-  "bg-amber-100 text-amber-800",
-  "bg-green-100 text-green-800",
-  "bg-purple-100 text-purple-800",
-  "bg-rose-100 text-rose-800",
-  "bg-blue-100 text-blue-800",
-];
-
-export function getTagColor(tag: string) {
-  let hash = 0;
-  for (let i = 0; i < tag.length; i++) {
-    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return tagColors[Math.abs(hash) % tagColors.length];
-}
 
 export function getFaviconUrl(url: string) {
   try {

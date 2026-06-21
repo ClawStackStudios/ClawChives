@@ -4,32 +4,8 @@ import { Input } from "@/shared/ui/input";
 import { Label } from "@/shared/ui/label";
 import { Button } from "@/shared/ui/button";
 import { ModalContainer } from "@/shared/ui/modals/ModalContainer";
+import { getTagColorClasses } from "@/shared/lib/lobsterColorRNG";
 
-const LOBSTER_TAG_COLORS = [
-  {
-    bg: "bg-cyan-100 dark:bg-cyan-900/30",
-    text: "text-cyan-800 dark:text-cyan-300",
-    border: "border-cyan-200 dark:border-cyan-700/50",
-    hover: "hover:text-cyan-900 dark:hover:text-cyan-100"
-  },
-  {
-    bg: "bg-amber-100 dark:bg-amber-900/30",
-    text: "text-amber-800 dark:text-amber-300",
-    border: "border-amber-200 dark:border-amber-700/50",
-    hover: "hover:text-amber-900 dark:hover:text-amber-100"
-  },
-  {
-    bg: "bg-red-100 dark:bg-red-900/30",
-    text: "text-red-800 dark:text-red-300",
-    border: "border-red-200 dark:border-red-700/50",
-    hover: "hover:text-red-900 dark:hover:text-red-100"
-  }
-];
-
-export function getTagColor(tag: string) {
-  const hash = tag.split("").reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  return LOBSTER_TAG_COLORS[hash % LOBSTER_TAG_COLORS.length];
-}
 
 interface TagInputProps {
   tags: string[];
@@ -91,17 +67,17 @@ export function TagInput({ tags, setTags }: TagInputProps) {
         <div className="flex flex-wrap gap-2 mt-2">
           {tags.length <= 2 ? (
             tags.map((tag) => {
-              const color = getTagColor(tag);
+              const colorClasses = getTagColorClasses(tag);
               return (
                 <span
                   key={tag}
-                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 ${color.bg} ${color.text} rounded-lg text-[11px] font-bold border ${color.border} uppercase tracking-tight`}
+                  className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-bold border uppercase tracking-tight ${colorClasses}`}
                 >
                   {tag}
                   <button
                     type="button"
                     onClick={() => handleRemoveTag(tag)}
-                    className={`${color.hover} transition-colors`}
+                    className="hover:opacity-75 transition-opacity"
                   >
                     <X className="w-3.5 h-3.5" />
                   </button>
@@ -145,11 +121,11 @@ export function TagInput({ tags, setTags }: TagInputProps) {
             
             <div className="space-y-2 max-h-[40vh] overflow-y-auto custom-scrollbar pr-1">
               {tags.map((tag) => {
-                const color = getTagColor(tag);
+                const colorClasses = getTagColorClasses(tag);
                 return (
                   <div
                     key={tag}
-                    className={`flex items-center justify-between p-2.5 ${color.bg} ${color.text} rounded-xl border ${color.border} animate-in fade-in slide-in-from-left-2 duration-200`}
+                    className={`flex items-center justify-between p-2.5 rounded-xl border animate-in fade-in slide-in-from-left-2 duration-200 ${colorClasses}`}
                   >
                     <span className="text-xs font-bold uppercase tracking-tight">{tag}</span>
                     <button

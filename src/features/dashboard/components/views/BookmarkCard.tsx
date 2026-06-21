@@ -5,6 +5,7 @@ import { Button } from '@/shared/ui/button';
 import { ConfirmModal } from '@/shared/ui/LobsterModal';
 import { getCardTheme } from "../../utils/cardThemes";
 import type { Bookmark, IconSize } from "@/services/types";
+import { getTagColorClasses } from "@/shared/lib/lobsterColorRNG";
 
 interface BookmarkCardProps {
   bookmark: Bookmark;
@@ -19,22 +20,7 @@ interface BookmarkCardProps {
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
 }
 
-const tagColors = [
-  "bg-cyan-100 text-cyan-800",
-  "bg-amber-100 text-amber-800",
-  "bg-green-100 text-green-800",
-  "bg-purple-100 text-purple-800",
-  "bg-rose-100 text-rose-800",
-  "bg-blue-100 text-blue-800",
-];
 
-function getTagColor(tag: string) {
-  let hash = 0;
-  for (let i = 0; i < tag.length; i++) {
-    hash = tag.charCodeAt(i) + ((hash << 5) - hash);
-  }
-  return tagColors[Math.abs(hash) % tagColors.length];
-}
 
 function getFaviconUrl(url: string) {
   try {
@@ -183,7 +169,7 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
         {bookmark.tags.length > 0 && (
           <div className="hidden md:flex items-center gap-1 flex-shrink-0 flex-wrap gap-1">
             {bookmark.tags.slice(0, 2).map((tag) => (
-              <span key={tag} className={`text-xs px-1.5 py-0.5 rounded-full ${getTagColor(tag)}`}>
+              <span key={tag} className={`text-xs px-2 py-0.5 rounded-full border ${getTagColorClasses(tag)}`}>
                 {tag}
               </span>
             ))}
@@ -391,7 +377,7 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
           {bookmark.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className={`text-xs px-2 py-0.5 rounded-full ${getTagColor(tag)}`}
+              className={`text-xs px-2 py-0.5 rounded-full border ${getTagColorClasses(tag)}`}
             >
               {tag}
             </span>
