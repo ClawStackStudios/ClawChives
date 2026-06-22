@@ -1,6 +1,5 @@
 import { Router } from 'express';
-import db from '../database/index.js';
-import { createAuditLogger } from '../utils/auditLogger.js';
+import db, { audit } from '../database/index.js';
 import { generateId } from '../utils/crypto.js';
 import { parseFolder } from '../utils/parsers.js';
 import { requireAuth, requirePermission, AuthRequest } from '../middleware/auth.js';
@@ -8,7 +7,6 @@ import { validateBody } from '../middleware/validate.js';
 import { FolderSchemas } from '../validation/schemas.js';
 
 const router = Router();
-const audit = createAuditLogger(db);
 
 /** GET /api/folders */
 router.get('/', requireAuth, requirePermission('canRead'), (req, res) => {

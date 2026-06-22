@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import crypto from 'crypto';
-import db from '../database/index.js';
-import { createAuditLogger } from '../utils/auditLogger.js';
+import db, { audit } from '../database/index.js';
 import { calculateExpiry } from '../utils/tokenExpiry.js';
 import { generateString } from '../utils/crypto.js';
 import { requireAuth, AuthRequest } from '../middleware/auth.js';
@@ -10,7 +9,6 @@ import { validateBody } from '../middleware/validate.js';
 import { AuthSchemas } from '../validation/schemas.js';
 
 const router = Router();
-const audit = createAuditLogger(db);
 
 function detectKeyType(key: string) {
   if (key?.startsWith('hu-'))  return 'human';

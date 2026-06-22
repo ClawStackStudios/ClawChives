@@ -1,11 +1,11 @@
 import { AuthRequest } from '../../middleware/auth.js';
 import { generateId } from '../../utils/crypto.js';
-import dbInstance from '../../database/index.js';
-import { createAuditLogger } from '../../utils/auditLogger.js';
+import dbInstance, { audit } from '../../database/index.js';
+
 import { parseBookmark } from '../../utils/parsers.js';
 
 const db = dbInstance;
-const audit = createAuditLogger(db);
+
 
 export const BOOKMARK_SELECT = `
   SELECT b.*, jc.url as jina_conversion_url

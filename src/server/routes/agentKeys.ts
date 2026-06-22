@@ -1,6 +1,6 @@
 import { Router } from 'express';
-import db from '../database/index.js';
-import { createAuditLogger } from '../utils/auditLogger.js';
+import db, { audit } from '../database/index.js';
+
 import { generateId, generateString } from '../utils/crypto.js';
 import { calculateExpiry } from '../utils/tokenExpiry.js';
 import { parseAgentKey } from '../utils/parsers.js';
@@ -10,7 +10,7 @@ import { authLimiter } from '../middleware/rateLimiter.js';
 import { AgentKeySchemas } from '../validation/schemas.js';
 
 const router = Router();
-const audit = createAuditLogger(db);
+
 
 /** GET /api/agent-keys */
 router.get('/', requireAuth, requireHuman, (req, res) => {

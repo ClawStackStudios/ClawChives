@@ -1,11 +1,11 @@
 import { Response } from 'express';
-import db from '../../../database/index.js';
+import db, { audit } from '../../../database/index.js';
 import { AuthRequest } from '../../../middleware/auth.js';
 import { parseBookmark } from '../../../utils/parsers.js';
-import { createAuditLogger } from '../../../utils/auditLogger.js';
+
 import { insertBookmark, BOOKMARK_SELECT } from '../utils.js';
 
-const audit = createAuditLogger(db);
+
 
 /** POST /api/bookmarks */
 export const createBookmark = (req: any, res: Response) => {

@@ -1,9 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
-import db from '../database/index.js';
-import { createAuditLogger } from '../utils/auditLogger.js';
+import db, { audit } from '../database/index.js';
 import { checkTokenExpiry } from '../utils/tokenExpiry.js';
-
-const audit = createAuditLogger(db);
 
 export interface AuthRequest extends Request {
   apiKey: string;

@@ -1,11 +1,11 @@
 import { Response } from 'express';
-import db from '../../../database/index.js';
+import db, { audit } from '../../../database/index.js';
 import { AuthRequest } from '../../../middleware/auth.js';
-import { createAuditLogger } from '../../../utils/auditLogger.js';
+
 import { parseBookmark } from '../../../utils/parsers.js';
 import { BOOKMARK_SELECT } from '../utils.js';
 
-const audit = createAuditLogger(db);
+
 
 /** PATCH /api/bookmarks/:id/star */
 export const toggleStar = (req: any, res: Response) => {
