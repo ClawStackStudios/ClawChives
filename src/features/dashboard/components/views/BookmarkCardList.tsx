@@ -3,7 +3,8 @@ import { Star, Link as LinkIcon, Archive, Trash2, Pencil, ExternalLink, Clock, P
 import { Button } from "@/shared/ui/button";
 import { ConfirmModal } from "@/shared/ui/LobsterModal";
 import { BookmarkContextMenu } from "./BookmarkContextMenu";
-import { getFaviconUrl, getTagColor, formatRelativeTime } from "./bookmarkCardUtils";
+import { getFaviconUrl, formatRelativeTime } from "./bookmarkCardUtils";
+import { getTagColorClasses } from "@/shared/lib/lobsterColorRNG";
 import type { Bookmark } from "@/services/types";
 
 export interface BookmarkCardListProps {
@@ -123,7 +124,7 @@ export const BookmarkCardList = React.memo((props: BookmarkCardListProps) => {
               {bookmark.tags.map((tag) => (
                 <span
                   key={tag}
-                  className={`text-xs px-2 py-0.5 rounded-full ${getTagColor(tag)}`}
+                  className={`text-xs px-2 py-0.5 rounded-full border ${getTagColorClasses(tag)}`}
                 >
                   {tag}
                 </span>

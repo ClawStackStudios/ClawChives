@@ -13,6 +13,7 @@ import { X, Tag } from "lucide-react";
 import type { Bookmark } from "@/services/types";
 import { ConfirmModal, TagBlockedModal } from '@/shared/ui/LobsterModal';
 import { aggregateTags } from '@/shared/lib/utils';
+import { getTagColorClasses } from '@/shared/lib/lobsterColorRNG';
 
 interface TagsViewProps {
   bookmarks: Bookmark[];
@@ -20,20 +21,7 @@ interface TagsViewProps {
   onDeleteTag: (tag: string) => Promise<void>;
 }
 
-const TAG_PALETTE = [
-  "bg-cyan-100 text-cyan-800 border-cyan-200 dark:bg-cyan-900/30 dark:text-cyan-300 dark:border-cyan-700/50",
-  "bg-amber-100 text-amber-800 border-amber-200 dark:bg-amber-900/30 dark:text-amber-300 dark:border-amber-700/50",
-  "bg-violet-100 text-violet-800 border-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:border-violet-700/50",
-  "bg-sky-100 text-sky-800 border-sky-200 dark:bg-sky-900/30 dark:text-sky-300 dark:border-sky-700/50",
-  "bg-green-100 text-green-800 border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-700/50",
-  "bg-rose-100 text-rose-800 border-rose-200 dark:bg-rose-900/30 dark:text-rose-300 dark:border-rose-700/50",
-];
 
-function hash(s: string) {
-  let h = 0;
-  for (let i = 0; i < s.length; i++) h = s.charCodeAt(i) + ((h << 5) - h);
-  return Math.abs(h);
-}
 
 export function TagsView({ bookmarks, onSelectTag, onDeleteTag }: TagsViewProps) {
   const [blockedTag, setBlockedTag] = useState<string | null>(null);
@@ -78,7 +66,7 @@ export function TagsView({ bookmarks, onSelectTag, onDeleteTag }: TagsViewProps)
       </div>
       <div className="flex flex-wrap gap-3">
         {tags.map(([tag, count]) => {
-          const cls = TAG_PALETTE[hash(tag) % TAG_PALETTE.length];
+          const cls = getTagColorClasses(tag);
           return (
             <div key={tag} className="relative group/tag">
               <button

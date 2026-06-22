@@ -13,22 +13,31 @@ const env = envArg !== -1 ? args[envArg + 1] : 'development';
 const isProd = env === 'production';
 const dataDirName = isProd ? 'data' : 'data-dev';
 const DATA_DIR = path.join(__dirname, '..', dataDirName);
-const DB_PATH = path.join(DATA_DIR, 'db.sqlite');
+const targetFiles = [
+  'db.sqlite', 'db.sqlite-wal', 'db.sqlite-shm',
+  'audit.sqlite', 'audit.sqlite-wal', 'audit.sqlite-shm'
+];
 
-console.log(`\n[🦞 Scuttle] Initiating deep-sea reset sequence...`);
-console.log(`[🦞 Scuttle] Targets: ${isProd ? 'PRODUCTION' : 'DEVELOPMENT'} reef`);
+let scuttled = false;
 
-if (fs.existsSync(DB_PATH)) {
-  try {
-    console.log(`[🦞 Scuttle] Scuttling ${DB_PATH}...`);
-    fs.unlinkSync(DB_PATH);
-    console.log(`[🦞 Scuttle] ✅ Database file has been molted.`);
-  } catch (err: any) {
-    console.error(`[🦞 Scuttle] ❌ Failed to scuttle database: ${err.message}`);
-    process.exit(1);
+for (const file of targetFiles) {
+  const filePath = path.join(DATA_DIR, file);
+  if (fs.existsSync(filePath)) {
+    try {
+      console.log(`[🦞 Scuttle] Scuttling ${filePath}...`);
+      fs.unlinkSync(filePath);
+      scuttled = true;
+    } catch (err: any) {
+      console.error(`[🦞 Scuttle] ❌ Failed to scuttle ${file}: ${err.message}`);
+      process.exit(1);
+    }
   }
+}
+
+if (scuttled) {
+  console.log(`[🦞 Scuttle] ✅ Database files have been molted.`);
 } else {
-  console.log(`[🦞 Scuttle] ℹ️ No database file found at ${DB_PATH}. Reef is already clean.`);
+  console.log(`[🦞 Scuttle] ℹ️ No database files found in ${DATA_DIR}. Reef is already clean.`);
 }
 
 console.log(`[🦞 Scuttle] Reset complete. Restart the API to hatch a new database.\n`);

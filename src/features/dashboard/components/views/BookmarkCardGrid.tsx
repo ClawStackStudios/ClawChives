@@ -3,7 +3,8 @@ import { Star, Archive, Trash2, Pencil, ExternalLink, Clock, Pin } from "lucide-
 import { Button } from "@/shared/ui/button";
 import { ConfirmModal } from "@/shared/ui/LobsterModal";
 import { BookmarkContextMenu } from "./BookmarkContextMenu";
-import { getFaviconUrl, getTagColor, formatRelativeTime } from "./bookmarkCardUtils";
+import { getFaviconUrl, formatRelativeTime } from "./bookmarkCardUtils";
+import { getTagColorClasses } from "@/shared/lib/lobsterColorRNG";
 import type { Bookmark } from "@/services/types";
 
 export interface BookmarkCardGridProps {
@@ -125,7 +126,7 @@ export const BookmarkCardGrid = React.memo((props: BookmarkCardGridProps) => {
           {bookmark.tags.slice(0, 3).map((tag) => (
             <span
               key={tag}
-              className={`text-xs px-2 py-0.5 rounded-full ${getTagColor(tag)}`}
+              className={`text-xs px-2 py-0.5 rounded-full border ${getTagColorClasses(tag)}`}
             >
               {tag}
             </span>

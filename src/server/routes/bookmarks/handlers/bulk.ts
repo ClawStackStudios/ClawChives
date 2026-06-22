@@ -1,11 +1,11 @@
 import { Response } from 'express';
-import db from '../../../database/index.js';
+import db, { audit } from '../../../database/index.js';
 import { AuthRequest } from '../../../middleware/auth.js';
-import { createAuditLogger } from '../../../utils/auditLogger.js';
+
 import { BookmarkSchemas } from '../../../validation/schemas.js';
 import { insertBookmark } from '../utils.js';
 
-const audit = createAuditLogger(db);
+
 
 /** POST /api/bookmarks/bulk */
 export const bulkImport = (req: any, res: Response) => {

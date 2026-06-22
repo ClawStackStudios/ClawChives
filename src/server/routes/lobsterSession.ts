@@ -1,12 +1,12 @@
 import { Router } from 'express';
-import db from '../database/index.js';
+import db, { audit } from '../database/index.js';
 import { generateId, generateString } from '../utils/crypto.js';
 import { requireAuth, requireHuman, AuthRequest } from '../middleware/auth.js';
-import { createAuditLogger } from '../utils/auditLogger.js';
+
 import { authLimiter } from '../middleware/rateLimiter.js';
 
 const router = Router();
-const audit = createAuditLogger(db);
+
 
 /** POST /api/lobster-session/start — Generate ephemeral session key */
 router.post('/start', requireAuth, requireHuman, authLimiter, (req, res) => {
