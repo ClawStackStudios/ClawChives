@@ -20,9 +20,15 @@ export const getBookmarks = (req: any, res: Response) => {
   }
   sql += ' ORDER BY b.created_at DESC';
 
-  const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 50, 1), 10000);
+  let limit: number;
+  if (req.query.limit === 'all') {
+    limit = -1;
+  } else {
+    limit = Math.min(Math.max(parseInt(req.query.limit as string) || 50, 1), 10000);
+  }
+  
   let offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
-  if (req.query.page) {
+  if (req.query.page && limit !== -1) {
     const page = Math.max(parseInt(req.query.page as string) || 1, 1);
     offset = (page - 1) * limit;
   }

@@ -61,7 +61,7 @@ export class RestAdapter implements IDatabaseAdapter {
    * @param offset Pagination offset
    * @returns Array of bookmarks for this page
    */
-  getBookmarks(limit: number = 50, offset: number = 0): Promise<Bookmark[]> {
+  getBookmarks(limit: number | "all" = 50, offset: number = 0): Promise<Bookmark[]> {
     const params = new URLSearchParams();
     params.set("limit", limit.toString());
     params.set("offset", offset.toString());

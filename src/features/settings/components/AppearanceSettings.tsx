@@ -10,7 +10,7 @@ type Layout = "grid" | "list";
 export function AppearanceSettings() {
   const { theme, setTheme } = useTheme();
   const [layout, setLayout] = useState<Layout>("grid");
-  const [itemsPerPage, setItemsPerPage] = useState<12 | 24 | 48>(12);
+  const [itemsPerPage, setItemsPerPage] = useState<12 | 24 | 48 | 96 | "all">(12);
   const [compactMode, setCompactMode] = useState(false);
   const [showFavicons, setShowFavicons] = useState(true);
   const [sortBy, setSortBy] = useState<"dateAdded" | "title" | "starred">("dateAdded");
@@ -24,7 +24,7 @@ export function AppearanceSettings() {
   useEffect(() => {
     if (settings) {
       setLayout(settings.layout || "grid");
-      setItemsPerPage((settings.itemsPerPage as 12 | 24 | 48) || 12);
+      setItemsPerPage((settings.itemsPerPage as 12 | 24 | 48 | 96 | "all") || 12);
       setCompactMode(settings.compactMode ?? false);
       setShowFavicons(settings.showFavicons ?? true);
       setSortBy(settings.sortBy || "dateAdded");
@@ -130,19 +130,22 @@ export function AppearanceSettings() {
           <div>
             <Label className="text-sm font-semibold text-slate-900 dark:text-white mb-3 block">Items Per Page</Label>
             <div className="flex gap-2">
-              {[12, 24, 48, 96].map((count) => (
-                <button
-                  key={count}
-                  onClick={() => setItemsPerPage(count as 12 | 24 | 48)}
-                  className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
-                    itemsPerPage === count
-                      ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
-                      : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-                  }`}
-                >
-                  {count}
-                </button>
-              ))}
+              {[12, 24, 48, 96, "All"].map((count) => {
+                const countVal = count === "All" ? "all" : (count as 12 | 24 | 48 | 96);
+                return (
+                  <button
+                    key={count}
+                    onClick={() => setItemsPerPage(countVal)}
+                    className={`px-4 py-2 rounded-lg border-2 text-sm font-medium transition-all ${
+                      itemsPerPage === countVal
+                        ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
+                        : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
+                    }`}
+                  >
+                    {count}
+                  </button>
+                );
+              })}
             </div>
           </div>
 

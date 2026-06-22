@@ -17,7 +17,7 @@ import { FOLDER_COUNTS_QUERY_KEY } from "./useFolderCounts";
 import { TAGS_QUERY_KEY } from "./useTags";
 import type { Bookmark } from "../services/types";
 
-const BOOKMARKS_QUERY_KEY = (pageSize: number) => ["bookmarks", "infinite", pageSize];
+const BOOKMARKS_QUERY_KEY = (pageSize: number | "all") => ["bookmarks", "infinite", pageSize];
 
 export function useInfiniteBookmarks() {
   const db = useDatabaseAdapter();
@@ -33,10 +33,11 @@ export function useInfiniteBookmarks() {
       return db.getBookmarks(pageSize, pageParam);
     },
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < pageSize) {
+      if (pageSize === "all") return undefined; // No pagination if all
+      if (lastPage.length < (pageSize as number)) {
         return undefined; // No more pages
       }
-      return allPages.length * pageSize;
+      return allPages.length * (pageSize as number);
     },
     enabled: !!db,
     initialPageParam: 0,
@@ -103,7 +104,9 @@ export function useInfiniteBookmarks() {
           return {
             ...oldData,
             pages: [
-              [savedBookmark, ...oldData.pages[0]].slice(0, pageSize),
+              pageSize === "all" 
+                ? [savedBookmark, ...oldData.pages[0]]
+                : [savedBookmark, ...oldData.pages[0]].slice(0, pageSize as number),
               ...oldData.pages.slice(1),
             ],
           };
