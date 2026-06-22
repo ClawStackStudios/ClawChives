@@ -3,7 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import path from 'path';
-import { existsSync } from 'fs';
+import fs, { existsSync } from 'fs';
 import { fileURLToPath } from 'url';
 import cookieParser from 'cookie-parser';
 import crypto from 'crypto';
@@ -107,8 +107,11 @@ app.get('/api/health', (_req, res) => {
     folders:   (db.prepare('SELECT COUNT(*) as c FROM folders').get() as any).c,
     agentKeys: (db.prepare("SELECT COUNT(*) as c FROM agent_keys WHERE is_active = 1").get() as any).c,
   };
+  const pkgPath = path.join(process.cwd(), 'package.json');
+  const pkgVersion = fs.existsSync(pkgPath) ? JSON.parse(fs.readFileSync(pkgPath, 'utf8')).version : 'unknown';
+
   res.json({
-    success: true, service: 'ClawChives API', version: '2.0.0',
+    success: true, service: 'ClawChives API', version: pkgVersion,
     mode: 'sqlite', uptime: process.uptime(), counts,
   });
 });

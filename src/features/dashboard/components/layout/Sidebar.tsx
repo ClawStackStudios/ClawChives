@@ -202,6 +202,10 @@ export function Sidebar({
                     Claw Out
                   </button>
                 )}
+                
+                <div className="pt-2 mt-2 border-t border-slate-200 dark:border-slate-800 text-center text-[10px] font-bold text-slate-400 dark:text-slate-500 tracking-wider">
+                  VERSION {import.meta.env.VITE_APP_VERSION}
+                </div>
               </div>
             )}
           </>
