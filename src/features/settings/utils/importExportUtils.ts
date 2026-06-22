@@ -11,9 +11,60 @@ export const importBookmarksFromJson = async (
     const data = JSON.parse(jsonText);
 
     if (!Array.isArray(data)) {
-      throw new Error("Invalid file format: Expected an array of bookmarks.");
+      if (data._type === "clawchives_full_backup" && data.data) {
+        // It's a .ccbak file!
+        const backup = data.data;
+        let bCount = 0;
+        
+        // 0. Enforce "Empty Habitat" rule for robust restores
+        const existingBookmarks = await db.getBookmarks(1, 0);
+        if (existingBookmarks && existingBookmarks.length > 0) {
+          throw new Error("Can only import into an empty habitat. To protect your data from unpredictable merges, please purge your reef first.");
+        }
+        
+        // 1. Restore Appearance Settings
+        if (backup.appearanceSettings) {
+          await db.saveAppearanceSettings(backup.appearanceSettings);
+        }
+        
+        // 2. Restore Folders (Pods)
+        if (backup.folders && Array.isArray(backup.folders)) {
+          for (const folder of backup.folders) {
+            try {
+              await db.saveFolder(folder);
+            } catch (err) {
+              await db.updateFolder(folder); // Fallback to update if ID exists
+            }
+          }
+        }
+        
+        // 3. Tags are implicit in bookmarks, so we don't need a separate saveTag step.
+        // The server extracts tags dynamically from the JSON column.
+        
+        // 4. Restore Pinchmarks
+        if (backup.bookmarks && Array.isArray(backup.bookmarks)) {
+          for (const bookmark of backup.bookmarks) {
+            try {
+              await db.saveBookmark(bookmark);
+              bCount++;
+            } catch (err) {
+              await db.updateBookmark(bookmark); // Fallback to update if ID exists
+              bCount++;
+            }
+          }
+        }
+
+        return {
+          success: true,
+          message: "Sovereign backup restored successfully!",
+          count: bCount,
+        };
+      } else {
+        throw new Error("Invalid file format: Expected a .ccbak object or an array of bookmarks.");
+      }
     }
 
+    // Legacy fallback for array of bookmarks
     let count = 0;
     for (const bookmark of data) {
       await db.saveBookmark({
@@ -34,7 +85,7 @@ export const importBookmarksFromJson = async (
 
     return {
       success: true,
-      message: "Import completed successfully!",
+      message: "Legacy import completed successfully!",
       count,
     };
   } catch (error) {
@@ -43,6 +94,49 @@ export const importBookmarksFromJson = async (
       message: error instanceof Error ? error.message : "Import failed",
     };
   }
+};
+
+/**
+ * Exports a full .ccbak sovereign backup including folders, tags, settings, and pinchmarks.
+ */
+export const exportFullBackup = async (db: any) => {
+  const [bookmarks, folders, tags, appearanceSettings] = await Promise.all([
+    db.getBookmarks(),
+    db.getFolders(),
+    db.getTags(),
+    db.getAppearanceSettings()
+  ]);
+
+  const payload = {
+    _version: "1.0",
+    _type: "clawchives_full_backup",
+    metadata: {
+      exportedAt: new Date().toISOString(),
+      totalBookmarks: bookmarks.length,
+      totalFolders: folders.length,
+      totalTags: tags.length
+    },
+    data: {
+      bookmarks,
+      folders,
+      tags,
+      appearanceSettings
+    }
+  };
+
+  const content = JSON.stringify(payload, null, 2);
+  const blob = new Blob([content], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  
+  // Format YYYY-MM-DD
+  const dateStr = new Date().toISOString().split('T')[0];
+  a.href = url;
+  a.download = `ClawChives_Sovereign_Backup_${dateStr}.ccbak`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 };
 
 /**
