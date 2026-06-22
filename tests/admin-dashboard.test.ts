@@ -1,15 +1,19 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
 const DATA_DIR = path.join(process.cwd(), 'tests', 'data-admin');
-process.env.DATA_DIR = DATA_DIR;
-process.env.NODE_ENV = 'test';
-process.env.ADMIN_TOKEN = 'test-admin-token-for-testing';
 
-if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
+vi.hoisted(() => {
+  const dir = require('path').join(process.cwd(), 'tests', 'data-admin');
+  process.env.DATA_DIR = dir;
+  process.env.NODE_ENV = 'test';
+  process.env.ADMIN_TOKEN = 'test-admin-token-for-testing';
+  const fsLib = require('fs');
+  if (!fsLib.existsSync(dir)) fsLib.mkdirSync(dir, { recursive: true });
+});
 
 import { app, db, auditDb } from '../server.js';
 import { loginAsAdmin, adminGet, adminDelete, adminPatch, TEST_ADMIN_HASH } from './helpers/admin.js';
@@ -19,7 +23,6 @@ const now = () => new Date().toISOString();
 const uniqueKeyHash = () => crypto.randomBytes(32).toString('hex');
 
 describe('SuperAdmin Dashboard', () => {
-
 
 
   // ─── 1. Authentication ────────────────────────────────────────────────────

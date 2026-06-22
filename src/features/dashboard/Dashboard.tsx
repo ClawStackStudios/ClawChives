@@ -8,7 +8,6 @@ import { FolderEditModal } from "./components/layout/FolderEditModal";
 import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
 import { useFolderCounts } from "@/hooks/useFolderCounts";
-import { getTagColorClasses } from "@/shared/lib/lobsterColorRNG";
 import { User } from "@/App";
 import { useRef, useCallback, useEffect, useState } from "react";
 

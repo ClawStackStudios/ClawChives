@@ -29,7 +29,7 @@ export function useAppearanceSettings() {
       queryClient.setQueryData(APPEARANCE_SETTINGS_QUERY_KEY, newSettings);
       return { previousSettings };
     },
-    onError: (err, newSettings, context) => {
+    onError: (_err, _newSettings, context) => {
       queryClient.setQueryData(APPEARANCE_SETTINGS_QUERY_KEY, context?.previousSettings);
     },
     onSuccess: (newSettings) => {

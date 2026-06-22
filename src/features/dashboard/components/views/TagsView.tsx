@@ -8,7 +8,7 @@
  * ─────────────────────────────────────────────────────────────
  */
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { X, Tag, ArrowLeft } from "lucide-react";
 import type { Bookmark } from "@/services/types";
 import { ConfirmModal, TagBlockedModal } from '@/shared/ui/LobsterModal';
@@ -33,6 +33,8 @@ interface TagsViewProps {
   onFetchNextPage?: () => void;
   hasNextPage?: boolean;
   isFetchingNextPage?: boolean;
+  compactMode?: boolean;
+  showFavicons?: boolean;
 }
 
 export function TagsView({ 
@@ -50,16 +52,12 @@ export function TagsView({
   onFetchNextPage,
   hasNextPage = false,
   isFetchingNextPage = false,
+  compactMode = false,
+  showFavicons = false,
 }: TagsViewProps) {
   const [blockedTag, setBlockedTag] = useState<string | null>(null);
   const [blockedBookmarks, setBlockedBookmarks] = useState<Bookmark[]>([]);
   const [confirmTag, setConfirmTag] = useState<string | null>(null);
-  const [animateState, setAnimateState] = useState<"enter" | "exit">("enter");
-
-  // Reset animation when selectedTag changes
-  useEffect(() => {
-    setAnimateState("enter");
-  }, [selectedTag]);
 
   // Aggregate tags (memoized for performance)
   const tags = useMemo(() => aggregateTags(bookmarks), [bookmarks]);
@@ -137,6 +135,8 @@ export function TagsView({
             onFetchNextPage={onFetchNextPage!}
             hasNextPage={hasNextPage}
             isFetchingNextPage={isFetchingNextPage}
+            compactMode={compactMode}
+            showFavicons={showFavicons}
           />
         </div>
 

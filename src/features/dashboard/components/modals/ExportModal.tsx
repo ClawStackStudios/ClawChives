@@ -169,7 +169,7 @@ export function ExportModal({ isOpen, onClose, initialFormat = 'html' }: ExportM
               <option value="starred">⭐ Starred Only</option>
               {allTags && allTags.length > 0 && (
                 <optgroup label="Tags">
-                  {allTags.map(t => <option key={`tag:${t.name}`} value={`tag:${t.name}`}>#{t.name}</option>)}
+                  {allTags.map(t => <option key={`tag:${t}`} value={`tag:${t}`}>#{t}</option>)}
                 </optgroup>
               )}
               {folders && folders.length > 0 && (

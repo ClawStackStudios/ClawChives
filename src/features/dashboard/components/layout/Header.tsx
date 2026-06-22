@@ -1,4 +1,4 @@
-import { Menu, Plus, X } from "lucide-react";
+import { Menu, Plus } from "lucide-react";
 import { Button } from '@/shared/ui/button';
 
 import { SortDropdown } from "../views/SortDropdown";
