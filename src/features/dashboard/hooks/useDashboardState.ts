@@ -4,6 +4,7 @@ import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
 import { useInfiniteBookmarks } from "@/hooks/useInfiniteBookmarks";
 import { useBookmarkStats } from "@/hooks/useBookmarkStats";
 import { useTags } from "@/hooks/useTags";
+import { useAppearanceSettings } from "@/hooks/useAppearanceSettings";
 import { FOLDER_COUNTS_QUERY_KEY } from "@/hooks/useFolderCounts";
 import { useSidebarSearch } from "@/hooks/useSidebarSearch";
 import { useDebounce, sortBookmarks } from '@/shared/lib/utils';
@@ -18,6 +19,11 @@ export const useDashboardState = () => {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(() => sessionStorage.getItem("cc_selected_folder"));
   const [activeTab, setActiveTab] = useState<NavTab>(() => (sessionStorage.getItem("cc_active_tab") as NavTab) || "dashboard");
   const [tagFilter, setTagFilter] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState({
+    starred: false,
+    pinned: false,
+    archived: false,
+  });
   const [searchQuery, setSearchQuery] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBookmark, setEditingBookmark] = useState<Bookmark | null>(null);
@@ -29,7 +35,6 @@ export const useDashboardState = () => {
   });
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; variant?: "info" | "error" } | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>(() => (sessionStorage.getItem("cc_sort_by") as SortBy) || "date-desc");
-  const [viewMode, setViewMode] = useState<"grid" | "list">(() => (sessionStorage.getItem("cc_view_mode") as "grid" | "list") || "grid");
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     const saved = localStorage.getItem("cc_sidebar_width");
     return saved ? parseInt(saved, 10) : 256;
@@ -53,6 +58,9 @@ export const useDashboardState = () => {
 
   const { data: stats } = useBookmarkStats();
   const { data: allTags } = useTags();
+  const { data: appearanceSettings, saveSettings } = useAppearanceSettings();
+  
+  const viewMode = appearanceSettings?.layout ?? "grid";
   const debouncedQuery = useDebounce(searchQuery, 300);
   const filteredFolders = useSidebarSearch(folders, searchQuery);
 
@@ -82,14 +90,24 @@ export const useDashboardState = () => {
     });
   }, [db, queryClient]);
 
+  // Sync sort by from database if not manually overridden in session
+  useEffect(() => {
+    if (appearanceSettings) {
+      if (!sessionStorage.getItem("cc_sort_by") && appearanceSettings.sortBy) {
+        setSortBy(appearanceSettings.sortBy === "title" ? "name-asc" : appearanceSettings.sortBy === "starred" ? "date-desc" : "date-desc");
+      }
+    }
+  }, [appearanceSettings]);
+
   const handleSortChange = (sort: SortBy) => {
     setSortBy(sort);
     sessionStorage.setItem("cc_sort_by", sort);
   };
 
   const handleViewChange = (mode: "grid" | "list") => {
-    setViewMode(mode);
-    sessionStorage.setItem("cc_view_mode", mode);
+    if (appearanceSettings) {
+      saveSettings({ ...appearanceSettings, layout: mode });
+    }
   };
 
   const handleSidebarWidthChange = (width: number) => {
@@ -136,6 +154,7 @@ export const useDashboardState = () => {
     setSelectedFolder(null);
     sessionStorage.removeItem("cc_selected_folder");
     setTagFilter(null);
+    setFilterStatus({ starred: false, pinned: false, archived: false });
   };
 
   const handleAddFolder = async (name: string, color: string = "#06b6d4") => {
@@ -215,18 +234,25 @@ export const useDashboardState = () => {
             bookmark.tags?.some((t) => t.toLowerCase().includes(lowerQuery));
 
           const matchesFolder = selectedFolder ? bookmark.folderId === selectedFolder : true;
-          const matchesFilter =
-            (activeTab === "all" && !bookmark.archived) ||
-            (activeTab === "starred" && bookmark.starred) ||
-            (activeTab === "archived" && bookmark.archived) ||
-            (activeTab === "pinned" && bookmark.pinned);
           const matchesTag = tagFilter ? bookmark.tags.includes(tagFilter) : true;
+          
+          let matchesFilter = true;
+          if (activeTab === "starred" && !bookmark.starred) matchesFilter = false;
+          if (activeTab === "pinned" && !bookmark.pinned) matchesFilter = false;
+          if (activeTab === "archived" && !bookmark.archived) matchesFilter = false;
+          
+          if (filterStatus.starred && !bookmark.starred) matchesFilter = false;
+          if (filterStatus.pinned && !bookmark.pinned) matchesFilter = false;
+          if (filterStatus.archived && !bookmark.archived) matchesFilter = false;
 
-          return matchesSearch && matchesFolder && matchesFilter && matchesTag;
+          // By default, hide archived pinchmarks unless explicitly viewing them
+          if (bookmark.archived && activeTab !== "archived" && !filterStatus.archived) matchesFilter = false;
+
+          return matchesSearch && matchesFolder && matchesTag && matchesFilter;
         }),
         sortBy
       ),
-    [flatBookmarks, debouncedQuery, selectedFolder, activeTab, tagFilter, sortBy]
+    [flatBookmarks, debouncedQuery, selectedFolder, activeTab, tagFilter, filterStatus, sortBy]
   );
 
   return {
@@ -234,6 +260,7 @@ export const useDashboardState = () => {
     selectedFolder,
     activeTab,
     tagFilter,
+    filterStatus,
     searchQuery,
     isModalOpen,
     editingBookmark,
@@ -244,6 +271,7 @@ export const useDashboardState = () => {
     flatBookmarks,
     filteredFolders,
     filteredBookmarks,
+    appearanceSettings,
     stats,
     allTags,
     tagsCount: allTags?.length ?? 0,
@@ -252,6 +280,7 @@ export const useDashboardState = () => {
     setSearchQuery,
     setSidebarOpen,
     setTagFilter,
+    setFilterStatus,
     setIsModalOpen,
     setEditingBookmark,
     setAlertModal,

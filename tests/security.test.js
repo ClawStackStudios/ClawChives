@@ -1,22 +1,23 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-// Setup environment variables before importing the app
-process.env.NODE_ENV = 'test';
-process.env.DATA_DIR = path.join(process.cwd(), 'tests', 'data');
-if (!fs.existsSync(process.env.DATA_DIR)) {
-  fs.mkdirSync(process.env.DATA_DIR, { recursive: true });
-}
+vi.hoisted(() => {
+  const dir = require('path').join(process.cwd(), 'tests', 'data');
+  process.env.DATA_DIR = dir;
+  process.env.NODE_ENV = 'test';
+  const fsLib = require('fs');
+  if (!fsLib.existsSync(dir)) fsLib.mkdirSync(dir, { recursive: true });
+});
 
-// Import app and db after setting env
 import { app, db, generateString } from '../server.js';
 
 describe('Security Fixes: Key Generation & Agent Authorization Bypass', () => {
-
-
+  beforeAll(async () => {
+    // nothing
+  });
 
   describe('Key Generation (OWASP)', () => {
     it('generates strings of correct length without modulo bias', () => {

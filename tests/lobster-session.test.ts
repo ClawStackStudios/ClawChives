@@ -1,15 +1,17 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
 
 const DATA_DIR = path.join(process.cwd(), 'tests', 'data-lobster-session');
-process.env.DATA_DIR = DATA_DIR;
-process.env.NODE_ENV = 'test';
 
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
+vi.hoisted(() => {
+  const dir = require('path').join(process.cwd(), 'tests', 'data-lobster-session');
+  process.env.DATA_DIR = dir;
+  process.env.NODE_ENV = 'test';
+  const fsLib = require('fs');
+  if (!fsLib.existsSync(dir)) fsLib.mkdirSync(dir, { recursive: true });
+});
 
 import { app, db } from '../server.js';
 

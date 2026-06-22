@@ -92,7 +92,7 @@ export function SettingsPanel({ onBack, onLogout, onShowDatabaseStats }: Setting
           viewMode="grid"
           onViewChange={() => {}}
           tagFilter={null}
-          onClearTagFilter={() => {}}
+          onTagFilterChange={() => {}}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 

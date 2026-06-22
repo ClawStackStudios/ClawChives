@@ -1,16 +1,16 @@
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, vi } from 'vitest';
 import request from 'supertest';
 import fs from 'fs';
 import path from 'path';
 
-// Setup environment variables before importing the app
-process.env.NODE_ENV = 'test';
-process.env.DATA_DIR = path.join(process.cwd(), 'tests', 'data-bulk');
-if (!fs.existsSync(process.env.DATA_DIR)) {
-  fs.mkdirSync(process.env.DATA_DIR, { recursive: true });
-}
+vi.hoisted(() => {
+  const dir = require('path').join(process.cwd(), 'tests', 'data-bulk');
+  process.env.DATA_DIR = dir;
+  process.env.NODE_ENV = 'test';
+  const fsLib = require('fs');
+  if (!fsLib.existsSync(dir)) fsLib.mkdirSync(dir, { recursive: true });
+});
 
-// Import app and db after setting env
 import { app, db } from '../server.js';
 
 describe('POST /api/bookmarks/bulk — HardShell Comprehensive Tests', () => {

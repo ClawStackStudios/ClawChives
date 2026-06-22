@@ -12,7 +12,7 @@ import type { Bookmark, Folder, AgentKey, AppearanceSettings, ProfileSettings } 
 
 export interface IDatabaseAdapter {
   // ── Bookmarks ──────────────────────────────────────────────────────────────
-  getBookmarks(limit?: number, offset?: number): Promise<Bookmark[]>;
+  getBookmarks(limit?: number | "all", offset?: number): Promise<Bookmark[]>;
   getBookmark(id: string): Promise<Bookmark | null>;
   getBookmarkStats(): Promise<{ total: number; starred: number; archived: number; pinned: number }>;
   getTags(): Promise<string[]>;

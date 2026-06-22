@@ -1,18 +1,32 @@
 import { useState } from "react";
-import { Upload, Archive, Package } from "lucide-react";
+import { Upload, Archive, Package, DatabaseBackup, Loader2 } from "lucide-react";
 import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
 import { ConfirmModal, AlertModal } from '@/shared/ui/LobsterModal';
 import { LobsterImportModal } from "./LobsterImportModal";
 import { ImportSection } from "./ImportSection";
 import { ExportModal } from "@/features/dashboard/components/modals/ExportModal";
+import { exportFullBackup } from "../utils/importExportUtils";
 
 export function ImportExportSettings() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showPurgedAlert, setShowPurgedAlert] = useState(false);
   const [lobsterImportOpen, setLobsterImportOpen] = useState(false);
   const [exportModalOpen, setExportModalOpen] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
 
   const db = useDatabaseAdapter();
+
+  const handleFullBackup = async () => {
+    if (!db) return;
+    setIsBackingUp(true);
+    try {
+      await exportFullBackup(db);
+    } catch (err) {
+      console.error("Backup failed:", err);
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -38,12 +52,37 @@ export function ImportExportSettings() {
       {/* Import Section */}
       <ImportSection db={db} />
 
-      {/* Export Section */}
+      {/* Full Sovereign Backup Section */}
       <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm transition-colors overflow-hidden">
-        <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-cyan-500/5 to-transparent">
+        <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-cyan-500/10 to-transparent">
           <div className="flex items-center gap-5">
             <div className="p-4 bg-cyan-100 dark:bg-cyan-900/30 rounded-2xl border border-cyan-200 dark:border-cyan-800/50">
-              <Archive className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
+              <DatabaseBackup className="w-8 h-8 text-cyan-600 dark:text-cyan-400" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1 uppercase tracking-tight">Full Sovereign Backup</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-md">
+                1-Click export of your entire database state (.ccbak format). Includes all Pinchmarks, Pods, Tags, Settings, and relational metadata.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={handleFullBackup}
+            disabled={isBackingUp || !db}
+            className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-cyan-600 hover:bg-cyan-700 disabled:bg-slate-300 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-cyan-600/30 transition-all active:scale-95"
+          >
+            {isBackingUp ? <Loader2 className="w-5 h-5 animate-spin" /> : <DatabaseBackup className="w-5 h-5" />}
+            {isBackingUp ? "Backing up..." : "Download .ccbak"}
+          </button>
+        </div>
+      </div>
+
+      {/* Export Section */}
+      <div className="bg-white dark:bg-slate-900 rounded-xl border-2 border-slate-200 dark:border-slate-800 shadow-sm transition-colors overflow-hidden">
+        <div className="p-8 flex flex-col md:flex-row items-center justify-between gap-6 bg-gradient-to-r from-slate-500/5 to-transparent">
+          <div className="flex items-center gap-5">
+            <div className="p-4 bg-slate-100 dark:bg-slate-800/50 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <Archive className="w-8 h-8 text-slate-600 dark:text-slate-400" />
             </div>
             <div>
               <h3 className="text-xl font-bold text-slate-900 dark:text-slate-100 mb-1 uppercase tracking-tight">Export Your Habitat</h3>
@@ -54,7 +93,7 @@ export function ImportExportSettings() {
           </div>
           <button
             onClick={() => setExportModalOpen(true)}
-            className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-cyan-600 hover:bg-cyan-700 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-cyan-600/30 transition-all active:scale-95"
+            className="w-full md:w-auto flex items-center justify-center gap-3 px-8 py-4 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 text-white font-black uppercase tracking-widest rounded-xl shadow-xl shadow-slate-900/20 transition-all active:scale-95"
           >
             <Package className="w-5 h-5" />
             Hatch Exports

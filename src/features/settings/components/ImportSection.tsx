@@ -54,7 +54,7 @@ export function ImportSection({ db }: ImportSectionProps) {
             <input
               id="import-file"
               type="file"
-              accept=".json"
+              accept=".json,.ccbak"
               onChange={handleFileSelect}
               className="flex-1 h-10 rounded-lg border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 px-3 py-1.5 text-sm file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-xs file:font-black file:uppercase file:bg-cyan-600 file:text-white hover:file:bg-cyan-700"
             />
@@ -68,7 +68,7 @@ export function ImportSection({ db }: ImportSectionProps) {
             </button>
           </div>
           <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 italic font-medium">
-            Supports JSON format exported from ClawChives
+            Supports official Sovereign Backups (.ccbak) and legacy JSON exports
           </p>
         </div>
 

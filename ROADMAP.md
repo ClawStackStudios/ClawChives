@@ -105,26 +105,28 @@ gantt
 
 </details>
  
+</details>
+ 
  <details>
-+<summary>Phase 7 — Branded Export & UI Parity (2026-05-04)</summary>
-+
-+> Finalized the high-fidelity export ecosystem and unified the dashboard UI with the PinchPad design system.
-+
-+**Sub-Phase 7a — Sovereign Export Pipeline:**
-+- [x] **High-Fidelity Formats**: JSON, Markdown, and PDF/HTML implemented.
-+- [x] **Branded Design**: Added "ClawStack Studios©™" footers and Cyan-themed blockquote styling.
-+- [x] **Metadata Hooks**: Automatic enrichment with stats (Total Pinchmarks, Tags, Date).
-+- [x] **Export Themes**: Light/Dark mode toggles for generated HTML files.
-+
-+**Sub-Phase 7b — UI/UX Modernization:**
-+- [x] **Global Pod Management**: Elevated `FolderEditModal` to a global centered modal.
-+- [x] **Sidebar Persistence**: Sidebar open/width state synced via `localStorage`.
-+- [x] **Habitat Parity**: Restored persistent Settings headers/descriptions.
-+- [x] **Branding**: Changed browser favicon to the lobster emoji 🦞.
-+
-+</details>
-+
-+<details>
+<summary>Phase 7 — Branded Export & UI Parity (2026-05-04)</summary>
+
+> Finalized the high-fidelity export ecosystem and unified the dashboard UI with the PinchPad design system.
+
+**Sub-Phase 7a — Sovereign Export Pipeline:**
+- [x] **High-Fidelity Formats**: JSON, Markdown, and PDF/HTML implemented.
+- [x] **Branded Design**: Added "ClawStack Studios©™" footers and Cyan-themed blockquote styling.
+- [x] **Metadata Hooks**: Automatic enrichment with stats (Total Pinchmarks, Tags, Date).
+- [x] **Export Themes**: Light/Dark mode toggles for generated HTML files.
+
+**Sub-Phase 7b — UI/UX Modernization:**
+- [x] **Global Pod Management**: Elevated `FolderEditModal` to a global centered modal.
+- [x] **Sidebar Persistence**: Sidebar open/width state synced via `localStorage`.
+- [x] **Habitat Parity**: Restored persistent Settings headers/descriptions.
+- [x] **Branding**: Changed browser favicon to the lobster emoji 🦞.
+
+</details>
+
+<details>
  <summary>Phase 6 — Full Frontend Decomposition (2026-03-22)</summary>
 
 - [x] Vite + React + TypeScript scaffold
@@ -168,7 +170,7 @@ rename the agent_keys table and routes to lobster_keys to be more aligned to Lob
 
 ---
 
-- [ ] **Task 01: Audit Log Module Import**
+- [x] **Task 01: Audit Log Module Import**
 
   **Description:** In `src/server/routes/bookmarks/utils.ts`, resolve a critical runtime `ReferenceError` where `audit` is invoked to log bookmark creation events (`BOOKMARK_CREATED`, `bookmark_jina_conversion_set`) but is never imported. Update the top-level imports to pull the central `audit` logger instance from the `database` module so that all single-item creations are successfully audited without crashing the transaction block.
 
@@ -176,7 +178,7 @@ rename the agent_keys table and routes to lobster_keys to be more aligned to Lob
 
 ---
 
-- [ ] **Task 02: ESM Dynamic Test Database Isolation**
+- [x] **Task 02: ESM Dynamic Test Database Isolation**
 
   **Description:** Across all test files (specifically `tests/admin-dashboard.test.ts`, `tests/lobster-session.test.ts`, `tests/phase3-integration.test.ts`, `tests/bulk-import.test.js`, and `tests/security.test.js`), convert the static `import { app, db } from '../server.js'` statement into a dynamic `const { app, db } = await import('../server.js')` call. Since ES Modules evaluate static imports before executing any top-level body statements (hoisting), the database connection singleton was evaluating before `process.env.DATA_DIR` was set, causing all tests to run concurrently on the main `./data/db.sqlite` file. Dynamic imports ensure environment variables are configured before database connection instantiation.
 
