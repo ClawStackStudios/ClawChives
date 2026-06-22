@@ -23,6 +23,15 @@ export function useAppearanceSettings() {
       await db.saveAppearanceSettings(settings);
       return settings;
     },
+    onMutate: async (newSettings) => {
+      await queryClient.cancelQueries({ queryKey: APPEARANCE_SETTINGS_QUERY_KEY });
+      const previousSettings = queryClient.getQueryData(APPEARANCE_SETTINGS_QUERY_KEY);
+      queryClient.setQueryData(APPEARANCE_SETTINGS_QUERY_KEY, newSettings);
+      return { previousSettings };
+    },
+    onError: (err, newSettings, context) => {
+      queryClient.setQueryData(APPEARANCE_SETTINGS_QUERY_KEY, context?.previousSettings);
+    },
     onSuccess: (newSettings) => {
       queryClient.setQueryData(APPEARANCE_SETTINGS_QUERY_KEY, newSettings);
     },

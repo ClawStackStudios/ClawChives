@@ -35,7 +35,6 @@ export const useDashboardState = () => {
   });
   const [alertModal, setAlertModal] = useState<{ title: string; message: string; variant?: "info" | "error" } | null>(null);
   const [sortBy, setSortBy] = useState<SortBy>(() => (sessionStorage.getItem("cc_sort_by") as SortBy) || "date-desc");
-  const [viewMode, setViewMode] = useState<"grid" | "list">(() => (sessionStorage.getItem("cc_view_mode") as "grid" | "list") || "grid");
   const [sidebarWidth, setSidebarWidth] = useState<number>(() => {
     const saved = localStorage.getItem("cc_sidebar_width");
     return saved ? parseInt(saved, 10) : 256;
@@ -59,7 +58,9 @@ export const useDashboardState = () => {
 
   const { data: stats } = useBookmarkStats();
   const { data: allTags } = useTags();
-  const { data: appearanceSettings } = useAppearanceSettings();
+  const { data: appearanceSettings, saveSettings } = useAppearanceSettings();
+  
+  const viewMode = appearanceSettings?.layout ?? "grid";
   const debouncedQuery = useDebounce(searchQuery, 300);
   const filteredFolders = useSidebarSearch(folders, searchQuery);
 
@@ -89,13 +90,9 @@ export const useDashboardState = () => {
     });
   }, [db, queryClient]);
 
-  // Sync initial view mode and sort by from database if not manually overridden in session
+  // Sync sort by from database if not manually overridden in session
   useEffect(() => {
     if (appearanceSettings) {
-      if (!sessionStorage.getItem("cc_view_mode") && appearanceSettings.layout) {
-        // Fallback masonry to grid if stored in old db format
-        setViewMode((appearanceSettings.layout as any) === "masonry" ? "grid" : appearanceSettings.layout);
-      }
       if (!sessionStorage.getItem("cc_sort_by") && appearanceSettings.sortBy) {
         setSortBy(appearanceSettings.sortBy === "title" ? "name-asc" : appearanceSettings.sortBy === "starred" ? "date-desc" : "date-desc");
       }
@@ -108,8 +105,9 @@ export const useDashboardState = () => {
   };
 
   const handleViewChange = (mode: "grid" | "list") => {
-    setViewMode(mode);
-    sessionStorage.setItem("cc_view_mode", mode);
+    if (appearanceSettings) {
+      saveSettings({ ...appearanceSettings, layout: mode });
+    }
   };
 
   const handleSidebarWidthChange = (width: number) => {
