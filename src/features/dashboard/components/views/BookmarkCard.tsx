@@ -18,6 +18,8 @@ interface BookmarkCardProps {
   onToggleArchive: (bookmark: Bookmark) => void;
   onTogglePin: (bookmark: Bookmark) => void;
   onDragStart?: (e: React.DragEvent<HTMLDivElement>, id: string) => void;
+  compactMode?: boolean;
+  showFavicons?: boolean;
 }
 
 
@@ -57,6 +59,8 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
     onToggleArchive,
     onTogglePin,
     onDragStart,
+    compactMode,
+    showFavicons = true,
   } = props;
   
   const faviconUrl = getFaviconUrl(bookmark.url);
@@ -145,15 +149,17 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
         </Button>
 
         {/* Favicon */}
-        <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {faviconUrl ? (
-            <img src={faviconUrl} alt="" className="w-5 h-5" onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }} />
-          ) : (
-            <span className="text-lg">🦞</span>
-          )}
-        </div>
+        {showFavicons && (
+          <div className="w-8 h-8 rounded-md bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {faviconUrl ? (
+              <img src={faviconUrl} alt="" className="w-5 h-5" onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }} />
+            ) : (
+              <span className="text-lg">🦞</span>
+            )}
+          </div>
+        )}
 
         {/* Title + URL */}
         <div className="flex-1 min-w-0">
@@ -271,7 +277,7 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
 
   return (
     <div
-      className={`group ${theme.bg} border ${theme.border} ${theme.hover} rounded-xl p-4 hover:shadow-lg transition-all cursor-pointer relative`}
+      className={`group ${theme.bg} border ${theme.border} ${theme.hover} rounded-xl ${compactMode ? 'p-3' : 'p-4'} hover:shadow-lg transition-all cursor-pointer relative`}
       draggable={!!onDragStart}
       onDragStart={(e) => onDragStart?.(e, bookmark.id)}
       onClick={pinchCardClick}
@@ -334,15 +340,17 @@ export const BookmarkCard = React.memo((props: BookmarkCardProps) => {
       </Button>
 
       <div className="flex items-start gap-3 mb-3">
-        <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
-          {faviconUrl ? (
-            <img src={faviconUrl} alt="" className="w-6 h-6" onError={(e) => {
-              (e.target as HTMLImageElement).style.display = "none";
-            }} />
-          ) : (
-            <span className="text-2xl">🦞</span>
-          )}
-        </div>
+        {showFavicons && (
+          <div className="w-10 h-10 rounded-lg bg-slate-100 dark:bg-slate-800 flex items-center justify-center flex-shrink-0 overflow-hidden">
+            {faviconUrl ? (
+              <img src={faviconUrl} alt="" className="w-6 h-6" onError={(e) => {
+                (e.target as HTMLImageElement).style.display = "none";
+              }} />
+            ) : (
+              <span className="text-2xl">🦞</span>
+            )}
+          </div>
+        )}
         <div className="flex-1 min-w-0">
           <h3
             className={`font-semibold ${theme.text} truncate group-hover:${theme.accent} transition-colors`}

@@ -11,29 +11,32 @@
 
 import { useInfiniteQuery, useQueryClient, useMutation } from "@tanstack/react-query";
 import { useDatabaseAdapter } from "../services/database/DatabaseProvider";
-import { BOOKMARKS_PAGE_SIZE } from "../services/queryClient";
+import { useAppearanceSettings } from "./useAppearanceSettings";
 import { BOOKMARK_STATS_QUERY_KEY } from "./useBookmarkStats";
 import { FOLDER_COUNTS_QUERY_KEY } from "./useFolderCounts";
 import { TAGS_QUERY_KEY } from "./useTags";
 import type { Bookmark } from "../services/types";
 
-const BOOKMARKS_QUERY_KEY = ["bookmarks", "infinite"];
+const BOOKMARKS_QUERY_KEY = (pageSize: number) => ["bookmarks", "infinite", pageSize];
 
 export function useInfiniteBookmarks() {
   const db = useDatabaseAdapter();
   const queryClient = useQueryClient();
+  const { data: settings } = useAppearanceSettings();
+  
+  const pageSize = settings?.itemsPerPage || 50;
 
   const query = useInfiniteQuery({
-    queryKey: BOOKMARKS_QUERY_KEY,
+    queryKey: BOOKMARKS_QUERY_KEY(pageSize),
     queryFn: async ({ pageParam = 0 }) => {
       if (!db) return [];
-      return db.getBookmarks(BOOKMARKS_PAGE_SIZE, pageParam);
+      return db.getBookmarks(pageSize, pageParam);
     },
     getNextPageParam: (lastPage, allPages) => {
-      if (lastPage.length < BOOKMARKS_PAGE_SIZE) {
+      if (lastPage.length < pageSize) {
         return undefined; // No more pages
       }
-      return allPages.length * BOOKMARKS_PAGE_SIZE;
+      return allPages.length * pageSize;
     },
     enabled: !!db,
     initialPageParam: 0,
@@ -48,7 +51,7 @@ export function useInfiniteBookmarks() {
     onMutate: async (updatedBookmark) => {
       // Optimistically update cache
       queryClient.setQueriesData(
-        { queryKey: BOOKMARKS_QUERY_KEY },
+        { queryKey: BOOKMARKS_QUERY_KEY(pageSize) },
         (oldData: any) => {
           if (!oldData?.pages) return oldData;
           return {
@@ -64,7 +67,7 @@ export function useInfiniteBookmarks() {
       // Update cache with actual backend response (including updated_at) to trigger React.memo
       if (savedBookmark) {
         queryClient.setQueriesData(
-          { queryKey: BOOKMARKS_QUERY_KEY },
+          { queryKey: BOOKMARKS_QUERY_KEY(pageSize) },
           (oldData: any) => {
             if (!oldData?.pages) return oldData;
             return {
@@ -94,13 +97,13 @@ export function useInfiniteBookmarks() {
     onSuccess: (savedBookmark) => {
       // Add to first page cache
       queryClient.setQueriesData(
-        { queryKey: BOOKMARKS_QUERY_KEY },
+        { queryKey: BOOKMARKS_QUERY_KEY(pageSize) },
         (oldData: any) => {
           if (!oldData?.pages) return oldData;
           return {
             ...oldData,
             pages: [
-              [savedBookmark, ...oldData.pages[0]].slice(0, BOOKMARKS_PAGE_SIZE),
+              [savedBookmark, ...oldData.pages[0]].slice(0, pageSize),
               ...oldData.pages.slice(1),
             ],
           };
@@ -124,7 +127,7 @@ export function useInfiniteBookmarks() {
     onMutate: async (deletedId) => {
       // Optimistically remove from cache
       queryClient.setQueriesData(
-        { queryKey: BOOKMARKS_QUERY_KEY },
+        { queryKey: BOOKMARKS_QUERY_KEY(pageSize) },
         (oldData: any) => {
           if (!oldData?.pages) return oldData;
           return {

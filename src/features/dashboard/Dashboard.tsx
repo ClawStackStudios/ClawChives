@@ -8,6 +8,7 @@ import { FolderEditModal } from "./components/layout/FolderEditModal";
 import { AlertModal } from '@/shared/ui/LobsterModal';
 import { useDashboardState, NavTab } from "./hooks/useDashboardState";
 import { useFolderCounts } from "@/hooks/useFolderCounts";
+import { getTagColorClasses } from "@/shared/lib/lobsterColorRNG";
 import { User } from "@/App";
 import { useRef, useCallback, useEffect, useState } from "react";
 
@@ -24,6 +25,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     selectedFolder,
     activeTab,
     tagFilter,
+    filterStatus,
     searchQuery,
     isModalOpen,
     editingBookmark,
@@ -34,6 +36,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     flatBookmarks,
     filteredFolders,
     filteredBookmarks,
+    appearanceSettings,
     stats,
     allTags,
     hasNextPage,
@@ -41,6 +44,7 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
     setSearchQuery,
     setSidebarOpen,
     setTagFilter,
+    setFilterStatus,
     setIsModalOpen,
     setEditingBookmark,
     setAlertModal,
@@ -189,8 +193,11 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
           onSortChange={handleSortChange}
           viewMode={viewMode}
           onViewChange={handleViewChange}
-          tagFilter={tagFilter}
-          onClearTagFilter={() => setTagFilter(null)}
+          tagFilter={activeTab !== "tags" ? tagFilter : null}
+          onTagFilterChange={setTagFilter}
+          filterStatus={filterStatus}
+          onFilterStatusChange={setFilterStatus}
+          allTags={allTags}
           onToggleSidebar={() => setSidebarOpen(!sidebarOpen)}
         />
 
@@ -206,19 +213,14 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
             </div>
           )}
           {activeTab === "tags" && (
-            <div className="h-full overflow-y-auto">
+            <div className="h-full overflow-hidden">
               <TagsView
                 bookmarks={flatBookmarks.filter((b) => !b.archived)}
+                filteredBookmarks={filteredBookmarks}
+                selectedTag={tagFilter}
                 onSelectTag={setTagFilter}
                 onDeleteTag={handleDeleteTag}
-              />
-            </div>
-          )}
-          {showGrid && (
-            <div className="h-full p-6">
-              <BookmarkGrid
-                bookmarks={filteredBookmarks}
-                layout={viewMode}
+                viewMode={viewMode}
                 onEdit={(b) => { setEditingBookmark(b); setIsModalOpen(true); }}
                 onDelete={deleteBookmark}
                 onToggleStar={(b) => updateBookmark({ ...b, starred: !b.starred })}
@@ -227,7 +229,29 @@ export function Dashboard({ user, onLogout, onGoToSettings, onShowDatabaseStats 
                 onFetchNextPage={fetchNextPage}
                 hasNextPage={hasNextPage ?? false}
                 isFetchingNextPage={isFetchingNextPage}
+                compactMode={appearanceSettings?.compactMode}
+                showFavicons={appearanceSettings?.showFavicons}
               />
+            </div>
+          )}
+          {showGrid && (
+            <div className="h-full flex flex-col p-6">
+              <div className="flex-1 min-h-0">
+                <BookmarkGrid
+                  bookmarks={filteredBookmarks}
+                  layout={viewMode}
+                  onEdit={(b) => { setEditingBookmark(b); setIsModalOpen(true); }}
+                  onDelete={deleteBookmark}
+                  onToggleStar={(b) => updateBookmark({ ...b, starred: !b.starred })}
+                  onToggleArchive={(b) => updateBookmark({ ...b, archived: !b.archived })}
+                  onTogglePin={(b) => updateBookmark({ ...b, pinned: !b.pinned })}
+                  onFetchNextPage={fetchNextPage}
+                  hasNextPage={hasNextPage ?? false}
+                  isFetchingNextPage={isFetchingNextPage}
+                  compactMode={appearanceSettings?.compactMode}
+                  showFavicons={appearanceSettings?.showFavicons}
+                />
+              </div>
             </div>
           )}
         </div>

@@ -22,7 +22,7 @@ export const PERMISSIONS = {
   FULL: "full",
 } as const;
 
-export const LAYOUTS = ["grid", "list", "masonry"] as const;
+export const LAYOUTS = ["grid", "list"] as const;
 export const THEMES = ["light", "dark", "auto"] as const;
 export const SORT_OPTIONS = ["dateAdded", "title", "starred"] as const;
 export const ITEMS_PER_PAGE = [12, 24, 48] as const;

@@ -3,7 +3,14 @@ import { Button } from '@/shared/ui/button';
 
 import { SortDropdown } from "../views/SortDropdown";
 import { ViewToggle } from "../views/ViewToggle";
+import { FilterDropdown } from "../views/FilterDropdown";
 import type { SortBy } from '@/shared/lib/utils';
+
+interface FilterStatus {
+  starred: boolean;
+  pinned: boolean;
+  archived: boolean;
+}
 
 interface HeaderProps {
   user: { username: string } | null;
@@ -13,8 +20,11 @@ interface HeaderProps {
   onSortChange: (sort: SortBy) => void;
   viewMode: "grid" | "list";
   onViewChange: (mode: "grid" | "list") => void;
+  filterStatus?: FilterStatus;
+  onFilterStatusChange?: (status: FilterStatus) => void;
   tagFilter: string | null;
-  onClearTagFilter: () => void;
+  onTagFilterChange?: (tag: string | null) => void;
+  allTags?: string[];
   onToggleSidebar?: () => void;
   title?: string;
 }
@@ -27,8 +37,11 @@ export function Header({
   onSortChange,
   viewMode,
   onViewChange,
+  filterStatus,
+  onFilterStatusChange,
   tagFilter,
-  onClearTagFilter,
+  onTagFilterChange,
+  allTags,
   onToggleSidebar,
   title,
 }: HeaderProps) {
@@ -58,6 +71,15 @@ export function Header({
           <div className="hidden lg:flex items-center gap-2 border-l border-slate-200 dark:border-slate-800 pl-4">
             {showGridControls && (
               <>
+                {filterStatus && onFilterStatusChange && onTagFilterChange && (
+                  <FilterDropdown
+                    filterStatus={filterStatus}
+                    onFilterStatusChange={onFilterStatusChange}
+                    tagFilter={tagFilter}
+                    onTagFilterChange={onTagFilterChange}
+                    allTags={allTags}
+                  />
+                )}
                 <SortDropdown sortBy={sortBy} onChange={onSortChange} />
                 <ViewToggle viewMode={viewMode} onChange={onViewChange} />
               </>
@@ -86,18 +108,6 @@ export function Header({
           </div>
         </div>
       </div>
-
-      {tagFilter && (
-        <div className="mt-2 flex items-center gap-2">
-          <span className="text-xs text-slate-500 dark:text-slate-400">Filtered by tag:</span>
-          <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 bg-sky-100 dark:bg-sky-900/30 text-sky-800 dark:text-sky-300 rounded-full border border-sky-200 dark:border-sky-700/50">
-            {tagFilter}
-            <button onClick={onClearTagFilter} className="hover:text-sky-900 dark:hover:text-sky-100">
-              <X className="w-3 h-3" />
-            </button>
-          </span>
-        </div>
-      )}
     </header>
   );
 }

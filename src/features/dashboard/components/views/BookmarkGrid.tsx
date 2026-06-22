@@ -31,6 +31,8 @@ interface BookmarkGridProps {
   onFetchNextPage: () => void;
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
+  compactMode?: boolean;
+  showFavicons?: boolean;
 }
 
 type GridItem = 
@@ -49,6 +51,8 @@ export function BookmarkGrid({
   onFetchNextPage,
   hasNextPage,
   isFetchingNextPage,
+  compactMode,
+  showFavicons,
 }: BookmarkGridProps) {
   const { ref: sentinelRef, inView } = useInView();
   const parentRef = useRef<HTMLDivElement>(null);
@@ -204,6 +208,8 @@ export function BookmarkGrid({
                     bookmark={bookmark}
                     layout={layout}
                     pinnedFolderId={pinnedFolderId}
+                    compactMode={compactMode}
+                    showFavicons={showFavicons}
                     onEdit={onEdit}
                     onDelete={onDelete}
                     onToggleStar={onToggleStar}

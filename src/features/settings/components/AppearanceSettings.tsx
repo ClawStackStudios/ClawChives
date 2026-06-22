@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
 import { Label } from '@/shared/ui/label';
 import { Palette, Layout, Grid, List, Sun, Moon, Monitor } from "lucide-react";
-import { useDatabaseAdapter } from "@/services/database/DatabaseProvider";
+import { useAppearanceSettings } from "@/hooks/useAppearanceSettings";
 
 import { useTheme } from '@/shared/theme/theme-provider';
 
-type Layout = "grid" | "list" | "masonry";
+type Layout = "grid" | "list";
 
 export function AppearanceSettings() {
   const { theme, setTheme } = useTheme();
@@ -19,35 +19,22 @@ export function AppearanceSettings() {
   const [isResizable, setIsResizable] = useState(() => localStorage.getItem("cc_is_resizable") === "true");
   const [showToast, setShowToast] = useState(false);
 
-  const db = useDatabaseAdapter();
+  const { data: settings, saveSettings } = useAppearanceSettings();
 
   useEffect(() => {
-    loadAppearanceSettings();
-  }, []);
-
-  const loadAppearanceSettings = async () => {
-    if (!db) return;
-    try {
-      const settings = await db.getAppearanceSettings();
-      if (settings) {
-        // Note: We don't call setTheme here - the theme is already loaded from sessionStorage
-        // in ThemeProvider. We just sync the UI state to show the current theme setting.
-        setLayout(settings.layout);
-        setItemsPerPage(settings.itemsPerPage as 12 | 24 | 48);
-        setCompactMode(settings.compactMode ?? false);
-        setShowFavicons(settings.showFavicons ?? true);
-        setSortBy(settings.sortBy || "dateAdded");
-        setNotifications(settings.notifications ?? true);
-        setPwaUpdates(settings.pwaUpdates ?? true);
-      }
-    } catch (e) {
-      console.error(e);
+    if (settings) {
+      setLayout(settings.layout || "grid");
+      setItemsPerPage((settings.itemsPerPage as 12 | 24 | 48) || 12);
+      setCompactMode(settings.compactMode ?? false);
+      setShowFavicons(settings.showFavicons ?? true);
+      setSortBy(settings.sortBy || "dateAdded");
+      setNotifications(settings.notifications ?? true);
+      setPwaUpdates(settings.pwaUpdates ?? true);
     }
-  };
+  }, [settings]);
 
   const handleSaveSettings = async () => {
-    if (!db) return;
-    await db.saveAppearanceSettings({
+    await saveSettings({
       theme,
       layout,
       itemsPerPage,
@@ -113,7 +100,7 @@ export function AppearanceSettings() {
           {/* Layout Selection */}
           <div>
             <Label className="text-sm font-semibold text-slate-900 dark:text-white mb-3 block">Bookmark Layout</Label>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => setLayout("grid")}
                 className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
@@ -135,17 +122,6 @@ export function AppearanceSettings() {
               >
                 <List className="w-6 h-6 text-cyan-600" />
                 <span className="text-sm font-medium">List</span>
-              </button>
-              <button
-                onClick={() => setLayout("masonry")}
-                className={`flex flex-col items-center gap-2 p-4 rounded-lg border-2 transition-all ${
-                  layout === "masonry"
-                    ? "border-cyan-600 bg-cyan-50 dark:bg-cyan-950/30 text-cyan-900 dark:text-cyan-100"
-                    : "border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-200"
-                }`}
-              >
-                <Layout className="w-6 h-6 text-cyan-600" />
-                <span className="text-sm font-medium">Masonry</span>
               </button>
             </div>
           </div>

@@ -57,7 +57,7 @@ export interface AgentKey {
 
 export interface AppearanceSettings {
   theme: "light" | "dark" | "auto";
-  layout: "grid" | "list" | "masonry";
+  layout: "grid" | "list";
   itemsPerPage: 12 | 24 | 48;
   sortBy: "dateAdded" | "title" | "starred";
   notifications: boolean;
