@@ -19,6 +19,7 @@
 ---
 
 [![build](https://img.shields.io/badge/build-passing-brightgreen?style=for-the-badge)](https://github.com/ClawStackStudios/ClawChives/actions/workflows/docker-publish.yml)
+[![Version](https://img.shields.io/badge/Version-v3.3.1-blue?style=for-the-badge)](#)
 [![Vite](https://img.shields.io/badge/Vite-B73BFE?style=for-the-badge&logo=vite&logoColor=FFD62E)](https://vitejs.dev/)
 [![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -27,6 +28,7 @@
 [![SQLite](https://img.shields.io/badge/SQLite-07405E?style=for-the-badge&logo=sqlite&logoColor=white)](https://www.sqlite.org/)
 [![License: AGPL-3.0](https://img.shields.io/badge/License-AGPL--3.0-yellow.svg?style=for-the-badge)](LICENSE)
 [![Phase](https://img.shields.io/badge/Phase-7_Complete-blue?style=for-the-badge)](#)
+[![ClawStack](https://img.shields.io/badge/ClawStack-Mobile_Studios-FF4500?style=for-the-badge&logo=gitlab&logoColor=white)](#)
 
 ---
 
