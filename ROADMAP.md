@@ -161,6 +161,29 @@ rename the agent_keys table and routes to lobster_keys to be more aligned to Lob
 
 ---
 
+## Phase 10: Integrity & Isolation Hardening — Core Security Gating
+
+> **Phase Feature Set Overview:**
+> This phase addresses critical security and isolation vulnerabilities in the backend auditing and test runner pipeline. Success here means compiling and running the full 131-test suite with zero global environment side effects or database conflicts, fully isolating test runs from production databases, and restoring transactional audit log coverage for all bookmark creations.
+
+---
+
+- [ ] **Task 01: Audit Log Module Import**
+
+  **Description:** In `src/server/routes/bookmarks/utils.ts`, resolve a critical runtime `ReferenceError` where `audit` is invoked to log bookmark creation events (`BOOKMARK_CREATED`, `bookmark_jina_conversion_set`) but is never imported. Update the top-level imports to pull the central `audit` logger instance from the `database` module so that all single-item creations are successfully audited without crashing the transaction block.
+
+  > **Success Criteria:** Rerunning `vitest run tests/security.test.js` resolves the `ReferenceError: audit is not defined` crash, and the status response for bookmark creation gates successfully returns a `201` instead of a `500`.
+
+---
+
+- [ ] **Task 02: ESM Dynamic Test Database Isolation**
+
+  **Description:** Across all test files (specifically `tests/admin-dashboard.test.ts`, `tests/lobster-session.test.ts`, `tests/phase3-integration.test.ts`, `tests/bulk-import.test.js`, and `tests/security.test.js`), convert the static `import { app, db } from '../server.js'` statement into a dynamic `const { app, db } = await import('../server.js')` call. Since ES Modules evaluate static imports before executing any top-level body statements (hoisting), the database connection singleton was evaluating before `process.env.DATA_DIR` was set, causing all tests to run concurrently on the main `./data/db.sqlite` file. Dynamic imports ensure environment variables are configured before database connection instantiation.
+
+  > **Success Criteria:** Running `npm run test` executes all worker threads concurrently without database lock conflicts. Individual test databases are correctly generated inside isolated target directories (e.g., `tests/data-admin/`, `tests/data-lobster-session/`), leaving the main `./data/db.sqlite` development database clean and untouched.
+
+---
+
 ## 💡 Future Reef
 
 - [ ] Multi-user/team bookmark collections
