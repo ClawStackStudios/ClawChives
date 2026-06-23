@@ -27,6 +27,16 @@ Both systems exist asynchronously, meaning that one side may update its schema b
 
 ---
 
+## 📂 Folder (Pod) Operations & State Invariants
+
+To ensure parity between the Web Client and the Mobile Application, Folder management must adhere strictly to the following rules:
+
+1. **DTO Sanitization & Color Resolution**: Both `FolderCreateRequest` and `FolderUpdateRequest` must explicitly sanitize inputs. If a folder color hex code is invalid, empty, or `null`, the mobile UI must gracefully fall back to the semantic `CyanAccent` without throwing parsing errors.
+2. **The Deletion Invariant (Cascading Unassociation)**: Invoking `DELETE /api/folders/:id` on the server destroys the folder but does **not** delete the pinchmarks inside it. Instead, the server unassociates them (`folder_id = null`). The mobile client's local state must immediately mirror this cascading effect—orphaning the pinchmarks to the general pool—without requiring a full re-fetch of the database.
+3. **Complete API Parity**: The mobile client must fully map `POST /api/folders`, `PUT /api/folders/:id`, and `DELETE /api/folders/:id` to maintain true operational symmetry with the Web Client.
+
+---
+
 ## 🛡️ Authentication and Authorization Invariants
 
 To keep the client lightweight, it must not maintain long-running credentials inside raw memory variables. Authentication boundaries follow these strict rules:
