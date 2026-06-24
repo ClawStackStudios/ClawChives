@@ -37,6 +37,16 @@ To ensure parity between the Web Client and the Mobile Application, Folder manag
 
 ---
 
+## 🏷️ Tag Operations & State Invariants
+
+Until Phase 11 (Tag System Architectural Refactoring) is completed, Tags must be treated by the mobile client according to the following strict topology:
+
+1. **Stateless Tag Mapping (Virtual Existence):** The server does not maintain a separate `tags` database table. The endpoint `GET /api/bookmarks/tags` uses SQLite `json_each(tags)` to dynamically generate distinct tag strings from the existing pinchmarks. The mobile client must expect a primitive array of strings (`List<String>`), not complex DTOs, and must not enforce local UUID generation or independent table constraints for tags.
+2. **Implicit Tag Pruning (Garbage Collection):** Because tags are dynamically generated, there is no `DELETE /api/tags/:tag` endpoint. If a tag is removed from all local pinchmarks (or all pinchmarks holding it are deleted), the mobile application's local state must mirror the server's implicit deletion mechanic by orphaning and pruning the tag dynamically from UI filters.
+3. **Sanitization Invariant:** When creating or updating a pinchmark (`PUT /api/bookmarks/:id`), the mobile app must strictly `.trim()` all strings in the tag array to prevent ghost duplicate tags (e.g., `"tag "` vs `"tag"`) that would splinter the `json_each` groupings on the server.
+
+---
+
 ## 🛡️ Authentication and Authorization Invariants
 
 To keep the client lightweight, it must not maintain long-running credentials inside raw memory variables. Authentication boundaries follow these strict rules:

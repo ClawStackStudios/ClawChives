@@ -186,6 +186,27 @@ rename the agent_keys table and routes to lobster_keys to be more aligned to Lob
 
 ---
 
+## Phase 11: Tag System Architectural Refactoring
+
+> **Phase Feature Set Overview:**
+> This phase will decouple the Tag system from being a purely dynamically derived JSON array within pinchmarks, and transition it into a first-class SQL database table (`tags`). This architectural shift will enable the backend to support standalone tag metadata (such as distinct UI colors for tags), ensure strong referential integrity, and provide the mobile client with a dedicated CRUD endpoint for reliable tag management.
+
+---
+
+- [ ] **Task 01: Create Dedicated `tags` Table and Migrations**
+
+  **Description:** Create a new SQLite migration that constructs a `tags` table containing columns for `id`, `name`, `color` (optional), and `user_uuid`. Add a junction table (e.g., `bookmark_tags`) to handle the many-to-many relationship between pinchmarks and tags. Backfill existing JSON-based tags from the `bookmarks` table into the new `tags` and `bookmark_tags` structure via a migration script.
+
+- [ ] **Task 02: Implement Standalone Tag API Endpoints**
+
+  **Description:** Replace the current `GET /api/bookmarks/tags` (which relies on `json_each`) with a dedicated `GET /api/tags` endpoint that pulls from the new `tags` table. Add new `POST`, `PUT`, and `DELETE` endpoints for managing the lifecycle of independent tags, including cascading delete handlers or un-associations when tags are removed.
+
+- [ ] **Task 03: Update Mobile & Frontend Boundaries**
+
+  **Description:** Update `BOUNDARY.md` and both client implementations to transition from "Stateless Tag Mapping" to explicit ID-based referencing. The UI must adapt to manage tags independently of pinchmarks, supporting custom hex colors per tag instead of just relying on string arrays.
+
+---
+
 ## 💡 Future Reef
 
 - [ ] Multi-user/team bookmark collections
