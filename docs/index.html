@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Privacy Policy - ClawChives Mobile</title>
   
-  <!-- Tailwind CSS via CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Tailwind CSS via CDN with Typography Plugin -->
+  <script src="https://cdn.tailwindcss.com?plugins=typography"></script>
   <!-- Marked.js via CDN -->
   <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 
@@ -19,18 +19,6 @@
       }
     }
   </script>
-  <style>
-    /* Custom markdown typography styles to match Landing Page */
-    #content h1 { @apply text-4xl font-extrabold tracking-tight mb-8 text-slate-900 dark:text-white; }
-    #content h2 { @apply text-2xl font-bold tracking-tight mt-10 mb-4 text-slate-900 dark:text-white border-b border-slate-200 dark:border-slate-800 pb-2; }
-    #content p { @apply text-slate-600 dark:text-slate-300 mb-6 leading-relaxed; }
-    #content ul { @apply list-disc list-inside mb-6 text-slate-600 dark:text-slate-300 space-y-2; }
-    #content li { @apply ml-4; }
-    #content strong { @apply font-semibold text-slate-900 dark:text-white; }
-    #content a { @apply text-cyan-600 dark:text-cyan-400 hover:underline font-medium; }
-    #content hr { @apply my-8 border-slate-200 dark:border-slate-800; }
-    #content em { @apply italic text-slate-500 dark:text-slate-400; }
-  </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-slate-50 via-cyan-50 to-amber-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 antialiased selection:bg-cyan-500/30 flex flex-col">
 
@@ -56,7 +44,7 @@
       <!-- Decorative gradient orb -->
       <div class="absolute -top-24 -right-24 w-48 h-48 bg-cyan-500/20 dark:bg-cyan-500/10 blur-3xl rounded-full pointer-events-none"></div>
       
-      <div id="content" class="markdown-body relative z-10">
+      <div id="content" class="prose prose-slate dark:prose-invert max-w-none relative z-10">
         <!-- Loader while parsing Markdown -->
         <div class="flex justify-center items-center h-32">
           <div class="w-8 h-8 border-4 border-cyan-500 border-t-transparent rounded-full animate-spin"></div>
