@@ -38,9 +38,13 @@ We may update our Privacy Policy from time to time to reflect changes in our pra
 
 ## 6. Contact Us
 
-If you have any questions about this Privacy Policy or the ClawChives ecosystem, please reach out via our official repository:
+If you have any questions about this Privacy Policy or the ClawChives ecosystem, please reach out to us:
 
-**GitHub:** [ClawStackStudios/ClawChives](https://github.com/ClawStackStudios/ClawChives)
+**Email:** [clawstackstudios@protonmail.com](mailto:clawstackstudios@protonmail.com)
+
+**GitHub Repository:** [ClawStackStudios/ClawChives-Mobile](https://github.com/ClawStackStudios/ClawChives-Mobile)
+
+**View this Policy on GitHub:** [ClawChives Mobile PRIVACY.md](https://github.com/ClawStackStudios/ClawChives-Mobile/blob/main/PRIVACY.md)
 
 ---
 
